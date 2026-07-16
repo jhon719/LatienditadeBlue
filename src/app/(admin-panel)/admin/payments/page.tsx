@@ -36,12 +36,15 @@ const statusConfig = {
   pending: { label: "Pendiente", variant: "secondary" as const, className: "" },
   failed: { label: "Fallido", variant: "destructive" as const, className: "" },
   refunded: { label: "Reembolsado", variant: "outline" as const, className: "" },
+  verifying: { label: "Verificando", variant: "secondary" as const, className: "bg-yellow-600" },
+  rejected: { label: "Rechazado", variant: "destructive" as const, className: "" },
 }
 
 const methodLabels = {
   card: "Tarjeta",
   transfer: "Transferencia",
   wallet: "Billetera",
+  manual: "Manual",
 }
 
 export default function AdminPaymentsPage() {
