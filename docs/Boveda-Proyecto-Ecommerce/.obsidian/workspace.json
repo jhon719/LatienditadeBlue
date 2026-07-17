@@ -1,0 +1,196 @@
+{
+  "main": {
+    "id": "a19c55b81dd2d994",
+    "type": "split",
+    "children": [
+      {
+        "id": "879884bd9ca1e759",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "0da499571b80f61d",
+            "type": "leaf",
+            "state": {
+              "type": "graph",
+              "state": {},
+              "icon": "lucide-git-fork",
+              "title": "Vista gráfica"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "vertical"
+  },
+  "left": {
+    "id": "2965eea95e1f5338",
+    "type": "split",
+    "children": [
+      {
+        "id": "692221a673fe3351",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "f2af1acb4a30ec69",
+            "type": "leaf",
+            "state": {
+              "type": "file-explorer",
+              "state": {
+                "sortOrder": "alphabetical",
+                "autoReveal": false
+              },
+              "icon": "lucide-folder-closed",
+              "title": "Explorador de archivos"
+            }
+          },
+          {
+            "id": "f92537a8badfa245",
+            "type": "leaf",
+            "state": {
+              "type": "search",
+              "state": {
+                "query": "",
+                "matchingCase": false,
+                "explainSearch": false,
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical"
+              },
+              "icon": "lucide-search",
+              "title": "Buscar"
+            }
+          },
+          {
+            "id": "b14e0652a8b745f1",
+            "type": "leaf",
+            "state": {
+              "type": "bookmarks",
+              "state": {},
+              "icon": "lucide-bookmark",
+              "title": "Marcadores"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300
+  },
+  "right": {
+    "id": "5e7f7656adc73fac",
+    "type": "split",
+    "children": [
+      {
+        "id": "62a34c9af2eec0a1",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "e54fc2f4866a1699",
+            "type": "leaf",
+            "state": {
+              "type": "backlink",
+              "state": {
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical",
+                "showSearch": false,
+                "searchQuery": "",
+                "backlinkCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-coming-in",
+              "title": "Enlaces entrantes"
+            }
+          },
+          {
+            "id": "def62d973d831581",
+            "type": "leaf",
+            "state": {
+              "type": "outgoing-link",
+              "state": {
+                "linksCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-going-out",
+              "title": "Enlaces salientes"
+            }
+          },
+          {
+            "id": "10769f473c222ec5",
+            "type": "leaf",
+            "state": {
+              "type": "tag",
+              "state": {
+                "sortOrder": "frequency",
+                "useHierarchy": true,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-tags",
+              "title": "Etiquetas"
+            }
+          },
+          {
+            "id": "18bd33ac5f792531",
+            "type": "leaf",
+            "state": {
+              "type": "all-properties",
+              "state": {
+                "sortOrder": "frequency",
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-archive",
+              "title": "Todas las propiedades"
+            }
+          },
+          {
+            "id": "a5064af67f578192",
+            "type": "leaf",
+            "state": {
+              "type": "outline",
+              "state": {
+                "followCursor": false,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-list",
+              "title": "Esquema"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300,
+    "collapsed": true
+  },
+  "left-ribbon": {
+    "hiddenItems": {
+      "switcher:Abrir selector rápido": false,
+      "graph:Abrir vista gráfica": false,
+      "canvas:Crear nuevo lienzo": false,
+      "daily-notes:Abrir la nota de hoy": false,
+      "templates:Insertar plantilla": false,
+      "command-palette:Abrir paleta de comandos": false,
+      "bases:Crear nueva base": false
+    }
+  },
+  "active": "0da499571b80f61d",
+  "lastOpenFiles": [
+    "02-Frontend-Experiencia-Homidori/[[02.06-Autenticacion Segura con Google y NextAuth v5]].md",
+    "02-Frontend-Experiencia-Homidori/Sin confirmar 937905.crdownload",
+    "03-Sistema-Pagos-Y-Checkouts/Sin confirmar 248247.crdownload",
+    "02-Frontend-Experiencia-Homidori/[[02.03-Sistema de Perfiles y Datos Privados de Admin]].md",
+    "02-Frontend-Experiencia-Homidori/[[02.02-Galeria Interactiva y Detalle de Producto]].md",
+    "02-Frontend-Experiencia-Homidori/[[02.04-Sistema de Reseñas Vinculado a Usuarios]].md",
+    "02-Frontend-Experiencia-Homidori/[[02.05-Sistema de Categorias, Lineas y Marcas Dinamicas]].md",
+    "02-Frontend-Experiencia-Homidori/[[02.01-Home y Categorías Visuales con Imágenes]].md",
+    "03-Sistema-Pagos-Y-Checkouts/[[03.01-Pasarela Automatizada Mercado Pago]].md",
+    "03-Sistema-Pagos-Y-Checkouts/Sin confirmar 749722.crdownload",
+    "01-Core-Y-Arquitectura/[[01.03-Modelo de Base de Datos Prisma SQL]].md",
+    "01-Core-Y-Arquitectura/[[01.02-Estructura de Directorios Next.js]].md",
+    "01-Core-Y-Arquitectura/[[01.01-Visión General y Stack Tecnológico]].md",
+    "02.02-Galeria Interactiva y Detalle de Producto.md"
+  ]
+}
