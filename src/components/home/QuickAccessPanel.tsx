@@ -6,7 +6,7 @@ import { SpotlightCard } from "@/components/react-bits/SpotlightCard"
 const quickLinks = [
   { title: "Ubicaciones", subtitle: "Feria Grau y Centro Civico", href: "#ubicaciones", icon: MapPin, shadow: "solid-shadow-yellow" },
   { title: "TikTok", subtitle: "Unboxings, lives y novedades", href: "#tiktok", icon: Music2, shadow: "solid-shadow-blue" },
-  { title: "WhatsApp", subtitle: "+51 999 888 777", href: "https://wa.me/51999888777", icon: MessageCircle, shadow: "solid-shadow-yellow" },
+  { title: "WhatsApp", subtitle: "+51 997 763 962", href: "https://wa.me/51997763962", icon: MessageCircle, shadow: "solid-shadow-yellow" },
 ]
 
 export function QuickAccessPanel() {

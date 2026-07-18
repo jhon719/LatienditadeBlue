@@ -5,10 +5,11 @@ import { usePathname } from "next/navigation"
 import {
   LayoutDashboard,
   Package,
-  CreditCard,
+  Inbox,
+  ClipboardList,
+  Tags,
   Users,
   Settings,
-  ChevronLeft,
   Store,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
@@ -16,10 +17,12 @@ import { Button } from "@/components/ui/button"
 
 const navigation = [
   { name: "Dashboard", href: "/admin", icon: LayoutDashboard },
+  { name: "Bandeja POS", href: "/admin/manual-payments", icon: Inbox },
+  { name: "Órdenes", href: "/admin/orders", icon: ClipboardList },
   { name: "Productos", href: "/admin/products", icon: Package },
-  { name: "Pagos", href: "/admin/payments", icon: CreditCard },
+  { name: "Categorías y Líneas", href: "/admin/categories", icon: Tags },
   { name: "Usuarios", href: "/admin/users", icon: Users },
-  { name: "Configuracion", href: "/admin/settings", icon: Settings },
+  { name: "Configuración", href: "/admin/settings", icon: Settings },
 ]
 
 export function AdminSidebar() {
@@ -30,9 +33,9 @@ export function AdminSidebar() {
       {/* Logo */}
       <div className="flex h-16 items-center gap-2 border-b px-6">
         <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
-          <span className="text-sm font-bold text-primary-foreground">BT</span>
+          <span className="text-sm font-bold text-primary-foreground">LT</span>
         </div>
-        <span className="font-bold">Admin Panel</span>
+        <span className="font-bold">La Tiendita de Blue</span>
       </div>
 
       {/* Navigation */}

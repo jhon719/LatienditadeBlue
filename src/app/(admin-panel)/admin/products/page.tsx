@@ -42,24 +42,19 @@ import {
 } from "@/components/ui/alert-dialog"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 
-interface Product {
-  id: string
-  name: string
-  slug: string
-  brand: string
-  category: string
-  price: number
-  originalPrice?: number
-  stock: number
-  images: string[]
-  isNew: boolean
-  isFeatured: boolean
-}
+import type { Product } from "@/types"
 
 interface Category {
   id: string
   name: string
   slug: string
+}
+
+const statusBadge: Record<Product["status"], { label: string; className: string }> = {
+  STOCK: { label: "En stock", className: "bg-[#E2FBE9] text-[#1E7E34]" },
+  PREVENTA: { label: "Preventa", className: "bg-[#FFF5D1] text-[#8a6d00]" },
+  ONLINE: { label: "Online", className: "bg-[#E1F0FF] text-[#142F5C]" },
+  AGOTADO: { label: "Agotado", className: "bg-[#FFEAEA] text-red-600" },
 }
 
 function ProductsSkeleton() {
@@ -148,13 +143,13 @@ export default function AdminProductsPage() {
 
   const filteredProducts = products.filter((product) => {
     const matchesSearch = product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      product.brand.toLowerCase().includes(searchQuery.toLowerCase())
-    const matchesCategory = categoryFilter === "all" || product.category === categoryFilter
+      product.brand.name.toLowerCase().includes(searchQuery.toLowerCase())
+    const matchesCategory = categoryFilter === "all" || product.category.slug === categoryFilter
     return matchesSearch && matchesCategory
   })
 
-  const inStockCount = products.filter((p) => p.stock > 0).length
-  const outOfStockCount = products.filter((p) => p.stock === 0).length
+  const inStockCount = products.filter((p) => p.stockQty > 0).length
+  const outOfStockCount = products.filter((p) => p.stockQty === 0).length
 
   return (
     <div className="space-y-6">
@@ -288,20 +283,16 @@ export default function AdminProductsPage() {
                       <TableCell>
                         <div>
                           <p className="font-medium">{product.name}</p>
-                          <p className="text-xs text-muted-foreground">{product.brand}</p>
+                          <p className="text-xs text-muted-foreground">{product.brand.name}</p>
                         </div>
                       </TableCell>
-                      <TableCell className="capitalize">{product.category}</TableCell>
+                      <TableCell>{product.category.name}</TableCell>
                       <TableCell>S/ {product.price.toFixed(2)}</TableCell>
-                      <TableCell>{product.stock}</TableCell>
+                      <TableCell>{product.stockQty}</TableCell>
                       <TableCell>
-                        {product.stock > 0 ? (
-                          <Badge variant="default" className="bg-green-600">
-                            En stock
-                          </Badge>
-                        ) : (
-                          <Badge variant="destructive">Agotado</Badge>
-                        )}
+                        <Badge className={statusBadge[product.status].className}>
+                          {statusBadge[product.status].label}
+                        </Badge>
                       </TableCell>
                       <TableCell>
                         <DropdownMenu>

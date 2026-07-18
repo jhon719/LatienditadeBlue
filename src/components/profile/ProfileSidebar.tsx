@@ -2,36 +2,35 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { User, Package, MapPin, Heart, Settings, LogOut } from "lucide-react"
+import { useSession, signOut } from "next-auth/react"
+import { User, Package, Settings, LogOut } from "lucide-react"
 import { cn } from "@/lib/utils"
-import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
-import { userProfile } from "@/data/mock-user"
+import { UserAvatar } from "@/components/common/UserAvatar"
 
 const navigation = [
   { name: "Mi Perfil", href: "/profile", icon: User },
   { name: "Mis Pedidos", href: "/profile/orders", icon: Package },
-  { name: "Direcciones", href: "/profile/addresses", icon: MapPin },
-  { name: "Favoritos", href: "/profile/favorites", icon: Heart },
-  { name: "Configuracion", href: "/profile/settings", icon: Settings },
+  { name: "Configuración", href: "/profile/settings", icon: Settings },
 ]
 
 export function ProfileSidebar() {
   const pathname = usePathname()
+  const { data: session } = useSession()
 
   return (
     <aside className="space-y-6">
       {/* User Info */}
       <div className="flex items-center gap-4">
-        <Avatar className="h-16 w-16">
-          <AvatarFallback className="text-lg">
-            {userProfile.name.split(" ").map((n) => n[0]).join("")}
-          </AvatarFallback>
-        </Avatar>
+        <UserAvatar
+          username={session?.user?.username ?? "usuario"}
+          avatarFileName={null}
+          size={64}
+        />
         <div>
-          <h2 className="font-semibold">{userProfile.name}</h2>
-          <p className="text-sm text-muted-foreground">{userProfile.email}</p>
+          <h2 className="font-semibold">@{session?.user?.username}</h2>
+          <p className="text-sm text-muted-foreground">{session?.user?.email}</p>
         </div>
       </div>
 
@@ -62,9 +61,13 @@ export function ProfileSidebar() {
       <Separator />
 
       {/* Logout */}
-      <Button variant="ghost" className="w-full justify-start text-muted-foreground hover:text-destructive">
+      <Button
+        variant="ghost"
+        className="w-full justify-start text-muted-foreground hover:text-destructive"
+        onClick={() => signOut({ callbackUrl: "/" })}
+      >
         <LogOut className="mr-3 h-4 w-4" />
-        Cerrar Sesion
+        Cerrar Sesión
       </Button>
     </aside>
   )

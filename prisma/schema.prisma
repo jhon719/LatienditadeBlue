@@ -1,4 +1,5 @@
 // prisma/schema.prisma
+// Modelo relacional de La Tiendita de Blue (bóveda 01.03 + extensiones)
 
 generator client {
   provider = "prisma-client-js"
@@ -10,171 +11,275 @@ datasource db {
 
 // ==================== ENUMS ====================
 
-enum UserRole {
-  ADMIN
-  MODERATOR
+enum Role {
   CUSTOMER
+  ADMIN
 }
 
-enum UserStatus {
-  ACTIVE
-  INACTIVE
-  SUSPENDED
+enum ProductStatus {
+  ONLINE
+  STOCK
+  PREVENTA
+  AGOTADO
 }
 
-enum OrderStatus {
-  PENDING
-  CONFIRMED
-  PROCESSING
+enum ShippingType {
+  PICKUP           // Recojo en tienda
+  LOCAL_DELIVERY   // Motorizado Lima
+  NATIONAL_COURIER // Olva / Shalom a provincias
+}
+
+enum ShippingStatus {
+  PREPARING
   SHIPPED
   DELIVERED
-  CANCELLED
 }
 
 enum PaymentMethod {
-  CARD
-  TRANSFER
-  WALLET
-  CASH_ON_DELIVERY
+  MERCADO_PAGO
+  MANUAL_TRANSFER // Yape, Plin o transferencia bancaria
 }
 
-// ==================== MODELS ====================
+enum OrderStatus {
+  PENDING_PAYMENT
+  VERIFYING_MANUAL
+  PAID_APPROVED
+  REJECTED
+  CANCELLED
+  COMPLETED
+}
+
+enum ProofStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+// ==================== USUARIOS Y PERFILES ====================
 
 model User {
-  id        String     @id @default(cuid())
-  email     String     @unique
-  password  String
-  name      String
-  phone     String?
-  avatar    String?
-  role      UserRole   @default(CUSTOMER)
-  status    UserStatus @default(ACTIVE)
-  createdAt DateTime   @default(now())
-  updatedAt DateTime   @updatedAt
+  id           String  @id @default(cuid())
+  email        String  @unique
+  passwordHash String? // null para cuentas creadas con Google
+  username     String  @unique // Nombre público para reseñas
 
-  addresses Address[]
-  orders    Order[]
+  // Datos privados (visibles solo por el propio usuario y el ADMIN)
+  firstName String?
+  lastName  String?
+  dni       String?
+  phone     String?
+  address   String?
+
+  avatarFileName     String? // Archivo en public/Imagenes/avatar/
+  role               Role    @default(CUSTOMER)
+  mustChangePassword Boolean @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  accounts      Account[]
+  orders        Order[]
+  reviews       Review[]
+  paymentProofs PaymentProof[]
 
   @@map("users")
 }
 
-model Category {
-  id        String   @id @default(cuid())
-  name      String
-  slug      String   @unique
-  icon      String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+// Cuentas OAuth (Google) para NextAuth
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
 
-  products Product[]
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@index([userId])
+  @@map("accounts")
+}
+
+// ==================== CATÁLOGO ====================
+
+model Category {
+  id             String  @id @default(cuid())
+  name           String  @unique // Ej. "One Piece"
+  slug           String  @unique // Ej. "one-piece"
+  imageUrl       String? // Ruta local: /Imagenes/Lista de Animes/one piece.png
+  isActive       Boolean @default(true)
+  isTrending     Boolean @default(false)
+  hasNewArrivals Boolean @default(false)
+
+  products  Product[]
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
 
   @@map("categories")
 }
 
-model Brand {
-  id        String   @id @default(cuid())
-  name      String
-  slug      String   @unique
-  logo      String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+model Line {
+  id         String  @id @default(cuid())
+  name       String  @unique // Ej. "Ichiban Kuji"
+  slug       String  @unique
+  imageUrl   String? // Ruta local: /Imagenes/Lineas de figuras/ichiban kuji.png
+  isActive   Boolean @default(true)
+  isFeatured Boolean @default(false)
 
-  products Product[]
+  products  Product[]
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  @@map("lines")
+}
+
+model Brand {
+  id       String  @id @default(cuid())
+  name     String  @unique // Ej. "Banpresto"
+  slug     String  @unique
+  imageUrl String?
+  isActive Boolean @default(true)
+
+  products  Product[]
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
 
   @@map("brands")
 }
 
 model Product {
-  id           String   @id @default(cuid())
+  id           String        @id @default(cuid())
   name         String
-  slug         String   @unique
-  description  String?
-  price        Decimal  @db.Decimal(10, 2)
-  comparePrice Decimal? @db.Decimal(10, 2)
-  stock        Int      @default(0)
-  images       String[]
-  specs        Json?
-  isNew        Boolean  @default(false)
-  isFeatured   Boolean  @default(false)
-  isActive     Boolean  @default(true)
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  slug         String        @unique
+  description  String        @db.Text
+  price        Decimal       @db.Decimal(10, 2)
+  status       ProductStatus @default(STOCK)
+  expectedDate DateTime? // Fecha estimada de llegada (solo PREVENTA)
+  stockQty     Int           @default(0)
+  images       String[] // Galería (URLs de Cloudinary)
+  isFeatured   Boolean       @default(false)
+  isActive     Boolean       @default(true)
 
   categoryId String
   category   Category @relation(fields: [categoryId], references: [id])
 
+  lineId String?
+  line   Line?   @relation(fields: [lineId], references: [id])
+
   brandId String
   brand   Brand @relation(fields: [brandId], references: [id])
 
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  reviews    Review[]
   orderItems OrderItem[]
 
   @@index([categoryId])
+  @@index([lineId])
   @@index([brandId])
   @@index([slug])
   @@map("products")
 }
 
-model Address {
-  id        String   @id @default(cuid())
-  label     String
-  name      String
-  phone     String
-  address   String
-  city      String
-  state     String
-  zipCode   String
-  isDefault Boolean  @default(false)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+// ==================== RESEÑAS ====================
+
+model Review {
+  id      String   @id @default(cuid())
+  rating  Int      @default(5) // 1 a 5 estrellas
+  comment String   @db.VarChar(500)
+  images  String[] // Fotos de unboxing (Cloudinary)
 
   userId String
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  orders Order[]
+  productId String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
 
-  @@index([userId])
-  @@map("addresses")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([productId, userId]) // Una sola reseña por usuario por producto
+  @@map("reviews")
 }
 
+// ==================== ÓRDENES Y TRANSACCIONES ====================
+
 model Order {
-  id              String      @id @default(cuid())
-  orderNumber     String      @unique
-  status          OrderStatus @default(PENDING)
-  subtotal        Decimal     @db.Decimal(10, 2)
-  shipping        Decimal     @db.Decimal(10, 2)
-  total           Decimal     @db.Decimal(10, 2)
-  paymentMethod   String
-  stripeSessionId String?
-  notes           String?
-  createdAt       DateTime    @default(now())
-  updatedAt       DateTime    @updatedAt
+  id             String @id @default(cuid())
+  processCode    String @unique // Código único de trazabilidad (Ej: ORD-X8A9B)
+  idempotencyKey String @unique // Prevención de doble clic (bóveda 04.01)
 
   userId String
   user   User   @relation(fields: [userId], references: [id])
 
-  addressId String
-  address   Address @relation(fields: [addressId], references: [id])
+  totalAmount  Decimal @db.Decimal(10, 2) // Productos + envío
+  shippingCost Decimal @default(0) @db.Decimal(10, 2)
 
-  items OrderItem[]
+  shippingType    ShippingType   @default(LOCAL_DELIVERY)
+  shippingStatus  ShippingStatus @default(PREPARING)
+  receiverName    String
+  receiverPhone   String
+  deliveryAddress String? // Opcional si es PICKUP
+  trackingNumber  String? // Guía Olva/Shalom o enlace del motorizado
+
+  paymentMethod PaymentMethod
+  status        OrderStatus   @default(PENDING_PAYMENT)
+
+  mpPreferenceId String? @unique // Mercado Pago
+  mpPaymentId    String? @unique
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  items        OrderItem[]
+  paymentProof PaymentProof?
 
   @@index([userId])
-  @@index([orderNumber])
+  @@index([status])
   @@map("orders")
 }
 
 model OrderItem {
-  id       String  @id @default(cuid())
-  name     String
-  price    Decimal @db.Decimal(10, 2)
-  quantity Int
-  total    Decimal @db.Decimal(10, 2)
+  id String @id @default(cuid())
 
   orderId String
-  order   Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  order   Order  @relation(fields: [orderId], references: [id], onDelete: Cascade)
 
   productId String
   product   Product @relation(fields: [productId], references: [id])
 
+  quantity Int
+  price    Decimal @db.Decimal(10, 2) // Precio congelado al momento de la compra
+
   @@index([orderId])
   @@map("order_items")
+}
+
+// ==================== COMPROBANTES POS (Pago Manual) ====================
+
+model PaymentProof {
+  id String @id @default(cuid())
+
+  orderId String @unique
+  order   Order  @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+
+  imageUrl        String // Captura del voucher (Cloudinary)
+  operationNumber String // Número de operación ingresado por el usuario
+  status          ProofStatus @default(PENDING)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("payment_proofs")
 }

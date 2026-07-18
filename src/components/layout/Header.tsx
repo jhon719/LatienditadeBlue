@@ -1,9 +1,10 @@
 ﻿"use client"
 
 import { useSyncExternalStore } from "react"
+import Image from "next/image"
 import Link from "next/link"
 import { useSession, signOut } from "next-auth/react"
-import { Heart, LogOut, Package, Search, Settings, ShoppingCart, User } from "lucide-react"
+import { LogOut, Package, Search, Settings, ShoppingCart, User } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
@@ -23,9 +24,7 @@ const navLinks = [
   { label: "Stock", href: "/products?status=stock" },
   { label: "Preventa", href: "/products?status=preventa" },
   { label: "Online", href: "/products?status=online" },
-  { label: "Peluches", href: "/products?category=peluches" },
-  { label: "Mangas", href: "/products?category=mangas" },
-  { label: "Merch", href: "/products?category=merch" },
+  { label: "Catalogo", href: "/products" },
 ]
 
 const subscribeToClient = () => () => {}
@@ -42,8 +41,14 @@ export function Header() {
       <div className="blue-container">
         <div className="flex min-h-20 items-center gap-4 py-3">
           <Link href="/" className="flex shrink-0 items-center gap-3">
-            <div className="flex h-12 w-12 items-center justify-center rounded-3xl bg-[#4A80BE] text-white solid-shadow-yellow">
-              <span className="font-display text-3xl">B</span>
+            <div className="relative h-12 w-12 overflow-hidden rounded-3xl solid-shadow-yellow">
+              <Image
+                src="/Imagenes/LOGO BLUE.jpeg"
+                alt="La Tiendita de Blue"
+                fill
+                className="object-cover"
+                sizes="48px"
+              />
             </div>
             <div className="leading-none">
               <p className="font-display text-3xl text-[#142F5C]">La Tiendita</p>
@@ -64,21 +69,17 @@ export function Header() {
           </nav>
 
           <div className="hidden max-w-xs flex-1 md:block xl:max-w-sm">
-            <div className="relative">
+            <form action="/products" className="relative">
               <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[#4A80BE]" />
-              <Input className="h-11 rounded-full border-[#dbe3ee] pl-11 font-semibold" placeholder="Buscar anime, marca o producto" />
-            </div>
+              <Input
+                name="search"
+                className="h-11 rounded-full border-[#dbe3ee] pl-11 font-semibold"
+                placeholder="Buscar anime, marca o producto"
+              />
+            </form>
           </div>
 
           <div className="ml-auto flex items-center gap-1">
-            <Button variant="ghost" size="icon" className="rounded-full md:hidden">
-              <Search className="h-5 w-5" />
-              <span className="sr-only">Buscar</span>
-            </Button>
-            <Button variant="ghost" size="icon" className="rounded-full">
-              <Heart className="h-5 w-5" />
-              <span className="sr-only">Favoritos</span>
-            </Button>
             <Link href="/cart">
               <Button variant="ghost" size="icon" className="relative rounded-full">
                 <ShoppingCart className="h-5 w-5" />

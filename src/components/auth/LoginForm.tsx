@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import { GoogleButton } from "./GoogleButton"
 
 const loginSchema = z.object({
   email: z.string().email("Email inválido"),
@@ -20,7 +21,7 @@ const loginSchema = z.object({
 
 type LoginFormData = z.infer<typeof loginSchema>
 
-export function LoginForm() {
+export function LoginForm({ googleEnabled = false }: { googleEnabled?: boolean }) {
   const router = useRouter()
   const searchParams = useSearchParams()
   const callbackUrl = searchParams.get("callbackUrl") || "/"
@@ -45,7 +46,11 @@ export function LoginForm() {
     })
 
     if (result?.error) {
-      setError("Email o contraseña incorrectos")
+      setError(
+        result.code === "credentials"
+          ? "Email o contraseña incorrectos"
+          : "Esta cuenta está vinculada a Google. Inicia sesión con Google."
+      )
       return
     }
 
@@ -128,6 +133,16 @@ export function LoginForm() {
                 "Iniciar Sesión"
               )}
             </Button>
+
+            {googleEnabled && (
+              <>
+                <div className="relative w-full text-center text-xs text-muted-foreground">
+                  <span className="relative z-10 bg-card px-2">o</span>
+                  <div className="absolute inset-x-0 top-1/2 h-px bg-border" />
+                </div>
+                <GoogleButton callbackUrl={callbackUrl} />
+              </>
+            )}
 
             <p className="text-center text-sm text-muted-foreground">
               ¿No tienes una cuenta?{" "}

@@ -24,11 +24,19 @@ import {
   FieldGroup,
   FieldLabel,
 } from "@/components/ui/field"
+import { GoogleButton } from "./GoogleButton"
 
 const registerSchema = z.object({
-  name: z.string().min(2, "El nombre debe tener al menos 2 caracteres"),
+  username: z
+    .string()
+    .min(3, "El username debe tener al menos 3 caracteres")
+    .max(20, "Máximo 20 caracteres")
+    .regex(/^[a-z0-9._-]+$/i, "Solo letras, números, puntos y guiones"),
   email: z.string().email("Email inválido"),
-  password: z.string().min(6, "La contraseña debe tener al menos 6 caracteres"),
+  password: z
+    .string()
+    .min(8, "La contraseña debe tener al menos 8 caracteres")
+    .regex(/[0-9!@#$%^&*(),.?":{}|<>_-]/, "Incluye al menos un número o símbolo"),
   confirmPassword: z.string(),
 }).refine((data) => data.password === data.confirmPassword, {
   message: "Las contraseñas no coinciden",
@@ -37,7 +45,7 @@ const registerSchema = z.object({
 
 type RegisterFormData = z.infer<typeof registerSchema>
 
-export function RegisterForm() {
+export function RegisterForm({ googleEnabled = false }: { googleEnabled?: boolean }) {
   const router = useRouter()
   const [error, setError] = useState<string | null>(null)
 
@@ -57,7 +65,7 @@ export function RegisterForm() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          name: data.name,
+          username: data.username,
           email: data.email,
           password: data.password,
         }),
@@ -106,15 +114,18 @@ export function RegisterForm() {
           <form onSubmit={handleSubmit(onSubmit)}>
             <FieldGroup>
               <Field>
-                <FieldLabel htmlFor="name">Nombre completo</FieldLabel>
+                <FieldLabel htmlFor="username">Username</FieldLabel>
                 <Input
-                  id="name"
+                  id="username"
                   type="text"
-                  placeholder="Juan Pérez"
-                  {...register("name")}
+                  placeholder="coleccionista01"
+                  {...register("username")}
                 />
-                {errors.name && (
-                  <FieldError>{errors.name.message}</FieldError>
+                <FieldDescription>
+                  Es tu nombre público en las reseñas de la tienda.
+                </FieldDescription>
+                {errors.username && (
+                  <FieldError>{errors.username.message}</FieldError>
                 )}
               </Field>
               <Field>
@@ -157,7 +168,7 @@ export function RegisterForm() {
                   </Field>
                 </Field>
                 <FieldDescription>
-                  Debe tener al menos 6 caracteres.
+                  Mínimo 8 caracteres con al menos un número o símbolo.
                 </FieldDescription>
               </Field>
               <Field>
@@ -171,6 +182,7 @@ export function RegisterForm() {
                     "Crear Cuenta"
                   )}
                 </Button>
+                {googleEnabled && <GoogleButton />}
                 <FieldDescription className="text-center">
                   ¿Ya tienes una cuenta?{" "}
                   <Link href="/login" className="text-primary hover:underline">

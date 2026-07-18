@@ -1,27 +1,31 @@
 import { create } from "zustand"
-import type { Product, Category, Brand, FilterState } from "@/types"
+import type { Product, Category, Line, Brand, FilterState } from "@/types"
 
 interface ProductsState {
   products: Product[]
   categories: Category[]
+  lines: Line[]
   brands: Brand[]
   featuredProducts: Product[]
   filters: FilterState
+  search: string
   loading: boolean
   error: string | null
 
   // Actions
   fetchProducts: (filters?: Partial<FilterState>) => Promise<void>
   fetchFeaturedProducts: () => Promise<void>
-  fetchCategories: () => Promise<void>
-  fetchBrands: () => Promise<void>
+  fetchCatalogData: () => Promise<void>
   setFilters: (filters: Partial<FilterState>) => void
+  setSearch: (search: string) => void
   resetFilters: () => void
 }
 
 const defaultFilters: FilterState = {
   categories: [],
+  lines: [],
   brands: [],
+  status: [],
   priceRange: [0, 10000],
   sortBy: "newest",
 }
@@ -29,9 +33,11 @@ const defaultFilters: FilterState = {
 export const useProductsStore = create<ProductsState>((set, get) => ({
   products: [],
   categories: [],
+  lines: [],
   brands: [],
   featuredProducts: [],
   filters: defaultFilters,
+  search: "",
   loading: false,
   error: null,
 
@@ -44,8 +50,14 @@ export const useProductsStore = create<ProductsState>((set, get) => ({
       if (filters.categories.length === 1) {
         params.set("category", filters.categories[0])
       }
+      if (filters.lines.length === 1) {
+        params.set("line", filters.lines[0])
+      }
       if (filters.brands.length === 1) {
         params.set("brand", filters.brands[0])
+      }
+      if (filters.status.length === 1) {
+        params.set("status", filters.status[0])
       }
       if (filters.priceRange[0] > 0) {
         params.set("minPrice", filters.priceRange[0].toString())
@@ -56,9 +68,13 @@ export const useProductsStore = create<ProductsState>((set, get) => ({
       if (filters.sortBy) {
         params.set("sortBy", filters.sortBy)
       }
+      const search = get().search
+      if (search) {
+        params.set("search", search)
+      }
 
       const response = await fetch(`/api/products?${params.toString()}`)
-      if (!response.ok) throw new Error("Failed to fetch products")
+      if (!response.ok) throw new Error("No se pudieron cargar los productos")
 
       const data = await response.json()
       set({ products: data.products, loading: false })
@@ -70,7 +86,7 @@ export const useProductsStore = create<ProductsState>((set, get) => ({
   fetchFeaturedProducts: async () => {
     try {
       const response = await fetch("/api/products?featured=true&limit=8")
-      if (!response.ok) throw new Error("Failed to fetch featured products")
+      if (!response.ok) throw new Error("No se pudieron cargar los destacados")
 
       const data = await response.json()
       set({ featuredProducts: data.products })
@@ -79,27 +95,21 @@ export const useProductsStore = create<ProductsState>((set, get) => ({
     }
   },
 
-  fetchCategories: async () => {
+  fetchCatalogData: async () => {
     try {
-      const response = await fetch("/api/categories")
-      if (!response.ok) throw new Error("Failed to fetch categories")
-
-      const categories = await response.json()
-      set({ categories })
+      const [catRes, lineRes, brandRes] = await Promise.all([
+        fetch("/api/categories"),
+        fetch("/api/lines"),
+        fetch("/api/brands"),
+      ])
+      const [categories, lines, brands] = await Promise.all([
+        catRes.ok ? catRes.json() : [],
+        lineRes.ok ? lineRes.json() : [],
+        brandRes.ok ? brandRes.json() : [],
+      ])
+      set({ categories, lines, brands })
     } catch (error) {
-      console.error("Error fetching categories:", error)
-    }
-  },
-
-  fetchBrands: async () => {
-    try {
-      const response = await fetch("/api/brands")
-      if (!response.ok) throw new Error("Failed to fetch brands")
-
-      const brands = await response.json()
-      set({ brands })
-    } catch (error) {
-      console.error("Error fetching brands:", error)
+      console.error("Error fetching catalog data:", error)
     }
   },
 
@@ -107,6 +117,10 @@ export const useProductsStore = create<ProductsState>((set, get) => ({
     set((state) => ({
       filters: { ...state.filters, ...newFilters },
     }))
+  },
+
+  setSearch: (search) => {
+    set({ search })
   },
 
   resetFilters: () => {

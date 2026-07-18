@@ -3,7 +3,7 @@
 import { useState } from "react"
 import Image from "next/image"
 import Link from "next/link"
-import { Heart, ShoppingCart, Star, Check } from "lucide-react"
+import { ShoppingCart, Star, Check, CalendarClock } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent } from "@/components/ui/card"
@@ -14,18 +14,34 @@ interface ProductCardProps {
   product: Product
 }
 
-const PLACEHOLDER_IMAGE = "https://images.unsplash.com/photo-1629429408209-1f912961dbd8?w=400&h=400&fit=crop"
+const PLACEHOLDER_IMAGE = "/Imagenes/Mascota BLUE.png"
+
+// Badges de estado con colores pastel de la marca (bóveda 01.04 / 02.01)
+function StatusBadge({ product }: { product: Product }) {
+  switch (product.status) {
+    case "PREVENTA":
+      return (
+        <Badge className="border border-dashed border-[#F5B400] bg-[#FFF5D1] text-[#142F5C]">
+          Preventa
+        </Badge>
+      )
+    case "STOCK":
+      return <Badge className="bg-[#E2FBE9] text-[#1E7E34]">En Stock</Badge>
+    case "ONLINE":
+      return <Badge className="bg-[#E1F0FF] text-[#142F5C]">Online</Badge>
+    case "AGOTADO":
+      return <Badge className="bg-[#FFEAEA] text-red-600">Agotado</Badge>
+  }
+}
 
 export function ProductCard({ product }: ProductCardProps) {
   const addItem = useCartStore((state) => state.addItem)
   const [added, setAdded] = useState(false)
 
-  const hasDiscount = product.originalPrice && product.originalPrice > product.price
-  const discountPercent = hasDiscount
-    ? Math.round(((product.originalPrice! - product.price) / product.originalPrice!) * 100)
-    : 0
-
   const productImage = product.images?.[0] || PLACEHOLDER_IMAGE
+  const canBuy =
+    product.status === "PREVENTA" ||
+    (product.status !== "AGOTADO" && product.stockQty > 0)
 
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault()
@@ -38,27 +54,10 @@ export function ProductCard({ product }: ProductCardProps) {
   return (
     <Card className="group overflow-hidden transition-all hover:shadow-lg">
       <div className="relative aspect-square overflow-hidden bg-muted">
-        {/* Badges */}
         <div className="absolute left-2 top-2 z-10 flex flex-col gap-1">
-          {product.isNew && (
-            <Badge className="bg-primary text-primary-foreground">Nuevo</Badge>
-          )}
-          {hasDiscount && (
-            <Badge variant="destructive">-{discountPercent}%</Badge>
-          )}
+          <StatusBadge product={product} />
         </div>
 
-        {/* Favorite Button */}
-        <Button
-          variant="ghost"
-          size="icon"
-          className="absolute right-2 top-2 z-10 h-8 w-8 rounded-full bg-background/80 opacity-0 transition-opacity group-hover:opacity-100"
-        >
-          <Heart className="h-4 w-4" />
-          <span className="sr-only">Agregar a favoritos</span>
-        </Button>
-
-        {/* Image */}
         <Link href={`/products/${product.slug}`}>
           <div className="relative h-full w-full">
             <Image
@@ -71,13 +70,12 @@ export function ProductCard({ product }: ProductCardProps) {
           </div>
         </Link>
 
-        {/* Quick Add Button */}
-        <div className="absolute bottom-2 left-2 right-2 z-20 pointer-events-none translate-y-full opacity-0 transition-all group-hover:pointer-events-auto group-hover:translate-y-0 group-hover:opacity-100">
+        <div className="pointer-events-none absolute bottom-2 left-2 right-2 z-20 translate-y-full opacity-0 transition-all group-hover:pointer-events-auto group-hover:translate-y-0 group-hover:opacity-100">
           <Button
             className="w-full"
             size="sm"
             onClick={handleAddToCart}
-            disabled={product.stock === 0}
+            disabled={!canBuy}
             variant={added ? "secondary" : "default"}
           >
             {added ? (
@@ -96,39 +94,46 @@ export function ProductCard({ product }: ProductCardProps) {
       </div>
 
       <CardContent className="p-3 sm:p-4">
-        {/* Brand */}
-        <p className="text-xs text-muted-foreground">{product.brand}</p>
+        <p className="text-xs text-muted-foreground">
+          {product.brand.name}
+          {product.line ? ` · ${product.line.name}` : ""}
+        </p>
 
-        {/* Name */}
         <Link href={`/products/${product.slug}`}>
-          <h3 className="mt-1 font-medium leading-tight line-clamp-2 hover:text-primary transition-colors">
+          <h3 className="mt-1 font-medium leading-tight line-clamp-2 transition-colors hover:text-primary">
             {product.name}
           </h3>
         </Link>
 
-        {/* Rating */}
-        <div className="mt-2 flex items-center gap-1">
-          <Star className="h-3.5 w-3.5 fill-yellow-400 text-yellow-400" />
-          <span className="text-sm font-medium">{product.rating}</span>
-        </div>
+        {product.reviewCount > 0 && (
+          <div className="mt-2 flex items-center gap-1">
+            <Star className="h-3.5 w-3.5 fill-yellow-400 text-yellow-400" />
+            <span className="text-sm font-medium">{product.rating}</span>
+            <span className="text-xs text-muted-foreground">
+              ({product.reviewCount})
+            </span>
+          </div>
+        )}
 
-        {/* Price */}
         <div className="mt-2 flex items-baseline gap-2">
           <span className="text-lg font-bold text-primary">
             S/ {product.price.toFixed(2)}
           </span>
-          {hasDiscount && (
-            <span className="text-sm text-muted-foreground line-through">
-              S/ {product.originalPrice!.toFixed(2)}
-            </span>
-          )}
         </div>
 
-        {/* Stock */}
         <p className="mt-1 text-xs text-muted-foreground">
-          {product.stock > 0 ? (
+          {product.status === "PREVENTA" && product.expectedDate ? (
+            <span className="flex items-center gap-1 text-[#B08900]">
+              <CalendarClock className="h-3 w-3" />
+              Llega{" "}
+              {new Date(product.expectedDate).toLocaleDateString("es-PE", {
+                month: "long",
+                year: "numeric",
+              })}
+            </span>
+          ) : product.stockQty > 0 ? (
             <span className="text-green-600 dark:text-green-400">
-              {product.stock} disponibles
+              {product.stockQty} disponibles
             </span>
           ) : (
             <span className="text-destructive">Agotado</span>

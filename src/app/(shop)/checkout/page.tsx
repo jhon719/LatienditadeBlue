@@ -1,47 +1,196 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import Link from "next/link"
-import { ChevronLeft, Check } from "lucide-react"
+import { useRouter } from "next/navigation"
+import { useForm } from "react-hook-form"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { z } from "zod"
+import {
+  ChevronLeft,
+  Store,
+  Truck,
+  MapPin,
+  Loader2,
+  CreditCard,
+  QrCode,
+  ShoppingBag,
+} from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { Separator } from "@/components/ui/separator"
-import { ShippingForm } from "@/components/checkout/ShippingForm"
-import { PaymentForm } from "@/components/checkout/PaymentForm"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { OrderSummary } from "@/components/checkout/OrderSummary"
-import { products } from "@/data/mock-products"
-import { CartItem } from "@/types"
+import { ManualPaymentSection } from "@/components/checkout/ManualPaymentSection"
+import { useCartStore } from "@/stores/cart-store"
 
-// Mock cart data
-const cartItems: CartItem[] = [
-  { product: products[0], quantity: 1 },
-  { product: products[1], quantity: 2 },
-  { product: products[2], quantity: 1 },
-]
+// Modalidades de envío (bóveda 03.03)
+const SHIPPING_OPTIONS = [
+  {
+    value: "PICKUP",
+    label: "Recojo en Tienda",
+    description: "Gratis · Coordinamos punto y horario por WhatsApp",
+    cost: 0,
+    icon: Store,
+  },
+  {
+    value: "LOCAL_DELIVERY",
+    label: "Motorizado (Lima)",
+    description: "S/ 10.00 · Entrega express en Lima Metropolitana",
+    cost: 10,
+    icon: Truck,
+  },
+  {
+    value: "NATIONAL_COURIER",
+    label: "Envío a Provincia",
+    description: "Olva / Shalom · Pago del envío en destino",
+    cost: 0,
+    icon: MapPin,
+  },
+] as const
 
-const steps = [
-  { id: 1, name: "Envio" },
-  { id: 2, name: "Pago" },
-  { id: 3, name: "Confirmar" },
-]
+const checkoutSchema = z
+  .object({
+    receiverName: z.string().min(3, "Ingresa el nombre de quien recibe"),
+    receiverPhone: z
+      .string()
+      .regex(/^\d{9}$/, "El teléfono debe tener 9 dígitos"),
+    shippingType: z.enum(["PICKUP", "LOCAL_DELIVERY", "NATIONAL_COURIER"]),
+    deliveryAddress: z.string().optional(),
+    paymentMethod: z.enum(["MANUAL_TRANSFER", "MERCADO_PAGO"]),
+  })
+  .refine(
+    (data) => data.shippingType === "PICKUP" || !!data.deliveryAddress?.trim(),
+    {
+      message: "Indica la dirección de entrega o la agencia destino",
+      path: ["deliveryAddress"],
+    }
+  )
+
+type CheckoutFormData = z.infer<typeof checkoutSchema>
 
 export default function CheckoutPage() {
-  const [currentStep, setCurrentStep] = useState(1)
+  const router = useRouter()
+  const { items, clearCart } = useCartStore()
 
-  const handleNext = () => {
-    if (currentStep < 3) {
-      setCurrentStep(currentStep + 1)
+  // Idempotency key generada al montar el checkout (bóveda 04.01)
+  const [idempotencyKey] = useState(() => crypto.randomUUID())
+  const [mpEnabled, setMpEnabled] = useState(false)
+  const [voucherUrl, setVoucherUrl] = useState<string | null>(null)
+  const [operationNumber, setOperationNumber] = useState("")
+  const [submitError, setSubmitError] = useState<string | null>(null)
+
+  const {
+    register,
+    handleSubmit,
+    watch,
+    setValue,
+    formState: { errors, isSubmitting },
+  } = useForm<CheckoutFormData>({
+    resolver: zodResolver(checkoutSchema),
+    defaultValues: {
+      shippingType: "LOCAL_DELIVERY",
+      paymentMethod: "MANUAL_TRANSFER",
+    },
+  })
+
+  const shippingType = watch("shippingType")
+  const paymentMethod = watch("paymentMethod")
+  const shippingCost =
+    SHIPPING_OPTIONS.find((o) => o.value === shippingType)?.cost ?? 0
+
+  useEffect(() => {
+    fetch("/api/payments/mercadopago")
+      .then((res) => (res.ok ? res.json() : { enabled: false }))
+      .then((data) => setMpEnabled(!!data.enabled))
+      .catch(() => setMpEnabled(false))
+  }, [])
+
+  const onSubmit = async (data: CheckoutFormData) => {
+    setSubmitError(null)
+
+    if (data.paymentMethod === "MANUAL_TRANSFER") {
+      if (!voucherUrl) {
+        setSubmitError("Adjunta la captura de tu comprobante de pago")
+        return
+      }
+      if (operationNumber.trim().length < 4) {
+        setSubmitError("Ingresa el número de operación de tu pago")
+        return
+      }
     }
+
+    const res = await fetch("/api/orders", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        idempotencyKey,
+        items: items.map((item) => ({
+          productId: item.product.id,
+          quantity: item.quantity,
+        })),
+        shippingType: data.shippingType,
+        receiverName: data.receiverName,
+        receiverPhone: data.receiverPhone,
+        deliveryAddress: data.deliveryAddress,
+        paymentMethod: data.paymentMethod,
+        ...(data.paymentMethod === "MANUAL_TRANSFER"
+          ? { proof: { imageUrl: voucherUrl, operationNumber } }
+          : {}),
+      }),
+    })
+
+    const result = await res.json().catch(() => null)
+
+    if (!res.ok) {
+      setSubmitError(result?.error ?? "No se pudo procesar el pedido")
+      return
+    }
+
+    if (data.paymentMethod === "MERCADO_PAGO") {
+      // Redirigir al Checkout Pro de Mercado Pago
+      const mpRes = await fetch("/api/payments/mercadopago", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ orderId: result.id }),
+      })
+      const mpResult = await mpRes.json().catch(() => null)
+      if (!mpRes.ok || !mpResult?.initPoint) {
+        setSubmitError(mpResult?.error ?? "No se pudo iniciar el pago con Mercado Pago")
+        return
+      }
+      clearCart()
+      window.location.href = mpResult.initPoint
+      return
+    }
+
+    clearCart()
+    router.push(
+      `/checkout/success?code=${result.processCode}&type=${result.shippingType}`
+    )
   }
 
-  const handleBack = () => {
-    if (currentStep > 1) {
-      setCurrentStep(currentStep - 1)
-    }
+  if (items.length === 0) {
+    return (
+      <div className="container mx-auto px-4 py-16 text-center">
+        <div className="mx-auto max-w-md">
+          <div className="mx-auto mb-6 flex h-24 w-24 items-center justify-center rounded-full bg-muted">
+            <ShoppingBag className="h-12 w-12 text-muted-foreground" />
+          </div>
+          <h1 className="text-2xl font-bold">No hay nada que pagar</h1>
+          <p className="mt-2 text-muted-foreground">
+            Tu carrito está vacío. Agrega algunas figuras primero.
+          </p>
+          <Button asChild className="mt-6">
+            <Link href="/products">Explorar Productos</Link>
+          </Button>
+        </div>
+      </div>
+    )
   }
 
   return (
     <div className="container mx-auto px-4 py-6">
-      {/* Header */}
       <div className="mb-8">
         <Button variant="ghost" asChild className="-ml-2 mb-4">
           <Link href="/cart">
@@ -49,111 +198,205 @@ export default function CheckoutPage() {
             Volver al Carrito
           </Link>
         </Button>
-        <h1 className="text-2xl font-bold">Checkout</h1>
+        <h1 className="font-display text-4xl uppercase tracking-wide">Checkout</h1>
       </div>
 
-      {/* Steps */}
-      <div className="mb-8">
-        <div className="flex items-center justify-center">
-          {steps.map((step, index) => (
-            <div key={step.id} className="flex items-center">
-              <div className="flex items-center">
-                <div
-                  className={`flex h-8 w-8 items-center justify-center rounded-full border-2 text-sm font-medium transition-colors ${
-                    currentStep > step.id
-                      ? "border-primary bg-primary text-primary-foreground"
-                      : currentStep === step.id
-                      ? "border-primary text-primary"
-                      : "border-muted-foreground/30 text-muted-foreground"
-                  }`}
-                >
-                  {currentStep > step.id ? (
-                    <Check className="h-4 w-4" />
-                  ) : (
-                    step.id
+      <form onSubmit={handleSubmit(onSubmit)}>
+        <div className="grid gap-8 lg:grid-cols-3">
+          <div className="space-y-6 lg:col-span-2">
+            {/* Paso 1: Datos del receptor */}
+            <section className="rounded-lg border bg-card p-6">
+              <h2 className="mb-4 text-lg font-semibold">1. Datos de entrega</h2>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="space-y-2">
+                  <Label htmlFor="receiverName">Nombre de quien recibe</Label>
+                  <Input
+                    id="receiverName"
+                    placeholder="Nombre y apellido"
+                    {...register("receiverName")}
+                  />
+                  {errors.receiverName && (
+                    <p className="text-xs text-destructive">
+                      {errors.receiverName.message}
+                    </p>
                   )}
                 </div>
-                <span
-                  className={`ml-2 hidden text-sm font-medium sm:block ${
-                    currentStep >= step.id ? "text-foreground" : "text-muted-foreground"
+                <div className="space-y-2">
+                  <Label htmlFor="receiverPhone">Teléfono (WhatsApp)</Label>
+                  <Input
+                    id="receiverPhone"
+                    placeholder="999888777"
+                    maxLength={9}
+                    {...register("receiverPhone")}
+                  />
+                  {errors.receiverPhone && (
+                    <p className="text-xs text-destructive">
+                      {errors.receiverPhone.message}
+                    </p>
+                  )}
+                </div>
+              </div>
+            </section>
+
+            {/* Paso 2: Tipo de envío (bóveda 03.03) */}
+            <section className="rounded-lg border bg-card p-6">
+              <h2 className="mb-4 text-lg font-semibold">2. Modalidad de envío</h2>
+              <RadioGroup
+                value={shippingType}
+                onValueChange={(value) =>
+                  setValue("shippingType", value as CheckoutFormData["shippingType"])
+                }
+                className="grid gap-3"
+              >
+                {SHIPPING_OPTIONS.map((option) => (
+                  <Label
+                    key={option.value}
+                    htmlFor={`ship-${option.value}`}
+                    className={`flex cursor-pointer items-center gap-4 rounded-2xl border-2 p-4 transition-colors ${
+                      shippingType === option.value
+                        ? "border-primary bg-[#E1F0FF]/40 dark:bg-primary/10"
+                        : "border-border hover:border-primary/40"
+                    }`}
+                  >
+                    <RadioGroupItem value={option.value} id={`ship-${option.value}`} />
+                    <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-card text-primary shadow-sm">
+                      <option.icon size={20} />
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-sm font-bold">{option.label}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {option.description}
+                      </p>
+                    </div>
+                  </Label>
+                ))}
+              </RadioGroup>
+
+              {shippingType !== "PICKUP" && (
+                <div className="mt-4 space-y-2">
+                  <Label htmlFor="deliveryAddress">
+                    {shippingType === "NATIONAL_COURIER"
+                      ? "Agencia destino y ciudad (Olva/Shalom)"
+                      : "Dirección de entrega"}
+                  </Label>
+                  <Input
+                    id="deliveryAddress"
+                    placeholder={
+                      shippingType === "NATIONAL_COURIER"
+                        ? "Ej. Shalom Av. Ejército 123, Arequipa"
+                        : "Av. Larco 1234, Miraflores, Lima"
+                    }
+                    {...register("deliveryAddress")}
+                  />
+                  {errors.deliveryAddress && (
+                    <p className="text-xs text-destructive">
+                      {errors.deliveryAddress.message}
+                    </p>
+                  )}
+                </div>
+              )}
+            </section>
+
+            {/* Paso 3: Método de pago dual (bóveda 03.01 / 03.02) */}
+            <section className="rounded-lg border bg-card p-6">
+              <h2 className="mb-4 text-lg font-semibold">3. Método de pago</h2>
+              <RadioGroup
+                value={paymentMethod}
+                onValueChange={(value) =>
+                  setValue("paymentMethod", value as CheckoutFormData["paymentMethod"])
+                }
+                className="grid gap-3 sm:grid-cols-2"
+              >
+                <Label
+                  htmlFor="pay-manual"
+                  className={`flex cursor-pointer items-center gap-3 rounded-2xl border-2 p-4 transition-colors ${
+                    paymentMethod === "MANUAL_TRANSFER"
+                      ? "border-primary bg-[#E1F0FF]/40 dark:bg-primary/10"
+                      : "border-border hover:border-primary/40"
                   }`}
                 >
-                  {step.name}
-                </span>
-              </div>
-              {index < steps.length - 1 && (
-                <div
-                  className={`mx-4 h-0.5 w-12 sm:w-24 ${
-                    currentStep > step.id ? "bg-primary" : "bg-muted"
-                  }`}
-                />
+                  <RadioGroupItem value="MANUAL_TRANSFER" id="pay-manual" />
+                  <QrCode size={20} className="text-primary" />
+                  <div>
+                    <p className="text-sm font-bold">Yape / Plin / Transferencia</p>
+                    <p className="text-xs text-muted-foreground">
+                      Sube tu voucher y lo validamos
+                    </p>
+                  </div>
+                </Label>
+
+                {mpEnabled && (
+                  <Label
+                    htmlFor="pay-mp"
+                    className={`flex cursor-pointer items-center gap-3 rounded-2xl border-2 p-4 transition-colors ${
+                      paymentMethod === "MERCADO_PAGO"
+                        ? "border-primary bg-[#E1F0FF]/40 dark:bg-primary/10"
+                        : "border-border hover:border-primary/40"
+                    }`}
+                  >
+                    <RadioGroupItem value="MERCADO_PAGO" id="pay-mp" />
+                    <CreditCard size={20} className="text-primary" />
+                    <div>
+                      <p className="text-sm font-bold">Mercado Pago</p>
+                      <p className="text-xs text-muted-foreground">
+                        Tarjeta o billetera, aprobación instantánea
+                      </p>
+                    </div>
+                  </Label>
+                )}
+              </RadioGroup>
+
+              {paymentMethod === "MANUAL_TRANSFER" && (
+                <div className="mt-4">
+                  <ManualPaymentSection
+                    voucherUrl={voucherUrl}
+                    onVoucherChange={setVoucherUrl}
+                    operationNumber={operationNumber}
+                    onOperationNumberChange={setOperationNumber}
+                  />
+                </div>
               )}
-            </div>
-          ))}
-        </div>
-      </div>
+            </section>
+          </div>
 
-      <div className="grid gap-8 lg:grid-cols-3">
-        {/* Form */}
-        <div className="lg:col-span-2">
-          <div className="rounded-lg border bg-card p-6">
-            {currentStep === 1 && <ShippingForm />}
-            {currentStep === 2 && <PaymentForm />}
-            {currentStep === 3 && (
-              <div className="space-y-4">
-                <h2 className="text-lg font-semibold">Confirmar Pedido</h2>
-                <p className="text-sm text-muted-foreground">
-                  Por favor revisa los detalles de tu pedido antes de confirmar.
-                </p>
+          {/* Resumen */}
+          <div className="lg:col-span-1">
+            <div className="sticky top-24 space-y-4">
+              <OrderSummary items={items} shippingCost={shippingCost} />
 
-                <div className="rounded-lg bg-muted/50 p-4">
-                  <h3 className="font-medium">Direccion de Envio</h3>
-                  <p className="mt-1 text-sm text-muted-foreground">
-                    Juan Perez<br />
-                    Av. Principal 123<br />
-                    Lima, Lima 15001<br />
-                    Peru
-                  </p>
+              {submitError && (
+                <div className="rounded-md bg-destructive/15 p-3 text-sm text-destructive">
+                  {submitError}
                 </div>
+              )}
 
-                <div className="rounded-lg bg-muted/50 p-4">
-                  <h3 className="font-medium">Metodo de Pago</h3>
-                  <p className="mt-1 text-sm text-muted-foreground">
-                    Tarjeta terminada en •••• 3456
-                  </p>
-                </div>
-              </div>
-            )}
-
-            <Separator className="my-6" />
-
-            {/* Navigation */}
-            <div className="flex justify-between">
+              {/* Botón con bloqueo anti doble clic (bóveda 04.01) */}
               <Button
-                variant="outline"
-                onClick={handleBack}
-                disabled={currentStep === 1}
+                type="submit"
+                size="lg"
+                className="w-full"
+                disabled={isSubmitting}
               >
-                Atras
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Procesando...
+                  </>
+                ) : paymentMethod === "MERCADO_PAGO" ? (
+                  "Pagar con Mercado Pago"
+                ) : (
+                  "Confirmar Pedido"
+                )}
               </Button>
-              {currentStep < 3 ? (
-                <Button onClick={handleNext}>Continuar</Button>
-              ) : (
-                <Button className="bg-green-600 hover:bg-green-700">
-                  Confirmar y Pagar
-                </Button>
-              )}
+
+              <p className="text-center text-xs text-muted-foreground">
+                Al confirmar aceptas los términos de preventa y venta de La
+                Tiendita de Blue.
+              </p>
             </div>
           </div>
         </div>
-
-        {/* Order Summary */}
-        <div className="lg:col-span-1">
-          <div className="sticky top-24">
-            <OrderSummary items={cartItems} />
-          </div>
-        </div>
-      </div>
+      </form>
     </div>
   )
 }

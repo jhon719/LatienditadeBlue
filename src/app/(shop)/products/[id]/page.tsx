@@ -15,6 +15,7 @@ import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
 import { ProductGallery } from "@/components/products/ProductGallery"
 import { ProductDetail } from "@/components/products/ProductDetail"
+import { ProductReviews } from "@/components/products/ProductReviews"
 import { ProductCard } from "@/components/products/ProductCard"
 import { Product } from "@/types"
 
@@ -49,7 +50,7 @@ export default function ProductPage({ params }: ProductPageProps) {
 
         // Fetch related products
         const relatedResponse = await fetch(
-          `/api/products?category=${data.category}&limit=4`
+          `/api/products?category=${data.category.slug}&limit=5`
         )
         if (relatedResponse.ok) {
           const relatedData = await relatedResponse.json()
@@ -125,8 +126,8 @@ export default function ProductPage({ params }: ProductPageProps) {
           </BreadcrumbItem>
           <BreadcrumbSeparator />
           <BreadcrumbItem>
-            <BreadcrumbLink href={`/products?category=${product.category}`}>
-              {product.category.charAt(0).toUpperCase() + product.category.slice(1)}
+            <BreadcrumbLink href={`/products?category=${product.category.slug}`}>
+              {product.category.name}
             </BreadcrumbLink>
           </BreadcrumbItem>
           <BreadcrumbSeparator />
@@ -143,6 +144,9 @@ export default function ProductPage({ params }: ProductPageProps) {
         <ProductGallery images={product.images} productName={product.name} />
         <ProductDetail product={product} />
       </div>
+
+      {/* Reseñas vinculadas a usuarios (bóveda 02.04) */}
+      <ProductReviews productId={product.id} />
 
       {/* Related Products */}
       {relatedProducts.length > 0 && (

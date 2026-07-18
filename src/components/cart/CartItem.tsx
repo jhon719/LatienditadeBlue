@@ -32,13 +32,18 @@ export function CartItem({ item, onUpdateQuantity, onRemove }: CartItemProps) {
       <div className="flex flex-1 flex-col">
         <div className="flex justify-between">
           <div>
-            <p className="text-xs text-muted-foreground">{product.brand}</p>
+            <p className="text-xs text-muted-foreground">{product.brand.name}</p>
             <Link
-              href={`/products/${product.id}`}
+              href={`/products/${product.slug}`}
               className="font-medium hover:text-primary transition-colors line-clamp-2"
             >
               {product.name}
             </Link>
+            {product.status === "PREVENTA" && (
+              <span className="mt-1 inline-block rounded-full bg-[#FFF5D1] px-2 py-0.5 text-[10px] font-bold text-[#142F5C]">
+                Preventa
+              </span>
+            )}
           </div>
           <Button
             variant="ghost"
@@ -68,7 +73,11 @@ export function CartItem({ item, onUpdateQuantity, onRemove }: CartItemProps) {
               size="icon"
               className="h-8 w-8 rounded-l-none"
               onClick={() => onUpdateQuantity(product.id, quantity + 1)}
-              disabled={quantity >= product.stock}
+              disabled={
+                product.status === "PREVENTA"
+                  ? quantity >= 5
+                  : quantity >= product.stockQty
+              }
             >
               <Plus className="h-3 w-3" />
             </Button>

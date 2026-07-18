@@ -16,6 +16,16 @@ export default auth((req) => {
   const { nextUrl } = req
   const isLoggedIn = !!req.auth
   const isAdmin = req.auth?.user?.role === "ADMIN"
+  const mustChangePassword = req.auth?.user?.mustChangePassword === true
+
+  // Cambio forzado de contraseña (bóveda 02.03.01): bloquear navegación
+  // hasta definir una nueva clave, excepto la propia página de reset
+  if (isLoggedIn && mustChangePassword && nextUrl.pathname !== "/forced-reset") {
+    return NextResponse.redirect(new URL("/forced-reset", nextUrl))
+  }
+  if (isLoggedIn && !mustChangePassword && nextUrl.pathname === "/forced-reset") {
+    return NextResponse.redirect(new URL("/", nextUrl))
+  }
 
   // Check if the current path matches any protected route
   const isProtectedRoute = protectedRoutes.some((route) =>

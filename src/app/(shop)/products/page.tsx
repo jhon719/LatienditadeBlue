@@ -20,34 +20,39 @@ import { FilterState } from "@/types"
 
 function ProductsContent() {
   const searchParams = useSearchParams()
-  const { products, loading, filters, setFilters, fetchProducts, fetchCategories, fetchBrands } = useProductsStore()
+  const { products, loading, filters, setFilters, setSearch, search, fetchProducts, fetchCatalogData } = useProductsStore()
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid")
 
-  // Initialize filters from URL params
+  // Inicializar filtros desde la URL (?category=, ?line=, ?brand=, ?status=)
   useEffect(() => {
     const category = searchParams.get("category")
-    const featured = searchParams.get("featured")
+    const line = searchParams.get("line")
+    const brand = searchParams.get("brand")
+    const status = searchParams.get("status")
 
     const initialFilters: Partial<FilterState> = {}
-    if (category) {
-      initialFilters.categories = [category]
-    }
-    if (featured === "true") {
-      // This will be handled in the API call
+    if (category) initialFilters.categories = [category]
+    if (line) initialFilters.lines = [line]
+    if (brand) initialFilters.brands = [brand]
+    if (status) {
+      const normalized = status.toUpperCase()
+      if (["STOCK", "PREVENTA", "ONLINE", "AGOTADO"].includes(normalized)) {
+        initialFilters.status = [normalized as FilterState["status"][number]]
+      }
     }
 
     if (Object.keys(initialFilters).length > 0) {
       setFilters(initialFilters)
     }
+    setSearch(searchParams.get("search") ?? "")
 
-    fetchCategories()
-    fetchBrands()
-  }, [searchParams, setFilters, fetchCategories, fetchBrands])
+    fetchCatalogData()
+  }, [searchParams, setFilters, setSearch, fetchCatalogData])
 
   // Fetch products when filters change
   useEffect(() => {
     fetchProducts()
-  }, [filters, fetchProducts])
+  }, [filters, search, fetchProducts])
 
   const handleFiltersChange = useCallback((newFilters: FilterState) => {
     setFilters(newFilters)
@@ -56,6 +61,8 @@ function ProductsContent() {
   const activeFilterCount =
     filters.brands.length +
     filters.categories.length +
+    filters.lines.length +
+    filters.status.length +
     (filters.priceRange[0] > 0 || filters.priceRange[1] < 10000 ? 1 : 0)
 
   return (

@@ -2,28 +2,41 @@
 
 import { X } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { BrandFilter } from "./BrandFilter"
+import { FilterSection } from "./FilterSection"
 import { PriceFilter } from "./PriceFilter"
-import { CategoryFilter } from "./CategoryFilter"
-import { FilterState } from "@/types"
+import { useProductsStore } from "@/stores/products-store"
+import { FilterState, ProductStatus } from "@/types"
 
 interface FilterSidebarProps {
   filters: FilterState
   onFiltersChange: (filters: FilterState) => void
 }
 
+const STATUS_OPTIONS = [
+  { id: "stock", label: "En Stock", value: "STOCK" },
+  { id: "preventa", label: "Preventa", value: "PREVENTA" },
+  { id: "online", label: "Online", value: "ONLINE" },
+  { id: "agotado", label: "Agotado", value: "AGOTADO" },
+]
+
 export function FilterSidebar({ filters, onFiltersChange }: FilterSidebarProps) {
+  const { categories, lines, brands } = useProductsStore()
+
   const hasActiveFilters =
     filters.brands.length > 0 ||
     filters.categories.length > 0 ||
+    filters.lines.length > 0 ||
+    filters.status.length > 0 ||
     filters.priceRange[0] > 0 ||
-    filters.priceRange[1] < 5000
+    filters.priceRange[1] < 10000
 
   const handleClearFilters = () => {
     onFiltersChange({
       brands: [],
       categories: [],
-      priceRange: [0, 5000],
+      lines: [],
+      status: [],
+      priceRange: [0, 10000],
       sortBy: filters.sortBy,
     })
   }
@@ -45,10 +58,50 @@ export function FilterSidebar({ filters, onFiltersChange }: FilterSidebarProps) 
         )}
       </div>
 
-      <BrandFilter
-        selectedBrands={filters.brands}
-        onBrandsChange={(brands) =>
-          onFiltersChange({ ...filters, brands })
+      <FilterSection
+        title="Anime / Serie"
+        options={categories.map((c) => ({
+          id: c.id,
+          label: c.name,
+          value: c.slug,
+          count: c.productCount,
+        }))}
+        selected={filters.categories}
+        onChange={(categories) => onFiltersChange({ ...filters, categories })}
+      />
+
+      <FilterSection
+        title="Línea de figura"
+        options={lines.map((l) => ({
+          id: l.id,
+          label: l.name,
+          value: l.slug,
+          count: l.productCount,
+        }))}
+        selected={filters.lines}
+        onChange={(lines) => onFiltersChange({ ...filters, lines })}
+        defaultOpen={false}
+      />
+
+      <FilterSection
+        title="Marca"
+        options={brands.map((b) => ({
+          id: b.id,
+          label: b.name,
+          value: b.slug,
+          count: b.productCount,
+        }))}
+        selected={filters.brands}
+        onChange={(brands) => onFiltersChange({ ...filters, brands })}
+        defaultOpen={false}
+      />
+
+      <FilterSection
+        title="Estado"
+        options={STATUS_OPTIONS}
+        selected={filters.status}
+        onChange={(status) =>
+          onFiltersChange({ ...filters, status: status as ProductStatus[] })
         }
       />
 
@@ -57,13 +110,7 @@ export function FilterSidebar({ filters, onFiltersChange }: FilterSidebarProps) 
         onPriceChange={(priceRange) =>
           onFiltersChange({ ...filters, priceRange })
         }
-      />
-
-      <CategoryFilter
-        selectedCategories={filters.categories}
-        onCategoriesChange={(categories) =>
-          onFiltersChange({ ...filters, categories })
-        }
+        maxPrice={10000}
       />
     </div>
   )

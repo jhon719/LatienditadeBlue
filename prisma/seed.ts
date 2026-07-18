@@ -1,355 +1,383 @@
 import "dotenv/config"
-import { PrismaClient } from "@prisma/client"
+import fs from "node:fs"
+import path from "node:path"
+import { PrismaClient, ProductStatus } from "@prisma/client"
 import { PrismaPg } from "@prisma/adapter-pg"
 import { Pool } from "pg"
+import bcrypt from "bcryptjs"
 
 const pool = new Pool({ connectionString: process.env.DATABASE_URL })
 const adapter = new PrismaPg(pool)
 const prisma = new PrismaClient({ adapter })
 
-async function main() {
-  console.log("Seeding database...")
+const PUBLIC_DIR = path.join(process.cwd(), "public")
+const ANIMES_DIR = path.join(PUBLIC_DIR, "Imagenes", "Lista de Animes")
+const LINEAS_DIR = path.join(PUBLIC_DIR, "Imagenes", "Lineas de figuras")
 
-  // Clear existing data
+function slugify(name: string): string {
+  return name
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+}
+
+function titleCase(name: string): string {
+  return name
+    .split(" ")
+    .map((w) => (w.length > 0 ? w[0].toUpperCase() + w.slice(1) : w))
+    .join(" ")
+}
+
+// Escanea una carpeta de public/ y devuelve [{ name, slug, imageUrl }]
+function scanImageFolder(dir: string, publicPrefix: string) {
+  return fs
+    .readdirSync(dir)
+    .filter((f) => /\.(png|jpe?g|webp)$/i.test(f))
+    .map((file) => {
+      const base = file.replace(/\.[^.]+$/, "")
+      return {
+        name: titleCase(base),
+        slug: slugify(base),
+        imageUrl: `${publicPrefix}/${file}`,
+      }
+    })
+}
+
+async function main() {
+  console.log("Seeding La Tiendita de Blue...")
+
+  // Limpiar datos existentes (orden por dependencias)
+  await prisma.paymentProof.deleteMany()
   await prisma.orderItem.deleteMany()
   await prisma.order.deleteMany()
-  await prisma.address.deleteMany()
+  await prisma.review.deleteMany()
   await prisma.product.deleteMany()
   await prisma.category.deleteMany()
+  await prisma.line.deleteMany()
   await prisma.brand.deleteMany()
+  await prisma.account.deleteMany()
   await prisma.user.deleteMany()
 
-  // Create Categories
-  const categoriesData = [
-    { name: "Computadoras", slug: "computadoras", icon: "Monitor" },
-    { name: "Monitores", slug: "monitores", icon: "Monitor" },
-    { name: "Teclados", slug: "teclados", icon: "Keyboard" },
-    { name: "Mouse", slug: "mouse", icon: "Mouse" },
-    { name: "Audifonos", slug: "audifonos", icon: "Headphones" },
-    { name: "Almacenamiento", slug: "almacenamiento", icon: "HardDrive" },
-    { name: "Componentes", slug: "componentes", icon: "Cpu" },
-  ]
+  // ==================== CATEGORÍAS (Lista de Animes) ====================
+  const animeFiles = scanImageFolder(ANIMES_DIR, "/Imagenes/Lista de Animes")
+  const trendingSlugs = new Set(["one-piece", "demon-slayer", "frieren", "dragon-ball"])
 
-  const categories: Record<string, string> = {}
-  for (const cat of categoriesData) {
-    const created = await prisma.category.create({ data: cat })
-    categories[cat.slug] = created.id
-  }
-  console.log(`Created ${categoriesData.length} categories`)
-
-  // Create Brands
-  const brandsData = [
-    { name: "ASUS", slug: "asus" },
-    { name: "MSI", slug: "msi" },
-    { name: "Corsair", slug: "corsair" },
-    { name: "Logitech", slug: "logitech" },
-    { name: "Razer", slug: "razer" },
-    { name: "HyperX", slug: "hyperx" },
-    { name: "Kingston", slug: "kingston" },
-    { name: "Samsung", slug: "samsung" },
-    { name: "LG", slug: "lg" },
-    { name: "Dell", slug: "dell" },
-    { name: "NVIDIA", slug: "nvidia" },
-    { name: "AMD", slug: "amd" },
-  ]
-
-  const brands: Record<string, string> = {}
-  for (const brand of brandsData) {
-    const created = await prisma.brand.create({ data: brand })
-    brands[brand.name] = created.id
-  }
-  console.log(`Created ${brandsData.length} brands`)
-
-  // Create Products
-  const productsData = [
-    {
-      name: "ROG Strix GeForce RTX 4080",
-      slug: "rog-strix-rtx-4080",
-      brand: "ASUS",
-      category: "componentes",
-      price: 1299.99,
-      comparePrice: 1499.99,
-      images: [
-        "https://images.unsplash.com/photo-1591488320449-011701bb6704?w=500",
-        "https://images.unsplash.com/photo-1587202372775-e229f172b9d7?w=500",
-      ],
-      description: "Tarjeta grafica de alto rendimiento con iluminacion RGB y refrigeracion avanzada",
-      specs: {
-        Memoria: "16GB GDDR6X",
-        "Nucleos CUDA": "9728",
-        "Reloj Base": "2205 MHz",
-        TDP: "320W",
-      },
-      stock: 5,
-      isNew: true,
-      isFeatured: true,
-    },
-    {
-      name: "G Pro X Superlight 2",
-      slug: "g-pro-x-superlight-2",
-      brand: "Logitech",
-      category: "mouse",
-      price: 159.99,
-      images: ["https://images.unsplash.com/photo-1527814050087-3793815479db?w=500"],
-      description: "Mouse gaming ultraligero con sensor HERO 2 de 32K DPI",
-      specs: {
-        Peso: "60g",
-        Sensor: "HERO 2",
-        DPI: "32,000",
-        Bateria: "95 horas",
-      },
-      stock: 15,
-      isNew: true,
-      isFeatured: true,
-    },
-    {
-      name: "K100 RGB Mechanical",
-      slug: "k100-rgb-mechanical",
-      brand: "Corsair",
-      category: "teclados",
-      price: 229.99,
-      comparePrice: 249.99,
-      images: ["https://images.unsplash.com/photo-1511467687858-23d96c32e4ae?w=500"],
-      description: "Teclado mecanico premium con switches opticos y iCUE RGB",
-      specs: {
-        Switches: "OPX Optical",
-        Retroiluminacion: "RGB por tecla",
-        Conexion: "USB-C",
-        "Macro Keys": "6",
-      },
-      stock: 8,
-      isNew: false,
-      isFeatured: true,
-    },
-    {
-      name: "Odyssey G9 49\"",
-      slug: "odyssey-g9-49",
-      brand: "Samsung",
-      category: "monitores",
-      price: 1299.99,
-      comparePrice: 1499.99,
-      images: ["https://images.unsplash.com/photo-1527443224154-c4a3942d3acf?w=500"],
-      description: "Monitor gaming curvo ultrawide con 240Hz y 1ms de respuesta",
-      specs: {
-        Resolucion: "5120x1440",
-        Panel: "VA Curvo 1000R",
-        "Tasa Refresco": "240Hz",
-        HDR: "HDR1000",
-      },
-      stock: 3,
-      isNew: false,
-      isFeatured: true,
-    },
-    {
-      name: "Cloud III Wireless",
-      slug: "cloud-iii-wireless",
-      brand: "HyperX",
-      category: "audifonos",
-      price: 169.99,
-      images: ["https://images.unsplash.com/photo-1599669454699-248893623440?w=500"],
-      description: "Audifonos gaming inalambricos con sonido espacial DTS:X",
-      specs: {
-        Driver: "53mm",
-        Frecuencia: "10Hz-21kHz",
-        Bateria: "120 horas",
-        Microfono: "Bidireccional con cancelacion de ruido",
-      },
-      stock: 12,
-      isNew: true,
-      isFeatured: false,
-    },
-    {
-      name: "970 EVO Plus 2TB",
-      slug: "970-evo-plus-2tb",
-      brand: "Samsung",
-      category: "almacenamiento",
-      price: 189.99,
-      images: ["https://images.unsplash.com/photo-1597872200969-2b65d56bd16b?w=500"],
-      description: "SSD NVMe M.2 de alta velocidad para gaming y productividad",
-      specs: {
-        Capacidad: "2TB",
-        Lectura: "3,500 MB/s",
-        Escritura: "3,300 MB/s",
-        Interfaz: "PCIe Gen 3.0 x4",
-      },
-      stock: 25,
-      isNew: false,
-      isFeatured: false,
-    },
-    {
-      name: "DeathAdder V3 Pro",
-      slug: "deathadder-v3-pro",
-      brand: "Razer",
-      category: "mouse",
-      price: 149.99,
-      images: ["https://images.unsplash.com/photo-1615663245857-ac93bb7c39e7?w=500"],
-      description: "Mouse ergonomico gaming con sensor Focus Pro 30K",
-      specs: {
-        Peso: "63g",
-        Sensor: "Focus Pro 30K",
-        DPI: "30,000",
-        Bateria: "90 horas",
-      },
-      stock: 18,
-      isNew: true,
-      isFeatured: true,
-    },
-    {
-      name: "MAG B650 TOMAHAWK",
-      slug: "mag-b650-tomahawk",
-      brand: "MSI",
-      category: "componentes",
-      price: 259.99,
-      images: ["https://images.unsplash.com/photo-1518770660439-4636190af475?w=500"],
-      description: "Placa base ATX para AMD Ryzen 7000 con PCIe 5.0",
-      specs: {
-        Socket: "AM5",
-        Chipset: "AMD B650",
-        RAM: "DDR5 hasta 128GB",
-        "M.2 Slots": "2x PCIe 4.0",
-      },
-      stock: 10,
-      isNew: false,
-      isFeatured: false,
-    },
-    {
-      name: "Ryzen 9 7950X",
-      slug: "ryzen-9-7950x",
-      brand: "AMD",
-      category: "componentes",
-      price: 549.99,
-      comparePrice: 699.99,
-      images: ["https://images.unsplash.com/photo-1555617981-dac3880eac6e?w=500"],
-      description: "Procesador de 16 nucleos y 32 hilos para rendimiento extremo",
-      specs: {
-        Nucleos: "16",
-        Hilos: "32",
-        "Reloj Base": "4.5 GHz",
-        "Reloj Boost": "5.7 GHz",
-      },
-      stock: 7,
-      isNew: false,
-      isFeatured: true,
-    },
-    {
-      name: "UltraGear 27GP950",
-      slug: "ultragear-27gp950",
-      brand: "LG",
-      category: "monitores",
-      price: 799.99,
-      images: ["https://images.unsplash.com/photo-1593640408182-31c70c8268f5?w=500"],
-      description: "Monitor 4K Nano IPS con 144Hz y HDMI 2.1",
-      specs: {
-        Resolucion: "3840x2160",
-        Panel: "Nano IPS",
-        "Tasa Refresco": "144Hz",
-        HDR: "HDR600",
-      },
-      stock: 6,
-      isNew: true,
-      isFeatured: false,
-    },
-    {
-      name: "Huntsman V2 TKL",
-      slug: "huntsman-v2-tkl",
-      brand: "Razer",
-      category: "teclados",
-      price: 159.99,
-      images: ["https://images.unsplash.com/photo-1587829741301-dc798b83add3?w=500"],
-      description: "Teclado TKL con switches opticos y foam dampening",
-      specs: {
-        Switches: "Razer Optical",
-        Formato: "TKL (87 teclas)",
-        Retroiluminacion: "Razer Chroma RGB",
-        Conexion: "USB-C desmontable",
-      },
-      stock: 14,
-      isNew: false,
-      isFeatured: false,
-    },
-    {
-      name: "FURY Beast 32GB DDR5",
-      slug: "fury-beast-32gb-ddr5",
-      brand: "Kingston",
-      category: "componentes",
-      price: 124.99,
-      images: ["https://images.unsplash.com/photo-1562976540-1502c2145186?w=500"],
-      description: "Kit de memoria DDR5 de alto rendimiento para gaming",
-      specs: {
-        Capacidad: "32GB (2x16GB)",
-        Velocidad: "5600 MT/s",
-        Latencia: "CL40",
-        Voltaje: "1.25V",
-      },
-      stock: 30,
-      isNew: true,
-      isFeatured: false,
-    },
-  ]
-
-  for (const product of productsData) {
-    await prisma.product.create({
+  const categoryIds: Record<string, string> = {}
+  for (const anime of animeFiles) {
+    const created = await prisma.category.create({
       data: {
-        name: product.name,
-        slug: product.slug,
-        description: product.description,
-        price: product.price,
-        comparePrice: product.comparePrice,
-        stock: product.stock,
-        images: product.images,
-        specs: product.specs,
-        isNew: product.isNew,
-        isFeatured: product.isFeatured,
-        categoryId: categories[product.category],
-        brandId: brands[product.brand],
+        name: anime.name,
+        slug: anime.slug,
+        imageUrl: anime.imageUrl,
+        isTrending: trendingSlugs.has(anime.slug),
       },
     })
+    categoryIds[anime.slug] = created.id
   }
-  console.log(`Created ${productsData.length} products`)
+  console.log(`Categorías creadas: ${animeFiles.length}`)
 
-  // Create Admin User
-  const adminUser = await prisma.user.create({
+  // ==================== LÍNEAS (Lineas de figuras) ====================
+  const lineFiles = scanImageFolder(LINEAS_DIR, "/Imagenes/Lineas de figuras")
+  const featuredLineSlugs = new Set(["ichiban-kuji", "masterlise", "luminasta", "grandista"])
+
+  const lineIds: Record<string, string> = {}
+  for (const line of lineFiles) {
+    const created = await prisma.line.create({
+      data: {
+        name: line.name,
+        slug: line.slug,
+        imageUrl: line.imageUrl,
+        isFeatured: featuredLineSlugs.has(line.slug),
+      },
+    })
+    lineIds[line.slug] = created.id
+  }
+  console.log(`Líneas creadas: ${lineFiles.length}`)
+
+  // ==================== MARCAS (Fabricantes) ====================
+  // Si existe una imagen con el mismo slug en "Lineas de figuras", se reutiliza
+  const brandNames = ["Banpresto", "Bandai", "Good Smile Company", "Taito", "Sega", "FuRyu", "Kotobukiya", "Konami"]
+  const lineImageBySlug = new Map(lineFiles.map((l) => [l.slug, l.imageUrl]))
+
+  const brandIds: Record<string, string> = {}
+  for (const name of brandNames) {
+    const slug = slugify(name)
+    const created = await prisma.brand.create({
+      data: { name, slug, imageUrl: lineImageBySlug.get(slug) ?? null },
+    })
+    brandIds[slug] = created.id
+  }
+  console.log(`Marcas creadas: ${brandNames.length}`)
+
+  // ==================== USUARIOS ====================
+  const admin = await prisma.user.create({
     data: {
-      email: "admin@basictech.com",
-      password: "$2b$10$K7L1OJ45/4Y2nIvhRVpCe.FSmhDdWoXehVzJptJ/op0lSsvqNu9lK", // password: admin123
-      name: "Admin User",
-      phone: "+51 999 888 777",
+      email: "admin@latienditadeblue.com",
+      username: "blue.admin",
+      passwordHash: await bcrypt.hash("Admin-Blue-2026", 10),
+      firstName: "Admin",
+      lastName: "Blue",
       role: "ADMIN",
-      status: "ACTIVE",
     },
   })
-  console.log(`Created admin user: ${adminUser.email}`)
 
-  // Create Test Customer
-  const customerUser = await prisma.user.create({
+  const demo = await prisma.user.create({
     data: {
-      email: "juan@email.com",
-      password: "$2b$10$K7L1OJ45/4Y2nIvhRVpCe.FSmhDdWoXehVzJptJ/op0lSsvqNu9lK", // password: admin123
-      name: "Juan Perez",
-      phone: "+51 987 654 321",
+      email: "cliente@demo.com",
+      username: "coleccionista01",
+      passwordHash: await bcrypt.hash("Cliente-Demo-2026", 10),
+      firstName: "Cliente",
+      lastName: "Demo",
+      dni: "45678128",
+      phone: "999888777",
+      address: "Av. Larco 1234, Miraflores, Lima",
       role: "CUSTOMER",
-      status: "ACTIVE",
     },
   })
-  console.log(`Created customer user: ${customerUser.email}`)
+  console.log("Usuarios creados: admin@latienditadeblue.com / cliente@demo.com")
 
-  // Create Address for Customer
-  await prisma.address.create({
+  // ==================== PRODUCTOS ====================
+  const img = (seed: string) =>
+    `https://images.unsplash.com/${seed}?w=900&h=900&fit=crop`
+
+  type SeedProduct = {
+    name: string
+    category: string
+    line?: string
+    brand: string
+    price: number
+    status: ProductStatus
+    stockQty: number
+    expectedDate?: Date
+    isFeatured?: boolean
+    description: string
+    images: string[]
+  }
+
+  const productsData: SeedProduct[] = [
+    {
+      name: "Monkey D. Luffy Gear 5 - Masterlise",
+      category: "one-piece",
+      line: "masterlise",
+      brand: "banpresto",
+      price: 189.9,
+      status: "STOCK",
+      stockQty: 5,
+      isFeatured: true,
+      description:
+        "Figura Masterlise de Luffy Gear 5 con base especial y acabados premium. Altura aprox. 25 cm, PVC/ABS. Ideal para vitrina.",
+      images: [img("photo-1607604276583-eef5d076aa5f"), img("photo-1578632767115-351597cf2477")],
+    },
+    {
+      name: "Roronoa Zoro King of Artist - Wano",
+      category: "one-piece",
+      line: "grandista",
+      brand: "banpresto",
+      price: 159.9,
+      status: "STOCK",
+      stockQty: 3,
+      isFeatured: true,
+      description:
+        "Zoro en pose de combate con sus tres katanas, línea King of Artist. Escultura dinámica con detalle en el kimono de Wano.",
+      images: [img("photo-1534447677768-be436bb09401")],
+    },
+    {
+      name: "Tanjiro Kamado - Ichiban Kuji Premio A",
+      category: "demon-slayer",
+      line: "ichiban-kuji",
+      brand: "bandai",
+      price: 249.9,
+      status: "PREVENTA",
+      stockQty: 8,
+      expectedDate: new Date("2026-10-15"),
+      isFeatured: true,
+      description:
+        "Premio A del Ichiban Kuji de Demon Slayer: Tanjiro con efecto de Danza del Dios del Fuego. Caja sellada de lotería japonesa.",
+      images: [img("photo-1542751371-adc38448a05e")],
+    },
+    {
+      name: "Frieren - Luminasta Sousou no Frieren",
+      category: "frieren",
+      line: "luminasta",
+      brand: "sega",
+      price: 139.9,
+      status: "STOCK",
+      stockQty: 6,
+      isFeatured: true,
+      description:
+        "Frieren con su báculo en la línea Luminasta de Sega. Acabado mate y base translúcida, altura aprox. 18 cm.",
+      images: [img("photo-1563089145-599997674d42")],
+    },
+    {
+      name: "Goku Super Saiyan - Grandista Nero",
+      category: "dragon-ball",
+      line: "grandista",
+      brand: "banpresto",
+      price: 199.9,
+      status: "STOCK",
+      stockQty: 2,
+      description:
+        "Goku SSJ línea Grandista Nero, escala grande (28 cm) con esculpido de músculos y cabello con sombreado especial.",
+      images: [img("photo-1608889175123-8ee362201f81")],
+    },
+    {
+      name: "Vegeta Ultra Ego - Ichiban Kuji Premio B",
+      category: "dragon-ball",
+      line: "ichiban-kuji",
+      brand: "bandai",
+      price: 229.9,
+      status: "PREVENTA",
+      stockQty: 10,
+      expectedDate: new Date("2026-11-20"),
+      description:
+        "Vegeta Ultra Ego del Ichiban Kuji Dragon Ball Super. Preventa asegurada con adelanto, llegada estimada noviembre 2026.",
+      images: [img("photo-1620336655055-088d06e36bf0")],
+    },
+    {
+      name: "Marin Kitagawa - Coreful Uniforme",
+      category: "my-dress-up-darling",
+      line: "coreful",
+      brand: "taito",
+      price: 119.9,
+      status: "STOCK",
+      stockQty: 4,
+      description:
+        "Marin Kitagawa en uniforme escolar, línea Coreful de Taito. Figura de 20 cm con base personalizada.",
+      images: [img("photo-1613376023733-0a73315d9b06")],
+    },
+    {
+      name: "Rem - Relaxtime Re:Zero",
+      category: "re-zero",
+      line: "relaxtime",
+      brand: "sega",
+      price: 99.9,
+      status: "AGOTADO",
+      stockQty: 0,
+      description:
+        "Rem sentada en pose relajada, línea Relaxtime. Perfecta para escritorio, altura 14 cm.",
+      images: [img("photo-1566576912321-d58ddd7a6088")],
+    },
+    {
+      name: "Ai Hoshino - Ichiban Kuji Oshi no Ko",
+      category: "oshi-no-ko",
+      line: "ichiban-kuji",
+      brand: "bandai",
+      price: 259.9,
+      status: "PREVENTA",
+      stockQty: 6,
+      expectedDate: new Date("2026-12-05"),
+      description:
+        "Ai en su vestido de idol, Premio A del Ichiban Kuji de Oshi no Ko. Incluye base con destellos.",
+      images: [img("photo-1611930022073-b7a4ba5fcccd")],
+    },
+    {
+      name: "Nezuko Kamado - Glitter y Glamours",
+      category: "demon-slayer",
+      line: "glitter-y-glamours",
+      brand: "banpresto",
+      price: 129.9,
+      status: "STOCK",
+      stockQty: 7,
+      description:
+        "Nezuko línea Glitter & Glamours con acabado brillante en el kimono. Altura 23 cm.",
+      images: [img("photo-1601850494422-3cf14624b0b3")],
+    },
+    {
+      name: "Hatsune Miku - Noodle Stopper Figure",
+      category: "vocaloid",
+      line: "noddle-stopper-figure",
+      brand: "furyu",
+      price: 89.9,
+      status: "STOCK",
+      stockQty: 9,
+      description:
+        "Miku sentada estilo Noodle Stopper de FuRyu, para apoyar en tu vaso de ramen o en la repisa. 14 cm.",
+      images: [img("photo-1531525645387-7f14be1bdbbd")],
+    },
+    {
+      name: "Frieren y Fern Set - Trio Try It",
+      category: "frieren",
+      line: "trio-try-it",
+      brand: "furyu",
+      price: 169.9,
+      status: "STOCK",
+      stockQty: 3,
+      description:
+        "Set de Frieren y Fern en la línea Trio Try It de FuRyu. Dos figuras de 18 cm con bases independientes.",
+      images: [img("photo-1620428268482-cf1851a36764")],
+    },
+  ]
+
+  const productIds: Record<string, string> = {}
+  for (const p of productsData) {
+    const slug = slugify(p.name)
+    const created = await prisma.product.create({
+      data: {
+        name: p.name,
+        slug,
+        description: p.description,
+        price: p.price,
+        status: p.status,
+        expectedDate: p.expectedDate,
+        stockQty: p.stockQty,
+        images: p.images,
+        isFeatured: p.isFeatured ?? false,
+        categoryId: categoryIds[p.category],
+        lineId: p.line ? lineIds[p.line] : null,
+        brandId: brandIds[p.brand],
+      },
+    })
+    productIds[slug] = created.id
+  }
+  console.log(`Productos creados: ${productsData.length}`)
+
+  // ==================== ORDEN DEMO COMPLETADA + RESEÑA VERIFICADA ====================
+  const luffyId = productIds[slugify("Monkey D. Luffy Gear 5 - Masterlise")]
+  const order = await prisma.order.create({
     data: {
-      label: "Casa",
-      name: "Juan Perez",
-      phone: "+51 987 654 321",
-      address: "Av. Javier Prado 1234",
-      city: "Lima",
-      state: "Lima",
-      zipCode: "15036",
-      isDefault: true,
-      userId: customerUser.id,
+      processCode: "ORD-DEMO1",
+      idempotencyKey: "seed-demo-order-1",
+      userId: demo.id,
+      totalAmount: 199.9,
+      shippingCost: 10,
+      shippingType: "LOCAL_DELIVERY",
+      shippingStatus: "DELIVERED",
+      receiverName: "Cliente Demo",
+      receiverPhone: "999888777",
+      deliveryAddress: "Av. Larco 1234, Miraflores, Lima",
+      paymentMethod: "MANUAL_TRANSFER",
+      status: "COMPLETED",
+      items: {
+        create: [{ productId: luffyId, quantity: 1, price: 189.9 }],
+      },
     },
   })
-  console.log("Created address for customer")
 
-  console.log("Seed completed!")
+  await prisma.paymentProof.create({
+    data: {
+      orderId: order.id,
+      userId: demo.id,
+      imageUrl: "/Imagenes/Pagos/YAPE QR.jpeg",
+      operationNumber: "00123456",
+      status: "APPROVED",
+    },
+  })
+
+  await prisma.review.create({
+    data: {
+      userId: demo.id,
+      productId: luffyId,
+      rating: 5,
+      comment:
+        "Llegó súper bien embalado y la figura es idéntica a las fotos. La atención por WhatsApp fue rapidísima. ¡Volveré a comprar!",
+      images: [],
+    },
+  })
+  console.log("Orden demo y reseña verificada creadas")
+
+  console.log("Seed completado ✨")
 }
 
 main()
@@ -359,4 +387,5 @@ main()
   })
   .finally(async () => {
     await prisma.$disconnect()
+    await pool.end()
   })
