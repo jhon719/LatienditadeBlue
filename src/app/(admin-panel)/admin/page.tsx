@@ -2,11 +2,21 @@ import Link from "next/link"
 import {
   DollarSign,
   Inbox,
+  PackageCheck,
   CalendarClock,
   PackageX,
   ArrowUpRight,
+  Map,
 } from "lucide-react"
 import { prisma } from "@/lib/prisma"
+import { releaseAbandonedStock } from "@/lib/release-stock"
+import {
+  getKpis,
+  getCashFlowSeries,
+  getLogisticsDonut,
+  getCustomerMap,
+  type TimeRange,
+} from "@/lib/analytics"
 import {
   Card,
   CardContent,
@@ -16,6 +26,11 @@ import {
 } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { cn } from "@/lib/utils"
+import { AnimatedContent } from "@/components/react-bits/AnimatedContent"
+import { CashFlowChart } from "@/components/admin/charts/CashFlowChart"
+import { LogisticsDonut } from "@/components/admin/charts/LogisticsDonut"
+import { PeruHeatMap } from "@/components/admin/charts/PeruHeatMap"
 
 export const dynamic = "force-dynamic"
 
@@ -28,16 +43,36 @@ const statusLabels: Record<string, { label: string; className: string }> = {
   COMPLETED: { label: "Completado", className: "bg-[#E2FBE9] text-[#1E7E34]" },
 }
 
+// Selector de tiempo de los KPIs (bóveda 05.01 Flujo 1)
+const RANGES: { value: TimeRange; label: string }[] = [
+  { value: "today", label: "Hoy" },
+  { value: "7d", label: "7 días" },
+  { value: "30d", label: "30 días" },
+  { value: "1y", label: "1 año" },
+]
+
 // Dashboard del Centro de Mando (bóveda 05.01)
-export default async function AdminDashboardPage() {
-  const [revenue, pendingProofs, activePreorders, lowStock, recentOrders, pendingShipments] =
+export default async function AdminDashboardPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ range?: string }>
+}) {
+  // Limpieza oportunista de abandonos (bóveda 06.01 §4)
+  await releaseAbandonedStock().catch(() => {})
+
+  const params = await searchParams
+  const range: TimeRange = (
+    ["today", "7d", "30d", "1y"] as TimeRange[]
+  ).includes(params.range as TimeRange)
+    ? (params.range as TimeRange)
+    : "30d"
+
+  const [kpis, cashFlow, logistics, customerMap, lowStock, recentOrders] =
     await Promise.all([
-      prisma.order.aggregate({
-        where: { status: { in: ["PAID_APPROVED", "COMPLETED"] } },
-        _sum: { totalAmount: true },
-      }),
-      prisma.paymentProof.count({ where: { status: "PENDING" } }),
-      prisma.product.count({ where: { status: "PREVENTA", isActive: true } }),
+      getKpis(range),
+      getCashFlowSeries(range),
+      getLogisticsDonut(),
+      getCustomerMap(),
       prisma.product.findMany({
         where: { isActive: true, status: "STOCK", stockQty: { lte: 2, gt: 0 } },
         select: { id: true, name: true, stockQty: true },
@@ -48,86 +83,169 @@ export default async function AdminDashboardPage() {
         orderBy: { createdAt: "desc" },
         take: 6,
       }),
-      prisma.order.count({
-        where: { status: "PAID_APPROVED", shippingStatus: "PREPARING" },
-      }),
     ])
 
-  const totalRevenue = Number(revenue._sum.totalAmount ?? 0)
-  const criticalTasks = pendingProofs + pendingShipments
+  const criticalTasks = kpis.pendingProofs + kpis.pendingShipments
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold">Dashboard</h1>
-        <p className="text-muted-foreground">
-          Centro de mando de La Tiendita de Blue
-        </p>
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h1 className="text-2xl font-bold">Dashboard</h1>
+          <p className="text-muted-foreground">
+            Centro de mando de La Tiendita de Blue
+          </p>
+        </div>
+
+        {/* Selector de rango */}
+        <div className="flex gap-1 rounded-full border bg-card p-1">
+          {RANGES.map((r) => (
+            <Link
+              key={r.value}
+              href={`/admin?range=${r.value}`}
+              className={cn(
+                "rounded-full px-4 py-1.5 text-xs font-bold transition-colors",
+                range === r.value
+                  ? "bg-primary text-primary-foreground"
+                  : "text-muted-foreground hover:text-foreground"
+              )}
+            >
+              {r.label}
+            </Link>
+          ))}
+        </div>
       </div>
 
-      {/* KPIs (bóveda 05.01) */}
+      {/* Flujo 1: KPIs */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Ingresos aprobados
-            </CardTitle>
-            <DollarSign className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <p className="text-2xl font-bold">S/ {totalRevenue.toFixed(2)}</p>
-          </CardContent>
-        </Card>
-
-        <Link href="/admin/manual-payments">
-          <Card className="transition-colors hover:border-primary">
+        <AnimatedContent>
+          <Card>
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">
-                Vouchers por revisar
+                Ingresos totales
               </CardTitle>
-              <Inbox className="h-4 w-4 text-muted-foreground" />
+              <DollarSign className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <p
-                className={`text-2xl font-bold ${pendingProofs > 0 ? "text-orange-500" : ""}`}
-              >
-                {pendingProofs}
+              <p className="font-display text-3xl tracking-wide">
+                S/ {kpis.totalRevenue.toFixed(2)}
+              </p>
+              <p className="text-xs text-muted-foreground">
+                pedidos aprobados en el rango
               </p>
             </CardContent>
           </Card>
-        </Link>
+        </AnimatedContent>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Preventas activas
-            </CardTitle>
-            <CalendarClock className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <p className="text-2xl font-bold">{activePreorders}</p>
-          </CardContent>
-        </Card>
+        <AnimatedContent delay={60}>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground">
+                Ventas completadas
+              </CardTitle>
+              <PackageCheck className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <p className="font-display text-3xl tracking-wide">
+                {kpis.completedSales}
+              </p>
+              <p className="text-xs text-muted-foreground">cajas entregadas</p>
+            </CardContent>
+          </Card>
+        </AnimatedContent>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Tareas críticas
-            </CardTitle>
-            <PackageX className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <p
-              className={`text-2xl font-bold ${criticalTasks > 0 ? "text-red-500" : ""}`}
-            >
-              {criticalTasks}
-            </p>
-            <p className="text-xs text-muted-foreground">
-              vouchers + despachos pendientes
-            </p>
-          </CardContent>
-        </Card>
+        <AnimatedContent delay={120}>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground">
+                Capital en preventas
+              </CardTitle>
+              <CalendarClock className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <p className="font-display text-3xl tracking-wide">
+                S/ {kpis.preorderCapital.toFixed(2)}
+              </p>
+              <p className="text-xs text-muted-foreground">
+                liquidez retenida por entregar
+              </p>
+            </CardContent>
+          </Card>
+        </AnimatedContent>
+
+        <AnimatedContent delay={180}>
+          <Link href="/admin/manual-payments">
+            <Card className="transition-colors hover:border-primary">
+              <CardHeader className="flex flex-row items-center justify-between pb-2">
+                <CardTitle className="text-sm font-medium text-muted-foreground">
+                  Tareas críticas
+                </CardTitle>
+                <PackageX className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <p
+                  className={cn(
+                    "font-display text-3xl tracking-wide",
+                    criticalTasks > 0 && "text-red-500"
+                  )}
+                >
+                  {criticalTasks}
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  {kpis.pendingProofs} vouchers + {kpis.pendingShipments} despachos
+                </p>
+              </CardContent>
+            </Card>
+          </Link>
+        </AnimatedContent>
       </div>
+
+      {/* Flujo 2 y 3: área de flujo de caja + donut logístico */}
+      <div className="grid gap-4 lg:grid-cols-5">
+        <AnimatedContent className="lg:col-span-3">
+          <Card>
+            <CardHeader>
+              <CardTitle>Flujo de caja</CardTitle>
+              <CardDescription>
+                Ingresos por ventas de stock vs. preventas
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <CashFlowChart data={cashFlow} />
+            </CardContent>
+          </Card>
+        </AnimatedContent>
+
+        <AnimatedContent delay={80} className="lg:col-span-2">
+          <Card className="h-full">
+            <CardHeader>
+              <CardTitle>Estado logístico</CardTitle>
+              <CardDescription>Todas las órdenes por estado de envío</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <LogisticsDonut data={logistics} />
+            </CardContent>
+          </Card>
+        </AnimatedContent>
+      </div>
+
+      {/* Flujo 4: mapa de calor nacional */}
+      <AnimatedContent>
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Map className="h-5 w-5 text-primary" /> Clientes por departamento
+            </CardTitle>
+            <CardDescription>
+              Cada región se tiñe según los clientes registrados en esa zona (dato
+              del perfil del usuario)
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <PeruHeatMap stats={customerMap} />
+          </CardContent>
+        </Card>
+      </AnimatedContent>
 
       <div className="grid gap-4 lg:grid-cols-7">
         {/* Últimos pedidos */}
@@ -201,6 +319,19 @@ export default async function AdminDashboardPage() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Alerta tipo campana (bóveda 05.01 §2A) */}
+      {kpis.pendingProofs > 0 && (
+        <Link
+          href="/admin/manual-payments"
+          className="flex items-center gap-3 rounded-2xl border-2 border-dashed border-[#F5B400] bg-[#FFF5D1]/40 p-4 text-sm font-semibold text-[#8a6d00] transition-colors hover:bg-[#FFF5D1]/70 dark:bg-[#FFF5D1]/10"
+        >
+          <Inbox className="h-5 w-5" />
+          Hay {kpis.pendingProofs}{" "}
+          {kpis.pendingProofs === 1 ? "voucher esperando" : "vouchers esperando"}{" "}
+          tu aprobación en la Bandeja POS →
+        </Link>
+      )}
     </div>
   )
 }

@@ -16,6 +16,14 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import { PERU_DEPARTMENTS } from "@/lib/peru"
 
 const settingsSchema = z.object({
   firstName: z.string().max(60).optional(),
@@ -29,6 +37,10 @@ const settingsSchema = z.object({
     .regex(/^\d{9}$/, "El teléfono debe tener 9 dígitos")
     .or(z.literal("")),
   address: z.string().max(200).optional(),
+  // Departamento del Perú (alimenta el mapa de calor del admin, bóveda 05.01)
+  department: z.string(),
+  // Opt-in de promociones (bóveda 05.04 §4, Ley 29733)
+  marketingOptIn: z.boolean(),
 })
 
 type SettingsFormData = z.infer<typeof settingsSchema>
@@ -65,11 +77,14 @@ export function ProfileSettingsForm({
   const {
     register,
     handleSubmit,
+    watch,
+    setValue,
     formState: { errors, isSubmitting },
   } = useForm<SettingsFormData>({
     resolver: zodResolver(settingsSchema),
     defaultValues: initialData,
   })
+  const department = watch("department")
 
   const passwordForm = useForm<PasswordFormData>({
     resolver: zodResolver(passwordSchema),
@@ -159,6 +174,34 @@ export function ProfileSettingsForm({
                   {...register("address")}
                 />
               </div>
+              <div className="space-y-2 sm:col-span-2">
+                <Label>Departamento</Label>
+                <Select
+                  value={department || undefined}
+                  onValueChange={(v) => setValue("department", v)}
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="¿Desde qué parte del Perú nos compras?" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {PERU_DEPARTMENTS.map((d) => (
+                      <SelectItem key={d.code} value={d.code}>
+                        {d.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <label className="flex cursor-pointer items-start gap-2 text-xs text-muted-foreground sm:col-span-2">
+                <input
+                  type="checkbox"
+                  className="mt-0.5 h-4 w-4 accent-[#4A80BE]"
+                  {...register("marketingOptIn")}
+                />
+                <span>
+                  Quiero recibir novedades, preventas y promociones por correo
+                </span>
+              </label>
             </div>
 
             <Button type="submit" disabled={isSubmitting}>

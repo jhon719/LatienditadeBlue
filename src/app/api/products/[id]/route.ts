@@ -3,6 +3,7 @@ import { z } from "zod"
 import { prisma } from "@/lib/prisma"
 import { transformProduct } from "@/lib/transformers"
 import { requireAdmin } from "@/lib/api-guards"
+import { getActiveDiscountRules } from "@/lib/campaigns"
 
 type Params = Promise<{ id: string }>
 
@@ -34,7 +35,8 @@ export async function GET(
       )
     }
 
-    return NextResponse.json(transformProduct(product))
+    const rules = await getActiveDiscountRules()
+    return NextResponse.json(transformProduct(product, rules))
   } catch (error) {
     console.error("Error fetching product:", error)
     return NextResponse.json(

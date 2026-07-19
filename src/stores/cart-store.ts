@@ -1,6 +1,7 @@
 import { create } from "zustand"
 import { persist } from "zustand/middleware"
 import type { Product, CartItem } from "@/types"
+import { effectivePrice } from "@/lib/pricing"
 
 interface CartState {
   items: CartItem[]
@@ -68,7 +69,7 @@ export const useCartStore = create<CartState>()(
 
       getSubtotal: () => {
         return get().items.reduce(
-          (total, item) => total + item.product.price * item.quantity,
+          (total, item) => total + effectivePrice(item.product) * item.quantity,
           0
         )
       },

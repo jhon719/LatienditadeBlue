@@ -5,6 +5,12 @@ import crypto from "node:crypto"
 import { prisma } from "@/lib/prisma"
 import { requireUser } from "@/lib/api-guards"
 import { transformOrder } from "@/lib/transformers"
+import { calculateBundleDiscount } from "@/lib/pricing"
+import {
+  getActiveDiscountRules,
+  applyDiscountRules,
+  validateCoupon,
+} from "@/lib/campaigns"
 
 export async function GET() {
   const { session, response } = await requireUser()
@@ -58,6 +64,7 @@ const createOrderSchema = z
       .regex(/^\d{9}$/, "El teléfono debe tener 9 dígitos"),
     deliveryAddress: z.string().max(250).optional(),
     paymentMethod: z.enum(["MANUAL_TRANSFER", "MERCADO_PAGO"]),
+    couponCode: z.string().max(30).optional(),
     proof: z
       .object({
         imageUrl: z.string().min(1, "Sube tu comprobante"),
@@ -111,6 +118,10 @@ export async function POST(request: NextRequest) {
     const userId = session!.user.id
     const shippingCost = SHIPPING_COSTS[data.shippingType]
 
+    // Reglas de precio activas (bóveda 05.05): el precio congelado de cada
+    // ítem es el precio efectivo (rebajado si hay campaña)
+    const activeRules = await getActiveDiscountRules()
+
     // Transacción atómica: validar stock, reservarlo y crear la orden
     const order = await prisma.$transaction(async (tx) => {
       const productIds = data.items.map((i) => i.productId)
@@ -121,6 +132,9 @@ export async function POST(request: NextRequest) {
       if (products.length !== productIds.length) {
         throw new Error("PRODUCT_NOT_FOUND")
       }
+
+      const unitPrice = (product: (typeof products)[number]) =>
+        applyDiscountRules(product, activeRules)?.salePrice ?? Number(product.price)
 
       let subtotal = 0
       for (const item of data.items) {
@@ -138,7 +152,7 @@ export async function POST(request: NextRequest) {
           throw new Error(`SIN_STOCK:${product.name}`)
         }
 
-        subtotal += Number(product.price) * item.quantity
+        subtotal += unitPrice(product) * item.quantity
       }
 
       // Reservar stock (se restaura si el pago es rechazado)
@@ -154,7 +168,47 @@ export async function POST(request: NextRequest) {
         data: { status: "AGOTADO" },
       })
 
-      const totalAmount = subtotal + shippingCost
+      // Descuento "Combina y Ahorra" calculado en servidor (bóveda 02.02)
+      const { discount } = calculateBundleDiscount(
+        data.items.map((item) => {
+          const product = products.find((p) => p.id === item.productId)!
+          return {
+            categoryId: product.categoryId,
+            price: unitPrice(product),
+            quantity: item.quantity,
+          }
+        })
+      )
+
+      // Cupón (bóveda 05.05 §4): se revalida en servidor sobre el subtotal
+      // ya rebajado, y su contador se incrementa con guard anti-carrera
+      let couponDiscount = 0
+      let couponId: string | null = null
+      let couponCode: string | null = null
+      if (data.couponCode) {
+        const result = await validateCoupon(data.couponCode, subtotal - discount)
+        if (!result.valid) {
+          throw new Error(`CUPON:${result.error}`)
+        }
+        const claimed = await tx.coupon.updateMany({
+          where: {
+            id: result.coupon.id,
+            OR: [
+              { maxUses: null },
+              { usedCount: { lt: result.coupon.maxUses ?? 0 } },
+            ],
+          },
+          data: { usedCount: { increment: 1 } },
+        })
+        if (claimed.count === 0) {
+          throw new Error("CUPON:Este cupón ya alcanzó su límite de usos")
+        }
+        couponDiscount = result.discount
+        couponId = result.coupon.id
+        couponCode = result.coupon.code
+      }
+
+      const totalAmount = subtotal - discount - couponDiscount + shippingCost
 
       // Generar processCode único
       let processCode = generateProcessCode()
@@ -169,6 +223,10 @@ export async function POST(request: NextRequest) {
           userId,
           totalAmount,
           shippingCost,
+          discountAmount: discount,
+          couponDiscount,
+          couponId,
+          couponCode,
           shippingType: data.shippingType,
           receiverName: data.receiverName,
           receiverPhone: data.receiverPhone,
@@ -184,7 +242,7 @@ export async function POST(request: NextRequest) {
               return {
                 productId: item.productId,
                 quantity: item.quantity,
-                price: product.price, // Precio congelado
+                price: unitPrice(product), // Precio congelado (con rebaja de campaña)
               }
             }),
           },
@@ -228,6 +286,9 @@ export async function POST(request: NextRequest) {
     }
 
     const message = error instanceof Error ? error.message : ""
+    if (message.startsWith("CUPON:")) {
+      return NextResponse.json({ error: message.slice(6) }, { status: 400 })
+    }
     if (message.startsWith("SIN_STOCK:")) {
       return NextResponse.json(
         { error: `No hay stock suficiente de "${message.slice(10)}"` },

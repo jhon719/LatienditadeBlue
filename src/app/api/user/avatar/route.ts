@@ -3,9 +3,15 @@ import { writeFile, mkdir, unlink } from "node:fs/promises"
 import path from "node:path"
 import { prisma } from "@/lib/prisma"
 import { requireUser } from "@/lib/api-guards"
+import { cloudinary, isCloudinaryEnabled } from "@/lib/cloudinary"
 
-// Avatares almacenados localmente en public/Imagenes/avatar/ (bóveda 02.04)
+// Avatares de usuario (bóveda 02.04).
+// Con Cloudinary configurado se suben a `latiendita/avatars` (carpeta aislada
+// de products/vouchers/reviews) usando el userId como public_id, de modo que
+// cambiar la foto SOBRESCRIBE la anterior en lugar de acumular archivos.
+// Sin credenciales, cae al disco local en public/Imagenes/avatar/.
 const AVATAR_DIR = path.join(process.cwd(), "public", "Imagenes", "avatar")
+const CLOUD_FOLDER = "latiendita/avatars"
 
 const VALID_TYPES: Record<string, string> = {
   "image/jpeg": "jpg",
@@ -39,23 +45,65 @@ export async function POST(request: NextRequest) {
     }
 
     const userId = session!.user.id
-    const ext = VALID_TYPES[file.type]
-    const fileName = `${userId}.${ext}`
-
-    await mkdir(AVATAR_DIR, { recursive: true })
-
-    // Borrar avatares anteriores con otra extensión
     const previous = await prisma.user.findUnique({
       where: { id: userId },
       select: { avatarFileName: true },
     })
-    if (previous?.avatarFileName && previous.avatarFileName !== fileName) {
+    const buffer = Buffer.from(await file.arrayBuffer())
+
+    if (isCloudinaryEnabled()) {
+      const result = await new Promise<{ secure_url: string }>((resolve, reject) => {
+        cloudinary.uploader
+          .upload_stream(
+            {
+              folder: CLOUD_FOLDER,
+              public_id: userId, // Un único archivo por usuario
+              overwrite: true,
+              invalidate: true,
+              resource_type: "image",
+              transformation: [
+                { width: 400, height: 400, crop: "fill", gravity: "face" },
+                { quality: "auto" },
+                { fetch_format: "auto" },
+              ],
+            },
+            (error, uploaded) => {
+              if (error) reject(error)
+              else resolve(uploaded as { secure_url: string })
+            }
+          )
+          .end(buffer)
+      })
+
+      // Si antes tenía un archivo local, se limpia del disco
+      if (previous?.avatarFileName && !previous.avatarFileName.startsWith("http")) {
+        await unlink(path.join(AVATAR_DIR, previous.avatarFileName)).catch(() => {})
+      }
+
+      // El public_id es fijo, pero secure_url incluye el segmento de versión
+      // (/v1234567/), que cambia en cada overwrite y rompe la caché por sí solo
+      await prisma.user.update({
+        where: { id: userId },
+        data: { avatarFileName: result.secure_url },
+      })
+
+      return NextResponse.json({ avatarFileName: result.secure_url })
+    }
+
+    // Fallback local
+    const ext = VALID_TYPES[file.type]
+    const fileName = `${userId}.${ext}`
+    await mkdir(AVATAR_DIR, { recursive: true })
+
+    if (
+      previous?.avatarFileName &&
+      !previous.avatarFileName.startsWith("http") &&
+      previous.avatarFileName !== fileName
+    ) {
       await unlink(path.join(AVATAR_DIR, previous.avatarFileName)).catch(() => {})
     }
 
-    const bytes = Buffer.from(await file.arrayBuffer())
-    await writeFile(path.join(AVATAR_DIR, fileName), bytes)
-
+    await writeFile(path.join(AVATAR_DIR, fileName), buffer)
     await prisma.user.update({
       where: { id: userId },
       data: { avatarFileName: fileName },

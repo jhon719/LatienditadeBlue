@@ -7,7 +7,9 @@ import type {
   Review as PrismaReview,
   Order as PrismaOrder,
   OrderItem as PrismaOrderItem,
+  DiscountRule,
 } from "@prisma/client"
+import { applyDiscountRules } from "@/lib/campaigns"
 
 type ProductWithRelations = PrismaProduct & {
   category: PrismaCategory
@@ -16,14 +18,22 @@ type ProductWithRelations = PrismaProduct & {
   reviews?: { rating: number }[]
 }
 
-export function transformProduct(product: ProductWithRelations): Product {
+export function transformProduct(
+  product: ProductWithRelations,
+  discountRules: DiscountRule[] = []
+): Product {
   const ratings = product.reviews ?? []
   const rating =
     ratings.length > 0
       ? ratings.reduce((acc, r) => acc + r.rating, 0) / ratings.length
       : 0
 
+  // Precio tachado por regla de campaña activa (bóveda 05.05)
+  const sale = applyDiscountRules(product, discountRules)
+
   return {
+    salePrice: sale?.salePrice,
+    discountRuleName: sale?.ruleName,
     id: product.id,
     name: product.name,
     slug: product.slug,
@@ -125,6 +135,9 @@ export function transformOrder(order: OrderWithItems): OrderView {
     processCode: order.processCode,
     totalAmount: Number(order.totalAmount),
     shippingCost: Number(order.shippingCost),
+    discountAmount: Number(order.discountAmount),
+    couponDiscount: Number(order.couponDiscount),
+    couponCode: order.couponCode ?? undefined,
     shippingType: order.shippingType,
     shippingStatus: order.shippingStatus,
     receiverName: order.receiverName,

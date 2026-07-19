@@ -2,7 +2,11 @@ import { NextRequest, NextResponse } from "next/server"
 import { z } from "zod"
 import { prisma } from "@/lib/prisma"
 import { requireUser } from "@/lib/api-guards"
-import { isMercadoPagoEnabled, getPreferenceClient } from "@/lib/mercadopago"
+import {
+  isMercadoPagoEnabled,
+  isMercadoPagoSandbox,
+  getPreferenceClient,
+} from "@/lib/mercadopago"
 
 // El checkout consulta este endpoint para saber si mostrar la opción de pasarela
 export async function GET() {
@@ -48,6 +52,8 @@ export async function POST(request: NextRequest) {
     }
 
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000"
+    // auto_return exige una URL pública; en localhost MP rechaza la preferencia
+    const isPublicUrl = !baseUrl.includes("localhost")
 
     const preference = await getPreferenceClient().create({
       body: {
@@ -70,8 +76,12 @@ export async function POST(request: NextRequest) {
           failure: `${baseUrl}/checkout/cancel`,
           pending: `${baseUrl}/checkout/success?code=${order.processCode}&type=${order.shippingType}&pending=1`,
         },
-        auto_return: "approved",
-        notification_url: `${baseUrl}/api/webhook/mercadopago`,
+        ...(isPublicUrl
+          ? {
+              auto_return: "approved" as const,
+              notification_url: `${baseUrl}/api/webhook/mercadopago`,
+            }
+          : {}),
       },
     })
 
@@ -82,7 +92,10 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       preferenceId: preference.id,
-      initPoint: preference.init_point,
+      // En sandbox se navega por el init_point de pruebas
+      initPoint: isMercadoPagoSandbox()
+        ? (preference.sandbox_init_point ?? preference.init_point)
+        : preference.init_point,
     })
   } catch (error) {
     console.error("Error creando preferencia de Mercado Pago:", error)

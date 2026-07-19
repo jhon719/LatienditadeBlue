@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { z } from "zod"
 import { prisma } from "@/lib/prisma"
 import { requireUser } from "@/lib/api-guards"
+import { DEPARTMENT_CODES } from "@/lib/peru"
 
 export async function GET() {
   const { session, response } = await requireUser()
@@ -18,7 +19,9 @@ export async function GET() {
       dni: true,
       phone: true,
       address: true,
+      department: true,
       avatarFileName: true,
+      marketingOptIn: true,
       createdAt: true,
     },
   })
@@ -42,6 +45,9 @@ const profileSchema = z.object({
     .nullable()
     .or(z.literal("")),
   address: z.string().max(200).optional().nullable(),
+  // Departamento del Perú para el mapa de calor (bóveda 05.01)
+  department: z.enum(DEPARTMENT_CODES).optional().nullable().or(z.literal("")),
+  marketingOptIn: z.boolean().optional(),
 })
 
 export async function PATCH(request: NextRequest) {
@@ -70,6 +76,8 @@ export async function PATCH(request: NextRequest) {
       dni: true,
       phone: true,
       address: true,
+      department: true,
+      marketingOptIn: true,
     },
   })
 

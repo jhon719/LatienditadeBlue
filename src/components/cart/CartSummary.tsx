@@ -1,10 +1,11 @@
 "use client"
 
 import Link from "next/link"
-import { Truck } from "lucide-react"
+import { Truck, Sparkles } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
 import { CartItem } from "@/types"
+import { calculateBundleDiscount, effectivePrice } from "@/lib/pricing"
 
 interface CartSummaryProps {
   items: CartItem[]
@@ -12,8 +13,17 @@ interface CartSummaryProps {
 
 export function CartSummary({ items }: CartSummaryProps) {
   const subtotal = items.reduce(
-    (acc, item) => acc + item.product.price * item.quantity,
+    (acc, item) => acc + effectivePrice(item.product) * item.quantity,
     0
+  )
+
+  // Descuento "Combina y Ahorra" (bóveda 02.02)
+  const { discount } = calculateBundleDiscount(
+    items.map((item) => ({
+      categoryId: item.product.category.id,
+      price: effectivePrice(item.product),
+      quantity: item.quantity,
+    }))
   )
 
   return (
@@ -25,6 +35,15 @@ export function CartSummary({ items }: CartSummaryProps) {
           <span className="text-muted-foreground">Subtotal</span>
           <span>S/ {subtotal.toFixed(2)}</span>
         </div>
+
+        {discount > 0 && (
+          <div className="flex justify-between text-sm text-[#1E7E34]">
+            <span className="flex items-center gap-1 font-semibold">
+              <Sparkles className="h-3.5 w-3.5" /> Descuento por set
+            </span>
+            <span className="font-semibold">- S/ {discount.toFixed(2)}</span>
+          </div>
+        )}
 
         <div className="flex items-center gap-2 rounded-md bg-muted p-3 text-xs">
           <Truck className="h-4 w-4 text-muted-foreground" />
@@ -38,7 +57,9 @@ export function CartSummary({ items }: CartSummaryProps) {
 
         <div className="flex justify-between font-semibold">
           <span>Total parcial</span>
-          <span className="text-lg text-primary">S/ {subtotal.toFixed(2)}</span>
+          <span className="text-lg text-primary">
+            S/ {(subtotal - discount).toFixed(2)}
+          </span>
         </div>
       </div>
 

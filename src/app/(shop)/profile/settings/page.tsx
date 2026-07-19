@@ -17,6 +17,8 @@ export default async function SettingsPage() {
       dni: true,
       phone: true,
       address: true,
+      department: true,
+      marketingOptIn: true,
       passwordHash: true,
     },
   })
@@ -39,6 +41,8 @@ export default async function SettingsPage() {
           dni: user.dni ?? "",
           phone: user.phone ?? "",
           address: user.address ?? "",
+          department: user.department ?? "",
+          marketingOptIn: user.marketingOptIn,
         }}
         hasPassword={!!user.passwordHash}
       />

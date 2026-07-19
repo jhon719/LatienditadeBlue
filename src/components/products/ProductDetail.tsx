@@ -35,7 +35,8 @@ export function ProductDetail({ product }: ProductDetailProps) {
   const isPreOrder = product.status === "PREVENTA"
   const canBuy = isPreOrder || (product.status !== "AGOTADO" && product.stockQty > 0)
   const maxLimit = isPreOrder ? PREORDER_LIMIT : Math.min(product.stockQty, 10)
-  const subtotal = product.price * quantity
+  const unitPrice = product.salePrice ?? product.price
+  const subtotal = unitPrice * quantity
 
   const whatsappPhone = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER ?? "51997763962"
   const whatsappMessage = encodeURIComponent(
@@ -121,12 +122,22 @@ export function ProductDetail({ product }: ProductDetailProps) {
         </div>
       )}
 
-      {/* Precio */}
+      {/* Precio (tachado si hay campaña activa, bóveda 05.05) */}
       <div className="border-y border-border py-4">
         <div className="flex items-baseline gap-2">
           <span className="font-display text-4xl tracking-wide text-foreground">
-            S/ {product.price.toFixed(2)}
+            S/ {unitPrice.toFixed(2)}
           </span>
+          {product.salePrice !== undefined && (
+            <>
+              <span className="text-lg text-muted-foreground line-through">
+                S/ {product.price.toFixed(2)}
+              </span>
+              <span className="rounded-full bg-red-500 px-2 py-0.5 text-xs font-bold text-white">
+                -{Math.round(((product.price - product.salePrice) / product.price) * 100)}%
+              </span>
+            </>
+          )}
           <span className="text-xs text-muted-foreground">Impuestos incluidos</span>
         </div>
         <p className="mt-2 text-sm leading-relaxed text-muted-foreground">

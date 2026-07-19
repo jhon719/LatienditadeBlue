@@ -1,0 +1,26 @@
+
+> ecommerce-basictech@0.1.0 dev
+> next dev
+
+▲ Next.js 16.1.1 (Turbopack)
+- Local:         http://localhost:3000
+- Network:       http://192.168.56.1:3000
+- Environments: .env.local, .env
+
+✓ Starting...
+⚠ The "middleware" file convention is deprecated. Please use "proxy" instead. Learn more: https://nextjs.org/docs/messages/middleware-to-proxy
+✓ Ready in 2.5s
+ GET /api/auth/csrf 200 in 1634ms (compile: 1578ms, render: 56ms)
+ POST /api/auth/callback/credentials 302 in 430ms (compile: 21ms, render: 409ms)
+ GET / 200 in 1724ms (compile: 565ms, proxy.ts: 122ms, render: 1038ms)
+ GET /api/auth/session 200 in 36ms (compile: 15ms, render: 21ms)
+ GET /api/payments/mercadopago 200 in 228ms (compile: 217ms, render: 10ms)
+ PATCH /api/user/profile 200 in 320ms (compile: 286ms, render: 34ms)
+ GET /api/products?status=STOCK&limit=1 200 in 100ms (compile: 71ms, render: 29ms)
+ POST /api/orders 201 in 151ms (compile: 57ms, render: 94ms)
+ POST /api/payments/mercadopago 200 in 843ms (compile: 6ms, render: 837ms)
+ GET /api/auth/csrf 200 in 26ms (compile: 15ms, render: 11ms)
+ POST /api/auth/callback/credentials 302 in 136ms (compile: 4ms, render: 132ms)
+ GET / 200 in 332ms (compile: 8ms, proxy.ts: 11ms, render: 314ms)
+ GET /api/auth/session 200 in 19ms (compile: 4ms, render: 15ms)
+ GET /admin?range=30d 200 in 874ms (compile: 141ms, proxy.ts: 12ms, render: 720ms)

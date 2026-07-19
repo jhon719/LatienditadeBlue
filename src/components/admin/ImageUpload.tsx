@@ -15,9 +15,16 @@ interface ImageUploadProps {
   value: UploadedImage[]
   onChange: (images: UploadedImage[]) => void
   maxImages?: number
+  // Subcarpeta lógica en Cloudinary/uploads: products | banners | reviews
+  folder?: string
 }
 
-export function ImageUpload({ value = [], onChange, maxImages = 5 }: ImageUploadProps) {
+export function ImageUpload({
+  value = [],
+  onChange,
+  maxImages = 5,
+  folder = "products",
+}: ImageUploadProps) {
   const [uploading, setUploading] = useState(false)
   const [dragActive, setDragActive] = useState(false)
 
@@ -35,6 +42,7 @@ export function ImageUpload({ value = [], onChange, maxImages = 5 }: ImageUpload
         const uploadPromises = filesToUpload.map(async (file) => {
           const formData = new FormData()
           formData.append("file", file)
+          formData.append("folder", folder)
 
           const response = await fetch("/api/upload", {
             method: "POST",
@@ -57,7 +65,7 @@ export function ImageUpload({ value = [], onChange, maxImages = 5 }: ImageUpload
         setUploading(false)
       }
     },
-    [value, onChange, maxImages]
+    [value, onChange, maxImages, folder]
   )
 
   const handleRemove = useCallback(

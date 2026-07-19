@@ -55,6 +55,33 @@ enum ProofStatus {
   REJECTED
 }
 
+// Nivel de fidelidad del CRM (bóveda 05.04 §3)
+enum LoyaltyTier {
+  NUEVO
+  FRECUENTE
+  VIP
+  EN_RIESGO
+}
+
+// Máquina de estados de tiempo para campañas (bóveda 05.05 §3)
+enum CampaignStatus {
+  DRAFT     // Se está diseñando, invisible para clientes
+  ACTIVE    // Permanente hasta que el admin lo apague
+  SCHEDULED // Requiere validFrom / validUntil
+}
+
+enum DiscountType {
+  PERCENTAGE   // 15 → 15% de descuento
+  FIXED_AMOUNT // 20 → S/ 20 menos
+}
+
+// Segmentación de reglas de precio (bóveda 05.05 §4)
+enum DiscountScope {
+  GLOBAL
+  CATEGORY
+  LINE
+}
+
 // ==================== USUARIOS Y PERFILES ====================
 
 model User {
@@ -64,15 +91,22 @@ model User {
   username     String  @unique // Nombre público para reseñas
 
   // Datos privados (visibles solo por el propio usuario y el ADMIN)
-  firstName String?
-  lastName  String?
-  dni       String?
-  phone     String?
-  address   String?
+  firstName  String?
+  lastName   String?
+  dni        String?
+  phone      String?
+  address    String?
+  department String? // Departamento del Perú (alimenta el mapa de calor, bóveda 05.01)
 
-  avatarFileName     String? // Archivo en public/Imagenes/avatar/
+  // URL de Cloudinary (latiendita/avatars) o archivo en public/Imagenes/avatar/
+  avatarFileName     String?
   role               Role    @default(CUSTOMER)
   mustChangePassword Boolean @default(false)
+
+  // CRM / Ficha 360° (bóveda 05.04)
+  loyaltyTier    LoyaltyTier @default(NUEVO)
+  adminNotes     String?     @db.Text // Recordatorios internos del admin
+  marketingOptIn Boolean     @default(false) // Consentimiento explícito (Ley 29733)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -81,6 +115,7 @@ model User {
   orders        Order[]
   reviews       Review[]
   paymentProofs PaymentProof[]
+  preorders     PreorderReservation[]
 
   @@map("users")
 }
@@ -118,9 +153,10 @@ model Category {
   isTrending     Boolean @default(false)
   hasNewArrivals Boolean @default(false)
 
-  products  Product[]
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
+  products      Product[]
+  discountRules DiscountRule[]
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
 
   @@map("categories")
 }
@@ -133,9 +169,10 @@ model Line {
   isActive   Boolean @default(true)
   isFeatured Boolean @default(false)
 
-  products  Product[]
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
+  products      Product[]
+  discountRules DiscountRule[]
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
 
   @@map("lines")
 }
@@ -181,6 +218,8 @@ model Product {
 
   reviews    Review[]
   orderItems OrderItem[]
+  batchItems ImportBatchItem[]
+  preorders  PreorderReservation[]
 
   @@index([categoryId])
   @@index([lineId])
@@ -220,8 +259,14 @@ model Order {
   userId String
   user   User   @relation(fields: [userId], references: [id])
 
-  totalAmount  Decimal @db.Decimal(10, 2) // Productos + envío
-  shippingCost Decimal @default(0) @db.Decimal(10, 2)
+  totalAmount    Decimal @db.Decimal(10, 2) // Productos - descuentos + envío
+  shippingCost   Decimal @default(0) @db.Decimal(10, 2)
+  discountAmount Decimal @default(0) @db.Decimal(10, 2) // "Combina y Ahorra" (bóveda 02.02)
+  couponDiscount Decimal @default(0) @db.Decimal(10, 2) // Cupón aplicado (bóveda 05.05)
+
+  couponId   String?
+  coupon     Coupon? @relation(fields: [couponId], references: [id])
+  couponCode String? // Código congelado para trazabilidad histórica
 
   shippingType    ShippingType   @default(LOCAL_DELIVERY)
   shippingStatus  ShippingStatus @default(PREPARING)
@@ -244,6 +289,7 @@ model Order {
 
   @@index([userId])
   @@index([status])
+  @@index([couponId])
   @@map("orders")
 }
 
@@ -282,4 +328,176 @@ model PaymentProof {
   updatedAt DateTime @updatedAt
 
   @@map("payment_proofs")
+}
+
+// ==================== CAMPAÑAS Y MARKETING (bóveda 05.05) ====================
+
+// Hero Banners del carrusel principal
+model Banner {
+  id             String  @id @default(cuid())
+  title          String
+  subtitle       String?
+  imageUrl       String // Imagen para escritorio
+  mobileImageUrl String? // Imagen optimizada para móvil (opcional)
+  ctaLabel       String? // Texto del botón (ej. "Ver colección")
+  ctaUrl         String? // Destino (ej. /products?category=one-piece)
+  sortOrder      Int     @default(0) // Orden de aparición en el carrusel
+
+  status     CampaignStatus @default(DRAFT)
+  validFrom  DateTime?
+  validUntil DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([status])
+  @@map("banners")
+}
+
+// Cinta de anuncios superior (Top Bar)
+model Announcement {
+  id        String  @id @default(cuid())
+  text      String
+  linkUrl   String? // Si es null, la cinta es estática
+  bgColor   String  @default("#142F5C")
+  textColor String  @default("#FFFFFF")
+
+  status     CampaignStatus @default(DRAFT)
+  validFrom  DateTime?
+  validUntil DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([status])
+  @@map("announcements")
+}
+
+// Reglas de precio automáticas (precios tachados en el catálogo)
+model DiscountRule {
+  id    String       @id @default(cuid())
+  name  String // Nombre interno, ej. "Cyber Days Dragon Ball"
+  type  DiscountType
+  value Decimal      @db.Decimal(10, 2)
+
+  scope      DiscountScope @default(GLOBAL)
+  categoryId String?
+  category   Category?     @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  lineId     String?
+  line       Line?         @relation(fields: [lineId], references: [id], onDelete: Cascade)
+
+  status     CampaignStatus @default(DRAFT)
+  validFrom  DateTime?
+  validUntil DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([status])
+  @@index([categoryId])
+  @@index([lineId])
+  @@map("discount_rules")
+}
+
+// Cupones alfanuméricos canjeables en el checkout
+model Coupon {
+  id          String       @id @default(cuid())
+  code        String       @unique // Ej. BLUE10 (se guarda en mayúsculas)
+  description String?
+  type        DiscountType
+  value       Decimal      @db.Decimal(10, 2)
+  minPurchase Decimal      @default(0) @db.Decimal(10, 2) // Monto mínimo de compra
+  maxUses     Int? // null = ilimitado
+  usedCount   Int          @default(0)
+
+  status     CampaignStatus @default(DRAFT)
+  validFrom  DateTime?
+  validUntil DateTime?
+
+  orders Order[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([status])
+  @@map("coupons")
+}
+
+// ==================== LOGÍSTICA Y BACKOFFICE (bóveda 05.03) ====================
+
+// Lotes de importación: stock en tránsito (aduanas), invisible para la venta
+enum BatchStatus {
+  IN_TRANSIT // Comprado al proveedor, en camino
+  RECEIVED   // Llegó a almacén → stock inyectado automáticamente
+}
+
+model ImportBatch {
+  id          String      @id @default(cuid())
+  name        String // Ej. "Lote Julio - Banpresto"
+  supplier    String? // Proveedor
+  trackingRef String? // Guía internacional / referencia aduanera
+  eta         DateTime? // Fecha estimada de llegada (mueve las preventas asociadas)
+  status      BatchStatus @default(IN_TRANSIT)
+  receivedAt  DateTime?
+  notes       String?     @db.Text
+
+  items     ImportBatchItem[]
+  preorders PreorderReservation[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([status])
+  @@map("import_batches")
+}
+
+model ImportBatchItem {
+  id String @id @default(cuid())
+
+  batchId String
+  batch   ImportBatch @relation(fields: [batchId], references: [id], onDelete: Cascade)
+
+  productId String
+  product   Product @relation(fields: [productId], references: [id])
+
+  quantity Int
+  unitCost Decimal? @db.Decimal(10, 2) // Costo del proveedor (para contabilidad)
+
+  @@index([batchId])
+  @@map("import_batch_items")
+}
+
+// Apartados de preventa con adelanto (deposit) y saldo por cobrar
+enum PreorderStatus {
+  PENDING   // Figura en tránsito, adelanto pagado
+  ARRIVED   // Llegó a almacén: cobrando saldo (dueDate activo, semáforo)
+  COMPLETED // Cliente pagó el saldo y recibió su figura
+  CANCELLED // Abandono: adelanto retenido, figura liberada al stock
+}
+
+model PreorderReservation {
+  id String @id @default(cuid())
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+
+  productId String
+  product   Product @relation(fields: [productId], references: [id])
+
+  batchId String?
+  batch   ImportBatch? @relation(fields: [batchId], references: [id])
+
+  totalPrice  Decimal @db.Decimal(10, 2)
+  depositPaid Decimal @db.Decimal(10, 2) // Adelanto no reembolsable (bóveda 07.01)
+
+  status  PreorderStatus @default(PENDING)
+  dueDate DateTime? // Plazo límite para cancelar el saldo tras la llegada
+  notes   String?        @db.Text
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([status])
+  @@index([userId])
+  @@map("preorder_reservations")
 }

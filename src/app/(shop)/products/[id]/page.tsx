@@ -15,6 +15,7 @@ import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
 import { ProductGallery } from "@/components/products/ProductGallery"
 import { ProductDetail } from "@/components/products/ProductDetail"
+import { ProductBundle } from "@/components/products/ProductBundle"
 import { ProductReviews } from "@/components/products/ProductReviews"
 import { ProductCard } from "@/components/products/ProductCard"
 import { Product } from "@/types"
@@ -144,6 +145,9 @@ export default function ProductPage({ params }: ProductPageProps) {
         <ProductGallery images={product.images} productName={product.name} />
         <ProductDetail product={product} />
       </div>
+
+      {/* Combina y Ahorra (bóveda 02.02 bloque 3) */}
+      <ProductBundle product={product} />
 
       {/* Reseñas vinculadas a usuarios (bóveda 02.04) */}
       <ProductReviews productId={product.id} />

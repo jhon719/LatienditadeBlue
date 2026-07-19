@@ -5,12 +5,14 @@ import {
   transformProduct,
   transformReview,
 } from "@/lib/transformers"
+import { getActiveDiscountRules, getActiveBanners } from "@/lib/campaigns"
 import { HeroBanner } from "@/components/home/HeroBanner"
 import { QuickAccessPanel } from "@/components/home/QuickAccessPanel"
 import { CategoryTrends } from "@/components/home/CategoryTrends"
 import { FeaturedProducts } from "@/components/home/FeaturedProducts"
 import { LinesSection } from "@/components/home/LinesSection"
 import { ReviewsSection } from "@/components/home/ReviewsSection"
+import { BuyMeACoffee } from "@/components/home/BuyMeACoffee"
 import { BluetBubble } from "@/components/layout/BluetBubble"
 
 export const dynamic = "force-dynamic"
@@ -45,14 +47,29 @@ export default async function HomePage() {
     }),
   ])
 
+  const [rules, banners] = await Promise.all([
+    getActiveDiscountRules(),
+    getActiveBanners(),
+  ])
+
   return (
     <>
-      <HeroBanner />
+      <HeroBanner
+        banners={banners.map((b) => ({
+          id: b.id,
+          title: b.title,
+          subtitle: b.subtitle ?? undefined,
+          imageUrl: b.imageUrl,
+          ctaLabel: b.ctaLabel ?? undefined,
+          ctaUrl: b.ctaUrl ?? undefined,
+        }))}
+      />
       <QuickAccessPanel />
       <CategoryTrends categories={categories.map(transformCategory)} />
-      <FeaturedProducts products={featured.map(transformProduct)} />
+      <FeaturedProducts products={featured.map((p) => transformProduct(p, rules))} />
       <LinesSection lines={lines.map(transformLine)} />
       <ReviewsSection reviews={reviews.map((r) => transformReview(r, true))} />
+      <BuyMeACoffee />
       <BluetBubble />
     </>
   )

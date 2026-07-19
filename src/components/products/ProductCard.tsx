@@ -16,6 +16,17 @@ interface ProductCardProps {
 
 const PLACEHOLDER_IMAGE = "/Imagenes/Mascota BLUE.png"
 
+// Badge automático de oferta (bóveda 05.05 §2 "Badges")
+function OfferBadge({ product }: { product: Product }) {
+  if (product.salePrice === undefined) return null
+  const percent = Math.round(
+    ((product.price - product.salePrice) / product.price) * 100
+  )
+  return (
+    <Badge className="bg-red-500 text-white shadow">-{percent}% OFF</Badge>
+  )
+}
+
 // Badges de estado con colores pastel de la marca (bóveda 01.04 / 02.01)
 function StatusBadge({ product }: { product: Product }) {
   switch (product.status) {
@@ -56,6 +67,7 @@ export function ProductCard({ product }: ProductCardProps) {
       <div className="relative aspect-square overflow-hidden bg-muted">
         <div className="absolute left-2 top-2 z-10 flex flex-col gap-1">
           <StatusBadge product={product} />
+          <OfferBadge product={product} />
         </div>
 
         <Link href={`/products/${product.slug}`}>
@@ -117,8 +129,13 @@ export function ProductCard({ product }: ProductCardProps) {
 
         <div className="mt-2 flex items-baseline gap-2">
           <span className="text-lg font-bold text-primary">
-            S/ {product.price.toFixed(2)}
+            S/ {(product.salePrice ?? product.price).toFixed(2)}
           </span>
+          {product.salePrice !== undefined && (
+            <span className="text-sm text-muted-foreground line-through">
+              S/ {product.price.toFixed(2)}
+            </span>
+          )}
         </div>
 
         <p className="mt-1 text-xs text-muted-foreground">

@@ -1,20 +1,40 @@
 "use client"
 
 import Image from "next/image"
+import { Sparkles } from "lucide-react"
 import { Separator } from "@/components/ui/separator"
 import { CartItem } from "@/types"
+import { calculateBundleDiscount, effectivePrice } from "@/lib/pricing"
 
 interface OrderSummaryProps {
   items: CartItem[]
   shippingCost: number
+  // Cupón validado en el checkout (bóveda 05.05)
+  couponDiscount?: number
+  couponCode?: string
 }
 
-export function OrderSummary({ items, shippingCost }: OrderSummaryProps) {
+export function OrderSummary({
+  items,
+  shippingCost,
+  couponDiscount = 0,
+  couponCode,
+}: OrderSummaryProps) {
   const subtotal = items.reduce(
-    (acc, item) => acc + item.product.price * item.quantity,
+    (acc, item) => acc + effectivePrice(item.product) * item.quantity,
     0
   )
-  const total = subtotal + shippingCost
+
+  // Descuento "Combina y Ahorra" (bóveda 02.02): mismo cálculo que el servidor
+  const { discount } = calculateBundleDiscount(
+    items.map((item) => ({
+      categoryId: item.product.category.id,
+      price: effectivePrice(item.product),
+      quantity: item.quantity,
+    }))
+  )
+
+  const total = subtotal - discount - couponDiscount + shippingCost
 
   return (
     <div className="rounded-lg border bg-card p-6">
@@ -41,11 +61,11 @@ export function OrderSummary({ items, shippingCost }: OrderSummaryProps) {
                 {item.product.name}
               </p>
               <p className="text-xs text-muted-foreground">
-                S/ {item.product.price.toFixed(2)} c/u
+                S/ {effectivePrice(item.product).toFixed(2)} c/u
               </p>
             </div>
             <p className="self-center text-sm font-semibold">
-              S/ {(item.product.price * item.quantity).toFixed(2)}
+              S/ {(effectivePrice(item.product) * item.quantity).toFixed(2)}
             </p>
           </div>
         ))}
@@ -58,6 +78,22 @@ export function OrderSummary({ items, shippingCost }: OrderSummaryProps) {
           <span className="text-muted-foreground">Subtotal</span>
           <span>S/ {subtotal.toFixed(2)}</span>
         </div>
+        {discount > 0 && (
+          <div className="flex justify-between text-[#1E7E34]">
+            <span className="flex items-center gap-1 font-semibold">
+              <Sparkles className="h-3.5 w-3.5" /> Descuento por set
+            </span>
+            <span className="font-semibold">- S/ {discount.toFixed(2)}</span>
+          </div>
+        )}
+        {couponDiscount > 0 && (
+          <div className="flex justify-between text-[#1E7E34]">
+            <span className="flex items-center gap-1 font-semibold">
+              <Sparkles className="h-3.5 w-3.5" /> Cupón {couponCode}
+            </span>
+            <span className="font-semibold">- S/ {couponDiscount.toFixed(2)}</span>
+          </div>
+        )}
         <div className="flex justify-between">
           <span className="text-muted-foreground">Envío</span>
           <span>

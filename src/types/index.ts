@@ -19,6 +19,10 @@ export interface Product {
   slug: string
   description: string
   price: number
+  // Precio rebajado por regla de campaña activa (bóveda 05.05); si existe,
+  // es el precio real de venta y `price` se muestra tachado
+  salePrice?: number
+  discountRuleName?: string
   status: ProductStatus
   expectedDate?: string // ISO date (solo PREVENTA)
   stockQty: number
@@ -83,6 +87,24 @@ export interface FilterState {
   sortBy: "popular" | "price-asc" | "price-desc" | "newest" | "rating"
 }
 
+// Contenido administrable del CMS de marketing (bóveda 05.05)
+export interface BannerView {
+  id: string
+  title: string
+  subtitle?: string
+  imageUrl: string
+  ctaLabel?: string
+  ctaUrl?: string
+}
+
+export interface AnnouncementView {
+  id: string
+  text: string
+  linkUrl?: string
+  bgColor: string
+  textColor: string
+}
+
 export interface ReviewItem {
   id: string
   rating: number
@@ -110,6 +132,9 @@ export interface OrderView {
   processCode: string
   totalAmount: number
   shippingCost: number
+  discountAmount: number
+  couponDiscount: number
+  couponCode?: string
   shippingType: ShippingType
   shippingStatus: ShippingStatus
   receiverName: string

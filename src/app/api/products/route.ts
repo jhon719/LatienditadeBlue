@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma"
 import { transformProduct } from "@/lib/transformers"
 import { requireAdmin } from "@/lib/api-guards"
 import { slugify } from "@/lib/utils"
+import { getActiveDiscountRules } from "@/lib/campaigns"
 
 export async function GET(request: NextRequest) {
   try {
@@ -61,7 +62,7 @@ export async function GET(request: NextRequest) {
         break
     }
 
-    const [dbProducts, total] = await Promise.all([
+    const [dbProducts, total, rules] = await Promise.all([
       prisma.product.findMany({
         where,
         orderBy,
@@ -75,10 +76,11 @@ export async function GET(request: NextRequest) {
         skip: offset ? Number(offset) : undefined,
       }),
       prisma.product.count({ where }),
+      getActiveDiscountRules(),
     ])
 
     return NextResponse.json({
-      products: dbProducts.map(transformProduct),
+      products: dbProducts.map((p) => transformProduct(p, rules)),
       total,
       limit: limit ? Number(limit) : null,
       offset: offset ? Number(offset) : 0,

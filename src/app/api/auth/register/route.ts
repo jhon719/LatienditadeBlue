@@ -14,6 +14,8 @@ const registerSchema = z.object({
     .string()
     .min(8, "La contraseña debe tener al menos 8 caracteres")
     .regex(/[0-9!@#$%^&*(),.?":{}|<>_-]/, "Debe incluir al menos un número o símbolo"),
+  // Consentimiento explícito para promociones (bóveda 05.04 §4, Ley 29733)
+  marketingOptIn: z.boolean().default(false),
 })
 
 export async function POST(request: NextRequest) {
@@ -28,7 +30,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const { username, email, password } = parsed.data
+    const { username, email, password, marketingOptIn } = parsed.data
 
     const existingEmail = await prisma.user.findUnique({ where: { email } })
     if (existingEmail) {
@@ -61,6 +63,7 @@ export async function POST(request: NextRequest) {
         username: username.toLowerCase(),
         email,
         passwordHash,
+        marketingOptIn,
       },
       select: { id: true, username: true, email: true },
     })

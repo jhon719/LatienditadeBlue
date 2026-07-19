@@ -2,11 +2,77 @@
 
 import Image from "next/image"
 import Link from "next/link"
+import Autoplay from "embla-carousel-autoplay"
 import { ArrowRight, Sparkles } from "lucide-react"
 import { AnimatedContent } from "@/components/react-bits/AnimatedContent"
 import { MagneticButton } from "@/components/react-bits/MagneticButton"
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+} from "@/components/ui/carousel"
+import type { BannerView } from "@/types"
 
-export function HeroBanner() {
+// Carrusel de Hero Banners administrables (bóveda 05.05 §2).
+// Si el admin no ha activado ninguno, se muestra el hero estático de la marca.
+export function HeroBanner({ banners = [] }: { banners?: BannerView[] }) {
+  if (banners.length > 0) {
+    return (
+      <section className="relative">
+        <Carousel
+          opts={{ loop: true }}
+          plugins={[Autoplay({ delay: 6000, stopOnInteraction: true })]}
+        >
+          <CarouselContent>
+            {banners.map((banner) => (
+              <CarouselItem key={banner.id}>
+                <div className="relative h-[420px] w-full overflow-hidden bg-[#142F5C] sm:h-[480px]">
+                  <Image
+                    src={banner.imageUrl}
+                    alt={banner.title}
+                    fill
+                    priority
+                    className="object-cover"
+                    sizes="100vw"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-r from-[#142F5C]/80 via-[#142F5C]/40 to-transparent" />
+                  <div className="blue-container relative flex h-full flex-col justify-center">
+                    <AnimatedContent className="max-w-2xl text-white">
+                      <h2 className="font-display text-6xl leading-[0.95] drop-shadow sm:text-7xl">
+                        {banner.title}
+                      </h2>
+                      {banner.subtitle && (
+                        <p className="mt-4 max-w-xl text-lg font-semibold text-white/85">
+                          {banner.subtitle}
+                        </p>
+                      )}
+                      {banner.ctaLabel && banner.ctaUrl && (
+                        <Link
+                          href={banner.ctaUrl}
+                          className="mt-7 inline-flex h-12 items-center gap-2 rounded-full bg-[#F5B400] px-7 font-extrabold text-[#142F5C] solid-shadow-blue transition hover:brightness-105"
+                        >
+                          {banner.ctaLabel} <ArrowRight className="h-5 w-5" />
+                        </Link>
+                      )}
+                    </AnimatedContent>
+                  </div>
+                </div>
+              </CarouselItem>
+            ))}
+          </CarouselContent>
+          {banners.length > 1 && (
+            <>
+              <CarouselPrevious className="left-4" />
+              <CarouselNext className="right-4" />
+            </>
+          )}
+        </Carousel>
+      </section>
+    )
+  }
+
   return (
     <section className="relative overflow-hidden bg-[#142F5C] text-white">
       <div className="absolute inset-0">

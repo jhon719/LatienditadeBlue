@@ -38,6 +38,7 @@ const registerSchema = z.object({
     .min(8, "La contraseña debe tener al menos 8 caracteres")
     .regex(/[0-9!@#$%^&*(),.?":{}|<>_-]/, "Incluye al menos un número o símbolo"),
   confirmPassword: z.string(),
+  marketingOptIn: z.boolean(),
 }).refine((data) => data.password === data.confirmPassword, {
   message: "Las contraseñas no coinciden",
   path: ["confirmPassword"],
@@ -55,6 +56,7 @@ export function RegisterForm({ googleEnabled = false }: { googleEnabled?: boolea
     formState: { errors, isSubmitting },
   } = useForm<RegisterFormData>({
     resolver: zodResolver(registerSchema),
+    defaultValues: { marketingOptIn: false },
   })
 
   const onSubmit = async (data: RegisterFormData) => {
@@ -68,6 +70,7 @@ export function RegisterForm({ googleEnabled = false }: { googleEnabled?: boolea
           username: data.username,
           email: data.email,
           password: data.password,
+          marketingOptIn: data.marketingOptIn,
         }),
       })
 
@@ -170,6 +173,19 @@ export function RegisterForm({ googleEnabled = false }: { googleEnabled?: boolea
                 <FieldDescription>
                   Mínimo 8 caracteres con al menos un número o símbolo.
                 </FieldDescription>
+              </Field>
+              <Field>
+                <label className="flex cursor-pointer items-start gap-2 text-xs text-muted-foreground">
+                  <input
+                    type="checkbox"
+                    className="mt-0.5 h-4 w-4 accent-[#4A80BE]"
+                    {...register("marketingOptIn")}
+                  />
+                  <span>
+                    Quiero recibir novedades, preventas y promociones por correo
+                    (opcional)
+                  </span>
+                </label>
               </Field>
               <Field>
                 <Button type="submit" className="w-full" disabled={isSubmitting}>

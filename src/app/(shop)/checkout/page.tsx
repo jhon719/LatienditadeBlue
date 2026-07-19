@@ -22,7 +22,9 @@ import { Label } from "@/components/ui/label"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { OrderSummary } from "@/components/checkout/OrderSummary"
 import { ManualPaymentSection } from "@/components/checkout/ManualPaymentSection"
+import { CouponInput, type AppliedCoupon } from "@/components/checkout/CouponInput"
 import { useCartStore } from "@/stores/cart-store"
+import { calculateBundleDiscount, effectivePrice } from "@/lib/pricing"
 
 // Modalidades de envío (bóveda 03.03)
 const SHIPPING_OPTIONS = [
@@ -58,6 +60,10 @@ const checkoutSchema = z
     shippingType: z.enum(["PICKUP", "LOCAL_DELIVERY", "NATIONAL_COURIER"]),
     deliveryAddress: z.string().optional(),
     paymentMethod: z.enum(["MANUAL_TRANSFER", "MERCADO_PAGO"]),
+    // Check-box obligatorio del marco legal (bóveda 07.01 §5)
+    acceptTerms: z.boolean().refine((v) => v === true, {
+      message: "Debes aceptar los términos y condiciones para continuar",
+    }),
   })
   .refine(
     (data) => data.shippingType === "PICKUP" || !!data.deliveryAddress?.trim(),
@@ -79,6 +85,7 @@ export default function CheckoutPage() {
   const [voucherUrl, setVoucherUrl] = useState<string | null>(null)
   const [operationNumber, setOperationNumber] = useState("")
   const [submitError, setSubmitError] = useState<string | null>(null)
+  const [coupon, setCoupon] = useState<AppliedCoupon | null>(null)
 
   const {
     register,
@@ -91,6 +98,7 @@ export default function CheckoutPage() {
     defaultValues: {
       shippingType: "LOCAL_DELIVERY",
       paymentMethod: "MANUAL_TRANSFER",
+      acceptTerms: false,
     },
   })
 
@@ -98,6 +106,20 @@ export default function CheckoutPage() {
   const paymentMethod = watch("paymentMethod")
   const shippingCost =
     SHIPPING_OPTIONS.find((o) => o.value === shippingType)?.cost ?? 0
+
+  // Subtotal tras "Combina y Ahorra": base sobre la que se valida el cupón
+  const subtotal = items.reduce(
+    (acc, item) => acc + effectivePrice(item.product) * item.quantity,
+    0
+  )
+  const { discount: bundleDiscount } = calculateBundleDiscount(
+    items.map((item) => ({
+      categoryId: item.product.category.id,
+      price: effectivePrice(item.product),
+      quantity: item.quantity,
+    }))
+  )
+  const couponBase = subtotal - bundleDiscount
 
   useEffect(() => {
     fetch("/api/payments/mercadopago")
@@ -134,6 +156,7 @@ export default function CheckoutPage() {
         receiverPhone: data.receiverPhone,
         deliveryAddress: data.deliveryAddress,
         paymentMethod: data.paymentMethod,
+        ...(coupon ? { couponCode: coupon.code } : {}),
         ...(data.paymentMethod === "MANUAL_TRANSFER"
           ? { proof: { imageUrl: voucherUrl, operationNumber } }
           : {}),
@@ -362,7 +385,54 @@ export default function CheckoutPage() {
           {/* Resumen */}
           <div className="lg:col-span-1">
             <div className="sticky top-24 space-y-4">
-              <OrderSummary items={items} shippingCost={shippingCost} />
+              <OrderSummary
+                items={items}
+                shippingCost={shippingCost}
+                couponDiscount={coupon?.discount ?? 0}
+                couponCode={coupon?.code}
+              />
+
+              {/* Código de descuento (bóveda 06.01 Fase 1) */}
+              <CouponInput
+                subtotal={couponBase}
+                applied={coupon}
+                onApply={setCoupon}
+              />
+
+              {/* Aceptación obligatoria del marco legal (bóveda 07.01 §5) */}
+              <div className="rounded-xl border border-border bg-card p-4">
+                <label className="flex cursor-pointer items-start gap-3">
+                  <input
+                    type="checkbox"
+                    className="mt-0.5 h-4 w-4 accent-[#4A80BE]"
+                    {...register("acceptTerms")}
+                  />
+                  <span className="text-xs leading-relaxed text-muted-foreground">
+                    He leído y acepto los{" "}
+                    <Link
+                      href="/terms"
+                      target="_blank"
+                      className="font-bold text-primary underline"
+                    >
+                      términos y condiciones de preventa y venta
+                    </Link>{" "}
+                    y la{" "}
+                    <Link
+                      href="/privacy"
+                      target="_blank"
+                      className="font-bold text-primary underline"
+                    >
+                      política de privacidad
+                    </Link>
+                    .
+                  </span>
+                </label>
+                {errors.acceptTerms && (
+                  <p className="mt-2 text-xs text-destructive">
+                    {errors.acceptTerms.message}
+                  </p>
+                )}
+              </div>
 
               {submitError && (
                 <div className="rounded-md bg-destructive/15 p-3 text-sm text-destructive">
@@ -388,11 +458,6 @@ export default function CheckoutPage() {
                   "Confirmar Pedido"
                 )}
               </Button>
-
-              <p className="text-center text-xs text-muted-foreground">
-                Al confirmar aceptas los términos de preventa y venta de La
-                Tiendita de Blue.
-              </p>
             </div>
           </div>
         </div>

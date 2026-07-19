@@ -1,7 +1,8 @@
 "use client"
 
 import { useCallback, useEffect, useState } from "react"
-import { Search, Loader2, KeyRound, Copy, Check } from "lucide-react"
+import Link from "next/link"
+import { Search, Loader2, KeyRound, Copy, Check, ContactRound } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
@@ -37,6 +38,7 @@ interface AdminUser {
   address: string | null
   avatarFileName: string | null
   role: string
+  loyaltyTier: string
   mustChangePassword: boolean
   isGoogleAccount: boolean
   createdAt: string
@@ -155,19 +157,25 @@ export default function AdminUsersPage() {
                   filtered.map((user) => (
                     <TableRow key={user.id}>
                       <TableCell>
-                        <div className="flex items-center gap-3">
+                        <Link
+                          href={`/admin/users/${user.id}`}
+                          className="flex items-center gap-3 hover:opacity-80"
+                        >
                           <UserAvatar
                             username={user.username}
                             avatarFileName={user.avatarFileName}
                             size={36}
                           />
                           <div>
-                            <p className="font-medium">@{user.username}</p>
+                            <p className="flex items-center gap-1 font-medium">
+                              @{user.username}
+                              <ContactRound className="h-3.5 w-3.5 text-muted-foreground" />
+                            </p>
                             <p className="text-xs text-muted-foreground">
                               {user.email}
                             </p>
                           </div>
-                        </div>
+                        </Link>
                       </TableCell>
                       <TableCell>
                         <p className="text-sm">

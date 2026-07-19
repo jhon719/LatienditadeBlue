@@ -8,11 +8,15 @@ interface UserAvatarProps {
   size?: number
 }
 
-// Avatar local (bóveda 02.04): archivo en public/Imagenes/avatar/,
-// con la mascota Bluet como fallback oficial
+// Avatar del usuario (bóveda 02.04). `avatarFileName` puede ser:
+//  - una URL completa de Cloudinary (latiendita/avatars), o
+//  - un nombre de archivo local en public/Imagenes/avatar/
+// En ambos casos la mascota Bluet es el fallback oficial.
 export function UserAvatar({ avatarFileName, username, size = 40 }: UserAvatarProps) {
   const srcPath = avatarFileName
-    ? `/Imagenes/avatar/${avatarFileName}`
+    ? avatarFileName.startsWith("http")
+      ? avatarFileName
+      : `/Imagenes/avatar/${avatarFileName}`
     : "/Imagenes/Mascota BLUE.png"
 
   return (
