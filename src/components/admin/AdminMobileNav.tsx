@@ -7,7 +7,9 @@ import {
   Menu,
   LayoutDashboard,
   Package,
-  CreditCard,
+  Inbox,
+  ClipboardList,
+  Tags,
   Users,
   Settings,
   Store,
@@ -24,10 +26,12 @@ import {
 
 const navigation = [
   { name: "Dashboard", href: "/admin", icon: LayoutDashboard },
+  { name: "Bandeja POS", href: "/admin/manual-payments", icon: Inbox },
+  { name: "Órdenes", href: "/admin/orders", icon: ClipboardList },
   { name: "Productos", href: "/admin/products", icon: Package },
-  { name: "Pagos", href: "/admin/payments", icon: CreditCard },
+  { name: "Categorías y Líneas", href: "/admin/categories", icon: Tags },
   { name: "Usuarios", href: "/admin/users", icon: Users },
-  { name: "Configuracion", href: "/admin/settings", icon: Settings },
+  { name: "Configuración", href: "/admin/settings", icon: Settings },
 ]
 
 export function AdminMobileNav() {

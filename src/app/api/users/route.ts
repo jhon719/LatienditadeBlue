@@ -1,96 +1,68 @@
 import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
+import { requireAdmin } from "@/lib/api-guards"
 
+// Listado de clientes para el admin: incluye datos privados (bóveda 02.03,
+// visibles exclusivamente por el rol ADMIN)
 export async function GET(request: NextRequest) {
+  const { response } = await requireAdmin()
+  if (response) return response
+
   try {
     const { searchParams } = new URL(request.url)
     const role = searchParams.get("role")
-    const status = searchParams.get("status")
-
-    const where: Record<string, unknown> = {}
-
-    if (role) {
-      where.role = role.toUpperCase()
-    }
-
-    if (status) {
-      where.status = status.toUpperCase()
-    }
 
     const users = await prisma.user.findMany({
-      where,
+      where: role && role !== "all" ? { role: role.toUpperCase() as "ADMIN" | "CUSTOMER" } : undefined,
       select: {
         id: true,
-        name: true,
+        username: true,
         email: true,
-        avatar: true,
+        firstName: true,
+        lastName: true,
+        dni: true,
+        phone: true,
+        address: true,
+        avatarFileName: true,
         role: true,
-        status: true,
+        mustChangePassword: true,
+        passwordHash: true,
         createdAt: true,
-        _count: {
-          select: { orders: true },
-        },
+        _count: { select: { orders: true } },
         orders: {
-          select: {
-            total: true,
-          },
+          where: { status: { in: ["PAID_APPROVED", "COMPLETED"] } },
+          select: { totalAmount: true },
         },
       },
       orderBy: { createdAt: "desc" },
     })
 
-    const transformedUsers = users.map((user) => ({
-      id: user.id,
-      name: user.name,
-      email: user.email,
-      avatar: user.avatar,
-      role: user.role.toLowerCase(),
-      status: user.status.toLowerCase(),
-      createdAt: user.createdAt.toISOString(),
-      orders: user._count.orders,
-      totalSpent: user.orders.reduce((sum, order) => sum + Number(order.total), 0),
-    }))
-
-    return NextResponse.json(transformedUsers)
+    return NextResponse.json(
+      users.map((user) => ({
+        id: user.id,
+        username: user.username,
+        email: user.email,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        dni: user.dni,
+        phone: user.phone,
+        address: user.address,
+        avatarFileName: user.avatarFileName,
+        role: user.role,
+        mustChangePassword: user.mustChangePassword,
+        isGoogleAccount: !user.passwordHash,
+        createdAt: user.createdAt.toISOString(),
+        orderCount: user._count.orders,
+        totalSpent: user.orders.reduce(
+          (acc, o) => acc + Number(o.totalAmount),
+          0
+        ),
+      }))
+    )
   } catch (error) {
     console.error("Error fetching users:", error)
     return NextResponse.json(
-      { error: "Error fetching users" },
-      { status: 500 }
-    )
-  }
-}
-
-export async function POST(request: NextRequest) {
-  try {
-    const body = await request.json()
-
-    // In a real app, you'd hash the password here
-    const user = await prisma.user.create({
-      data: {
-        email: body.email,
-        password: body.password, // Should be hashed
-        name: body.name,
-        phone: body.phone,
-        role: body.role?.toUpperCase() || "CUSTOMER",
-        status: "ACTIVE",
-      },
-    })
-
-    return NextResponse.json(
-      {
-        id: user.id,
-        name: user.name,
-        email: user.email,
-        role: user.role.toLowerCase(),
-        status: user.status.toLowerCase(),
-      },
-      { status: 201 }
-    )
-  } catch (error) {
-    console.error("Error creating user:", error)
-    return NextResponse.json(
-      { error: "Error creating user" },
+      { error: "Error al obtener usuarios" },
       { status: 500 }
     )
   }
