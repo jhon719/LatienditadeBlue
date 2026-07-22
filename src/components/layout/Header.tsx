@@ -1,11 +1,12 @@
 ﻿"use client"
 
-import { useSyncExternalStore } from "react"
+import { useEffect, useState, useSyncExternalStore } from "react"
 import Image from "next/image"
 import Link from "next/link"
 import { useSession, signOut } from "next-auth/react"
 import { LogOut, Package, Search, Settings, ShoppingCart, User } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
+import { UserAvatar } from "@/components/common/UserAvatar"
 import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
@@ -18,12 +19,15 @@ import {
 import { Input } from "@/components/ui/input"
 import { useCartStore } from "@/stores/cart-store"
 import { MobileNav } from "./MobileNav"
+import { AnimatedThemeToggle } from "./AnimatedThemeToggle"
 
+// Navegación por tipo de mercancía (estilo Homidori) + preventas y catálogo
 const navLinks = [
-  { label: "Articulos recientes", href: "/products?sortBy=newest" },
-  { label: "Stock", href: "/products?status=stock" },
-  { label: "Preventa", href: "/products?status=preventa" },
-  { label: "Online", href: "/products?status=online" },
+  { label: "Figuras", href: "/products?type=figura" },
+  { label: "Mangas", href: "/products?type=manga" },
+  { label: "Peluches", href: "/products?type=peluche" },
+  { label: "Merch", href: "/products?type=merch" },
+  { label: "Preventas", href: "/products?status=preventa" },
   { label: "Catalogo", href: "/products" },
 ]
 
@@ -35,9 +39,24 @@ export function Header() {
   const mounted = useSyncExternalStore(subscribeToClient, getClientSnapshot, getServerSnapshot)
   const itemCount = useCartStore((state) => state.getItemCount())
   const { data: session, status } = useSession()
+  const [avatarFileName, setAvatarFileName] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (!session?.user?.id) return
+    let cancelled = false
+    fetch("/api/user/profile")
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (!cancelled) setAvatarFileName(data?.avatarFileName ?? null)
+      })
+      .catch(() => {})
+    return () => {
+      cancelled = true
+    }
+  }, [session?.user?.id])
 
   return (
-    <header className="sticky top-0 z-50 border-b bg-white/95 backdrop-blur-xl">
+    <header className="sticky top-0 z-50 border-b bg-background/95 backdrop-blur-xl">
       <div className="blue-container">
         <div className="flex min-h-20 items-center gap-4 py-3">
           <Link href="/" className="flex shrink-0 items-center gap-3">
@@ -51,7 +70,7 @@ export function Header() {
               />
             </div>
             <div className="leading-none">
-              <p className="font-display text-3xl text-[#142F5C]">La Tiendita</p>
+              <p className="font-display text-3xl text-foreground">La Tiendita</p>
               <p className="-mt-1 text-xs font-extrabold uppercase tracking-wide text-[#4A80BE]">de Blue</p>
             </div>
           </Link>
@@ -61,7 +80,7 @@ export function Header() {
               <Link
                 key={link.href}
                 href={link.href}
-                className="rounded-full px-3 py-2 text-xs font-extrabold uppercase text-[#142F5C] transition hover:bg-[#F2F2F2] hover:text-[#4A80BE]"
+                className="rounded-full px-3 py-2 text-xs font-extrabold uppercase text-foreground transition hover:bg-secondary hover:text-[#4A80BE]"
               >
                 {link.label}
               </Link>
@@ -80,6 +99,7 @@ export function Header() {
           </div>
 
           <div className="ml-auto flex items-center gap-1">
+            <AnimatedThemeToggle className="mr-1" />
             <Link href="/cart">
               <Button variant="ghost" size="icon" className="relative rounded-full">
                 <ShoppingCart className="h-5 w-5" />
@@ -95,8 +115,14 @@ export function Header() {
             {mounted && status !== "loading" && session ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="outline" className="hidden rounded-full font-bold sm:flex">
-                    <User className="h-4 w-4" />
+                  <Button variant="outline" className="group hidden items-center gap-2 rounded-full py-1 pl-1.5 pr-4 font-bold sm:flex">
+                    <span className="flex h-6 w-6 shrink-0 rounded-full ring-2 ring-transparent transition-all duration-300 group-hover:scale-110 group-hover:ring-[#F5B400]">
+                      <UserAvatar
+                        username={session.user?.username ?? "usuario"}
+                        avatarFileName={avatarFileName}
+                        size={24}
+                      />
+                    </span>
                     {session.user?.name?.split(" ")[0] || "Cuenta"}
                   </Button>
                 </DropdownMenuTrigger>

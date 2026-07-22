@@ -7,16 +7,9 @@ import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
 import { signIn } from "next-auth/react"
-import { Loader2 } from "lucide-react"
+import { Loader2, Sparkles } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
 import {
   Field,
   FieldDescription,
@@ -101,14 +94,19 @@ export function RegisterForm({ googleEnabled = false }: { googleEnabled?: boolea
 
   return (
     <div className="flex flex-col gap-6">
-      <Card>
-        <CardHeader className="text-center">
-          <CardTitle className="text-xl">Crear Cuenta</CardTitle>
-          <CardDescription>
-            Ingresa tus datos para crear una nueva cuenta
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
+      <div className="glass-card p-7 sm:p-9">
+        <div className="mb-7 text-center">
+          <h1 className="font-display text-4xl">
+            <span className="bg-gradient-to-r from-[#142F5C] to-[#4A80BE] bg-clip-text text-transparent dark:from-white dark:to-[#7FB3E8]">
+              Únete a la colección
+            </span>
+          </h1>
+          <p className="mt-1.5 inline-flex items-center gap-1.5 text-sm text-muted-foreground">
+            <Sparkles className="h-3.5 w-3.5 text-[#F5B400]" />
+            Crea tu cuenta y no te pierdas ninguna preventa
+          </p>
+        </div>
+        <div>
           {error && (
             <div className="mb-6 rounded-md bg-destructive/15 p-3 text-sm text-destructive">
               {error}
@@ -122,6 +120,7 @@ export function RegisterForm({ googleEnabled = false }: { googleEnabled?: boolea
                   id="username"
                   type="text"
                   placeholder="coleccionista01"
+                  className="h-11 rounded-xl bg-background/60"
                   {...register("username")}
                 />
                 <FieldDescription>
@@ -137,6 +136,7 @@ export function RegisterForm({ googleEnabled = false }: { googleEnabled?: boolea
                   id="email"
                   type="email"
                   placeholder="tu@email.com"
+                  className="h-11 rounded-xl bg-background/60"
                   {...register("email")}
                 />
                 {errors.email && (
@@ -150,6 +150,7 @@ export function RegisterForm({ googleEnabled = false }: { googleEnabled?: boolea
                     <Input
                       id="password"
                       type="password"
+                      className="h-11 rounded-xl bg-background/60"
                       {...register("password")}
                     />
                     {errors.password && (
@@ -163,6 +164,7 @@ export function RegisterForm({ googleEnabled = false }: { googleEnabled?: boolea
                     <Input
                       id="confirmPassword"
                       type="password"
+                      className="h-11 rounded-xl bg-background/60"
                       {...register("confirmPassword")}
                     />
                     {errors.confirmPassword && (
@@ -188,7 +190,11 @@ export function RegisterForm({ googleEnabled = false }: { googleEnabled?: boolea
                 </label>
               </Field>
               <Field>
-                <Button type="submit" className="w-full" disabled={isSubmitting}>
+                <Button
+                  type="submit"
+                  className="btn-shine h-11 w-full rounded-xl text-sm font-bold text-white shadow-lg shadow-[#4A80BE]/30 transition-transform hover:scale-[1.015] active:scale-[0.99]"
+                  disabled={isSubmitting}
+                >
                   {isSubmitting ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -201,15 +207,18 @@ export function RegisterForm({ googleEnabled = false }: { googleEnabled?: boolea
                 {googleEnabled && <GoogleButton />}
                 <FieldDescription className="text-center">
                   ¿Ya tienes una cuenta?{" "}
-                  <Link href="/login" className="text-primary hover:underline">
+                  <Link
+                    href="/login"
+                    className="font-semibold text-primary underline-offset-4 hover:underline"
+                  >
                     Iniciar Sesión
                   </Link>
                 </FieldDescription>
               </Field>
             </FieldGroup>
           </form>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
       <FieldDescription className="px-6 text-center">
         Al continuar, aceptas nuestros{" "}
         <Link href="/terms" className="underline underline-offset-4 hover:text-primary">

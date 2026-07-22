@@ -1,7 +1,8 @@
 "use client"
 
 import { useCallback, useEffect, useState } from "react"
-import { Loader2, Save } from "lucide-react"
+import Link from "next/link"
+import { Loader2, Save, Pencil } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
@@ -21,6 +22,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
+import { ContactBadges } from "@/components/admin/ContactBadges"
 
 interface AdminOrder {
   id: string
@@ -35,7 +37,12 @@ interface AdminOrder {
   receiverPhone: string
   deliveryAddress: string | null
   createdAt: string
-  customer: { username: string; email: string; phone: string | null }
+  customer: {
+    username: string
+    email: string
+    phone: string | null
+    tiktokUsername: string | null
+  }
 }
 
 const orderStatusBadge: Record<string, { label: string; className: string }> = {
@@ -157,10 +164,12 @@ export default function AdminOrdersPage() {
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">Todas</SelectItem>
+            <SelectItem value="PENDING_PAYMENT">Pendientes de pago</SelectItem>
             <SelectItem value="VERIFYING_MANUAL">Verificando pago</SelectItem>
             <SelectItem value="PAID_APPROVED">Pagadas (por despachar)</SelectItem>
             <SelectItem value="COMPLETED">Completadas</SelectItem>
             <SelectItem value="REJECTED">Rechazadas</SelectItem>
+            <SelectItem value="CANCELLED">Canceladas</SelectItem>
           </SelectContent>
         </Select>
       </div>
@@ -181,13 +190,14 @@ export default function AdminOrdersPage() {
                   <TableHead>Estado</TableHead>
                   <TableHead>Envío</TableHead>
                   <TableHead>Logística</TableHead>
+                  <TableHead className="w-[90px] text-right">Acciones</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {orders.length === 0 ? (
                   <TableRow>
                     <TableCell
-                      colSpan={6}
+                      colSpan={7}
                       className="py-8 text-center text-muted-foreground"
                     >
                       No hay órdenes con este filtro
@@ -207,8 +217,13 @@ export default function AdminOrdersPage() {
                           {order.receiverName}
                         </p>
                         <p className="text-xs text-muted-foreground">
-                          @{order.customer.username} · {order.receiverPhone}
+                          @{order.customer.username}
                         </p>
+                        <ContactBadges
+                          tiktokUsername={order.customer.tiktokUsername}
+                          phone={order.receiverPhone}
+                          whatsappMessage={`¡Hola ${order.receiverName}! Te escribo por tu pedido *${order.processCode}*. ✨`}
+                        />
                       </TableCell>
                       <TableCell className="font-semibold">
                         S/ {order.totalAmount.toFixed(2)}
@@ -238,6 +253,19 @@ export default function AdminOrdersPage() {
                         ) : (
                           <span className="text-xs text-muted-foreground">—</span>
                         )}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          asChild
+                          className="h-8"
+                        >
+                          <Link href={`/admin/orders/${order.id}`}>
+                            <Pencil className="mr-1.5 h-3.5 w-3.5" />
+                            Ver / Editar
+                          </Link>
+                        </Button>
                       </TableCell>
                     </TableRow>
                   ))

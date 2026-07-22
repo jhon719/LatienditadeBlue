@@ -26,6 +26,7 @@ const defaultFilters: FilterState = {
   lines: [],
   brands: [],
   status: [],
+  types: [],
   priceRange: [0, 10000],
   sortBy: "newest",
 }
@@ -58,6 +59,9 @@ export const useProductsStore = create<ProductsState>((set, get) => ({
       }
       if (filters.status.length === 1) {
         params.set("status", filters.status[0])
+      }
+      if (filters.types.length === 1) {
+        params.set("type", filters.types[0])
       }
       if (filters.priceRange[0] > 0) {
         params.set("minPrice", filters.priceRange[0].toString())

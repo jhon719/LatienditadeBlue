@@ -1,6 +1,13 @@
 // Tipos de dominio de La Tiendita de Blue, alineados al schema de Prisma
 
 export type ProductStatus = "STOCK" | "ONLINE" | "PREVENTA" | "AGOTADO"
+export type ProductType =
+  | "FIGURA"
+  | "MANGA"
+  | "PELUCHE"
+  | "LLAVERO"
+  | "ROPA"
+  | "MERCH"
 export type ShippingType = "PICKUP" | "LOCAL_DELIVERY" | "NATIONAL_COURIER"
 export type ShippingStatus = "PREPARING" | "SHIPPED" | "DELIVERED"
 export type PaymentMethodType = "MERCADO_PAGO" | "MANUAL_TRANSFER"
@@ -24,6 +31,7 @@ export interface Product {
   salePrice?: number
   discountRuleName?: string
   status: ProductStatus
+  type: ProductType
   expectedDate?: string // ISO date (solo PREVENTA)
   stockQty: number
   images: string[]
@@ -41,6 +49,7 @@ export interface CategoryRef {
   id: string
   name: string
   slug: string
+  imageUrl?: string
 }
 
 export interface Category {
@@ -62,6 +71,8 @@ export interface Line {
   isActive: boolean
   isFeatured: boolean
   productCount: number
+  // Fabricante de la línea (bóveda 02.05): la mayoría de líneas pertenecen a una marca
+  brand?: CategoryRef
 }
 
 export interface Brand {
@@ -83,8 +94,19 @@ export interface FilterState {
   lines: string[]
   brands: string[]
   status: ProductStatus[]
+  types: ProductType[]
   priceRange: [number, number]
   sortBy: "popular" | "price-asc" | "price-desc" | "newest" | "rating"
+}
+
+// Etiquetas de tipo de producto (plural para nav/filtro, singular para el badge)
+export const PRODUCT_TYPE_LABELS: Record<ProductType, string> = {
+  FIGURA: "Figuras",
+  MANGA: "Mangas",
+  PELUCHE: "Peluches",
+  LLAVERO: "Llaveros",
+  ROPA: "Ropa",
+  MERCH: "Merch",
 }
 
 // Contenido administrable del CMS de marketing (bóveda 05.05)

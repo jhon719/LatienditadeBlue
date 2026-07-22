@@ -13,22 +13,28 @@ import {
 import { FilterSidebar } from "@/components/products/FilterSidebar"
 import { FilterMobile } from "@/components/products/FilterMobile"
 import { ProductGrid } from "@/components/products/ProductGrid"
+import {
+  ManchasStoreBanner,
+  ManchasStoreVerticals,
+} from "@/components/products/ManchasStorePromo"
 import { SortSelect } from "@/components/products/SortSelect"
 import { Skeleton } from "@/components/ui/skeleton"
 import { useProductsStore } from "@/stores/products-store"
-import { FilterState } from "@/types"
+import { FilterState, PRODUCT_TYPE_LABELS } from "@/types"
 
 function ProductsContent() {
   const searchParams = useSearchParams()
   const { products, loading, filters, setFilters, setSearch, search, fetchProducts, fetchCatalogData } = useProductsStore()
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid")
 
-  // Inicializar filtros desde la URL (?category=, ?line=, ?brand=, ?status=)
+  // Inicializar filtros desde la URL (?category=, ?line=, ?brand=, ?status=, ?type=, ?sortBy=)
   useEffect(() => {
     const category = searchParams.get("category")
     const line = searchParams.get("line")
     const brand = searchParams.get("brand")
     const status = searchParams.get("status")
+    const type = searchParams.get("type")
+    const sortBy = searchParams.get("sortBy")
 
     const initialFilters: Partial<FilterState> = {}
     if (category) initialFilters.categories = [category]
@@ -40,10 +46,33 @@ function ProductsContent() {
         initialFilters.status = [normalized as FilterState["status"][number]]
       }
     }
-
-    if (Object.keys(initialFilters).length > 0) {
-      setFilters(initialFilters)
+    if (type) {
+      const normalized = type.toUpperCase()
+      if (
+        ["FIGURA", "MANGA", "PELUCHE", "LLAVERO", "ROPA", "MERCH"].includes(
+          normalized
+        )
+      ) {
+        initialFilters.types = [normalized as FilterState["types"][number]]
+      }
     }
+    if (
+      sortBy &&
+      ["popular", "price-asc", "price-desc", "newest", "rating"].includes(sortBy)
+    ) {
+      initialFilters.sortBy = sortBy as FilterState["sortBy"]
+    }
+
+    // Siempre re-sincronizar con la URL: los filtros que ya no están en la URL
+    // vuelven a su valor por defecto (evita que un filtro previo quede pegado)
+    setFilters({
+      categories: initialFilters.categories ?? [],
+      lines: initialFilters.lines ?? [],
+      brands: initialFilters.brands ?? [],
+      status: initialFilters.status ?? [],
+      types: initialFilters.types ?? [],
+      ...(initialFilters.sortBy ? { sortBy: initialFilters.sortBy } : {}),
+    })
     setSearch(searchParams.get("search") ?? "")
 
     fetchCatalogData()
@@ -63,7 +92,12 @@ function ProductsContent() {
     filters.categories.length +
     filters.lines.length +
     filters.status.length +
+    filters.types.length +
     (filters.priceRange[0] > 0 || filters.priceRange[1] < 10000 ? 1 : 0)
+
+  // Branding de Manchas Store en las secciones que no son figuras
+  const isNonFiguraSection =
+    filters.types.length === 1 && filters.types[0] !== "FIGURA"
 
   return (
     <div className="container mx-auto px-4 py-6">
@@ -83,7 +117,11 @@ function ProductsContent() {
       {/* Results count and controls */}
       <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold">Todos los Productos</h1>
+          <h1 className="text-2xl font-bold">
+            {filters.types.length === 1
+              ? PRODUCT_TYPE_LABELS[filters.types[0]]
+              : "Todos los Productos"}
+          </h1>
           <p className="text-sm text-muted-foreground">
             {loading ? "Cargando..." : `${products.length} productos encontrados`}
           </p>
@@ -114,7 +152,16 @@ function ProductsContent() {
         </aside>
 
         {/* Products */}
-        <div className="flex-1">
+        <div className="min-w-0 flex-1">
+          {isNonFiguraSection && (
+            <>
+              <ManchasStoreBanner />
+              {/* Verticales en fila para móvil/tablet (el aside lateral es solo xl+) */}
+              <div className="mb-6 xl:hidden">
+                <ManchasStoreVerticals orientation="row" />
+              </div>
+            </>
+          )}
           <ProductGrid
             products={products}
             viewMode={viewMode}
@@ -122,6 +169,15 @@ function ProductsContent() {
             loading={loading}
           />
         </div>
+
+        {/* Aside derecho con banners verticales de Manchas Store (solo secciones no-figura) */}
+        {isNonFiguraSection && (
+          <aside className="hidden w-56 shrink-0 xl:block">
+            <div className="sticky top-24">
+              <ManchasStoreVerticals orientation="column" />
+            </div>
+          </aside>
+        )}
       </div>
     </div>
   )

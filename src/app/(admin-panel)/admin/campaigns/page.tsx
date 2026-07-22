@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from "react"
 import Link from "next/link"
 import Image from "next/image"
-import { Plus, Loader2, Trash2, Megaphone } from "lucide-react"
+import { Plus, Loader2, Trash2, Megaphone, Pencil } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent } from "@/components/ui/card"
@@ -113,7 +113,7 @@ function CampaignTable({
           <TableHead>Valor</TableHead>
           <TableHead>Estado</TableHead>
           <TableHead>Vigencia</TableHead>
-          <TableHead className="w-[60px]"></TableHead>
+          <TableHead className="w-[100px]"></TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
@@ -187,14 +187,29 @@ function CampaignTable({
               {formatWindow(item)}
             </TableCell>
             <TableCell>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-8 w-8 text-muted-foreground hover:text-destructive"
-                onClick={() => remove(item.id)}
-              >
-                <Trash2 className="h-4 w-4" />
-              </Button>
+              <div className="flex items-center gap-1">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 text-muted-foreground hover:text-primary"
+                  asChild
+                >
+                  <Link
+                    href={`/admin/campaigns/${type}/${item.id}/edit`}
+                    title="Editar campaña"
+                  >
+                    <Pencil className="h-4 w-4" />
+                  </Link>
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                  onClick={() => remove(item.id)}
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </div>
             </TableCell>
           </TableRow>
         ))}

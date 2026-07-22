@@ -1,6 +1,8 @@
 "use client"
 
 import { useState } from "react"
+import Image from "next/image"
+import Link from "next/link"
 import {
   Heart,
   ShoppingCart,
@@ -12,6 +14,7 @@ import {
   Check,
   Info,
   MessageSquare,
+  PiggyBank,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -34,6 +37,8 @@ export function ProductDetail({ product }: ProductDetailProps) {
 
   const isPreOrder = product.status === "PREVENTA"
   const canBuy = isPreOrder || (product.status !== "AGOTADO" && product.stockQty > 0)
+  // Se puede apartar con adelanto (bóveda 05.06): preventas y stock físico disponible
+  const canSeparate = canBuy
   const maxLimit = isPreOrder ? PREORDER_LIMIT : Math.min(product.stockQty, 10)
   const unitPrice = product.salePrice ?? product.price
   const subtotal = unitPrice * quantity
@@ -57,13 +62,51 @@ export function ProductDetail({ product }: ProductDetailProps) {
     setTimeout(() => setAdded(false), 2000)
   }
 
+  // Chips de línea/marca con imagen (bóveda 02.05): solo en figuras, donde el
+  // fabricante y la línea son relevantes para el coleccionista
+  const showCatalogBadges = product.type === "FIGURA"
+
   return (
     <div className="flex flex-col gap-6">
       {/* Marca y línea */}
-      <p className="text-sm font-bold uppercase tracking-wider text-primary">
-        {product.brand.name}
-        {product.line ? ` · ${product.line.name}` : ""}
-      </p>
+      <div className="flex flex-wrap items-center gap-3">
+        {showCatalogBadges && (
+          <div className="flex items-center gap-2">
+            {product.brand.imageUrl && (
+              <div
+                className="relative h-8 w-8 shrink-0 overflow-hidden rounded-full border border-border bg-card"
+                title={product.brand.name}
+              >
+                <Image
+                  src={product.brand.imageUrl}
+                  alt={product.brand.name}
+                  fill
+                  className="object-cover"
+                  sizes="32px"
+                />
+              </div>
+            )}
+            {product.line?.imageUrl && (
+              <div
+                className="relative h-8 w-8 shrink-0 overflow-hidden rounded-full border border-border bg-card"
+                title={product.line.name}
+              >
+                <Image
+                  src={product.line.imageUrl}
+                  alt={product.line.name}
+                  fill
+                  className="object-cover"
+                  sizes="32px"
+                />
+              </div>
+            )}
+          </div>
+        )}
+        <p className="text-sm font-bold uppercase tracking-wider text-primary">
+          {product.brand.name}
+          {product.line ? ` · ${product.line.name}` : ""}
+        </p>
+      </div>
 
       <h1 className="font-display text-3xl uppercase tracking-wide sm:text-4xl">
         {product.name}
@@ -218,6 +261,20 @@ export function ProductDetail({ product }: ProductDetailProps) {
                 />
               </Button>
             </div>
+
+            {/* Apartar con adelanto (bóveda 05.06): asegura la figura desde S/10 */}
+            {canSeparate && (
+              <Button
+                asChild
+                size="lg"
+                className="rounded-2xl bg-[#142F5C] font-bold text-white hover:bg-[#4A80BE]"
+              >
+                <Link href={`/products/${product.slug}/apartar`}>
+                  <PiggyBank className="mr-2 h-4 w-4" />
+                  Apartar con adelanto (desde S/ 10)
+                </Link>
+              </Button>
+            )}
           </>
         ) : (
           <Button disabled size="lg" className="w-full rounded-2xl">
@@ -275,12 +332,38 @@ export function ProductDetail({ product }: ProductDetailProps) {
           </div>
           <div className="flex flex-col">
             <dt className="text-muted-foreground">Fabricante</dt>
-            <dd className="font-medium">{product.brand.name}</dd>
+            <dd className="flex items-center gap-2 font-medium">
+              {showCatalogBadges && product.brand.imageUrl && (
+                <div className="relative h-5 w-5 shrink-0 overflow-hidden rounded-full bg-muted">
+                  <Image
+                    src={product.brand.imageUrl}
+                    alt={product.brand.name}
+                    fill
+                    className="object-cover"
+                    sizes="20px"
+                  />
+                </div>
+              )}
+              {product.brand.name}
+            </dd>
           </div>
           {product.line && (
             <div className="flex flex-col">
               <dt className="text-muted-foreground">Línea</dt>
-              <dd className="font-medium">{product.line.name}</dd>
+              <dd className="flex items-center gap-2 font-medium">
+                {showCatalogBadges && product.line.imageUrl && (
+                  <div className="relative h-5 w-5 shrink-0 overflow-hidden rounded-full bg-muted">
+                    <Image
+                      src={product.line.imageUrl}
+                      alt={product.line.name}
+                      fill
+                      className="object-cover"
+                      sizes="20px"
+                    />
+                  </div>
+                )}
+                {product.line.name}
+              </dd>
             </div>
           )}
           <div className="flex flex-col">

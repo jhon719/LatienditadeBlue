@@ -40,6 +40,7 @@ export function transformProduct(
     description: product.description,
     price: Number(product.price),
     status: product.status,
+    type: product.type,
     expectedDate: product.expectedDate?.toISOString(),
     stockQty: product.stockQty,
     images: product.images,
@@ -49,14 +50,21 @@ export function transformProduct(
       id: product.category.id,
       name: product.category.name,
       slug: product.category.slug,
+      imageUrl: product.category.imageUrl ?? undefined,
     },
     line: product.line
-      ? { id: product.line.id, name: product.line.name, slug: product.line.slug }
+      ? {
+          id: product.line.id,
+          name: product.line.name,
+          slug: product.line.slug,
+          imageUrl: product.line.imageUrl ?? undefined,
+        }
       : undefined,
     brand: {
       id: product.brand.id,
       name: product.brand.name,
       slug: product.brand.slug,
+      imageUrl: product.brand.imageUrl ?? undefined,
     },
     rating: Math.round(rating * 10) / 10,
     reviewCount: ratings.length,
@@ -78,7 +86,9 @@ export function transformCategory(category: PrismaCategory & WithCount): Categor
   }
 }
 
-export function transformLine(line: PrismaLine & WithCount): Line {
+export function transformLine(
+  line: PrismaLine & WithCount & { brand?: PrismaBrand | null }
+): Line {
   return {
     id: line.id,
     name: line.name,
@@ -87,6 +97,14 @@ export function transformLine(line: PrismaLine & WithCount): Line {
     isActive: line.isActive,
     isFeatured: line.isFeatured,
     productCount: line._count?.products ?? 0,
+    brand: line.brand
+      ? {
+          id: line.brand.id,
+          name: line.brand.name,
+          slug: line.brand.slug,
+          imageUrl: line.brand.imageUrl ?? undefined,
+        }
+      : undefined,
   }
 }
 

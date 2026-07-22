@@ -1,6 +1,7 @@
 import { Star, BadgeCheck } from "lucide-react"
 import { AnimatedContent } from "@/components/react-bits/AnimatedContent"
 import { SpotlightCard } from "@/components/react-bits/SpotlightCard"
+import { GradientText } from "@/components/common/GradientText"
 import { UserAvatar } from "@/components/common/UserAvatar"
 import type { ReviewItem } from "@/types"
 
@@ -13,8 +14,8 @@ export function ReviewsSection({ reviews }: { reviews: ReviewItem[] }) {
         <p className="text-sm font-extrabold uppercase text-[#4A80BE]">
           Confianza coleccionista
         </p>
-        <h2 className="font-display text-5xl leading-none text-[#142F5C] dark:text-foreground">
-          Reseñas de la comunidad
+        <h2 className="font-display text-5xl leading-none">
+          <GradientText>Reseñas de la comunidad</GradientText>
         </h2>
       </div>
       <div className="grid gap-5 md:grid-cols-3">

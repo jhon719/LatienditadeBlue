@@ -15,6 +15,7 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent } from "@/components/ui/card"
 import { Separator } from "@/components/ui/separator"
+import { ContactBadges } from "@/components/admin/ContactBadges"
 
 interface PosOrder {
   id: string
@@ -32,6 +33,7 @@ interface PosOrder {
     lastName: string | null
     dni: string | null
     phone: string | null
+    tiktokUsername: string | null
   }
   items: { id: string; name: string; image: string | null; quantity: number; price: number }[]
   proof: {
@@ -280,8 +282,12 @@ export default function ManualPaymentsPage() {
                       <p className="text-xs text-muted-foreground">
                         {selected.customer.email}
                         {selected.customer.dni ? ` · DNI ${selected.customer.dni}` : ""}
-                        {selected.customer.phone ? ` · ${selected.customer.phone}` : ""}
                       </p>
+                      <ContactBadges
+                        tiktokUsername={selected.customer.tiktokUsername}
+                        phone={selected.customer.phone}
+                        whatsappMessage={`¡Hola! Te escribo por tu pedido *${selected.processCode}* que estamos verificando. ✨`}
+                      />
                       {(customerHistory[selected.customer.email] ?? 0) > 0 ? (
                         <p className="mt-2 flex items-center gap-1 text-xs font-bold text-[#1E7E34]">
                           <ShieldCheck className="h-3.5 w-3.5" />

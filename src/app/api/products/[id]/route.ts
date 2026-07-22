@@ -51,6 +51,9 @@ const updateProductSchema = z.object({
   description: z.string().min(10).optional(),
   price: z.number().positive().optional(),
   status: z.enum(["STOCK", "PREVENTA", "AGOTADO", "ONLINE"]).optional(),
+  type: z
+    .enum(["FIGURA", "MANGA", "PELUCHE", "LLAVERO", "ROPA", "MERCH"])
+    .optional(),
   expectedDate: z.string().datetime().nullable().optional(),
   stockQty: z.number().int().min(0).optional(),
   images: z.array(z.string()).optional(),

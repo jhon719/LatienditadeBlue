@@ -16,6 +16,8 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { Separator } from "@/components/ui/separator"
+import { ShalomTracker } from "@/components/shipping/ShalomTracker"
+import { BoletaButton } from "@/components/orders/BoletaButton"
 import type { OrderStatusType, ShippingType } from "@/types"
 
 export const dynamic = "force-dynamic"
@@ -128,28 +130,37 @@ export default async function OrdersPage() {
                       <span className="font-bold text-primary">
                         S/ {order.totalAmount.toFixed(2)}
                       </span>
-                      {order.trackingNumber && (
-                        <p className="text-xs text-muted-foreground">
-                          Tracking:{" "}
-                          <span className="font-mono font-medium">
-                            {order.trackingNumber}
-                          </span>
-                        </p>
-                      )}
-                    </div>
-                    <Button asChild size="sm" variant="outline" className="gap-2">
-                      <a
-                        href={whatsappLink(
-                          `¡Hola! Quiero consultar por mi pedido *${order.processCode}* (${shippingLabels[order.shippingType]}). ✨`
+                      {order.shippingType !== "NATIONAL_COURIER" &&
+                        order.trackingNumber && (
+                          <p className="text-xs text-muted-foreground">
+                            Tracking:{" "}
+                            <span className="font-mono font-medium">
+                              {order.trackingNumber}
+                            </span>
+                          </p>
                         )}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                      >
-                        <MessageSquare className="h-4 w-4 text-[#25D366]" />
-                        Coordinar por WhatsApp
-                      </a>
-                    </Button>
+                    </div>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <BoletaButton order={order} />
+                      <Button asChild size="sm" variant="outline" className="gap-2">
+                        <a
+                          href={whatsappLink(
+                            `¡Hola! Quiero consultar por mi pedido *${order.processCode}* (${shippingLabels[order.shippingType]}). ✨`
+                          )}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
+                          <MessageSquare className="h-4 w-4 text-[#25D366]" />
+                          Coordinar por WhatsApp
+                        </a>
+                      </Button>
+                    </div>
                   </div>
+
+                  {/* Rastreo Shalom para envíos a provincia */}
+                  {order.shippingType === "NATIONAL_COURIER" && (
+                    <ShalomTracker trackingNumber={order.trackingNumber} />
+                  )}
                 </CardContent>
               </Card>
             )

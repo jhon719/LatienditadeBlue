@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button"
 import { FilterSection } from "./FilterSection"
 import { PriceFilter } from "./PriceFilter"
 import { useProductsStore } from "@/stores/products-store"
-import { FilterState, ProductStatus } from "@/types"
+import { FilterState, ProductStatus, ProductType, PRODUCT_TYPE_LABELS } from "@/types"
 
 interface FilterSidebarProps {
   filters: FilterState
@@ -19,6 +19,10 @@ const STATUS_OPTIONS = [
   { id: "agotado", label: "Agotado", value: "AGOTADO" },
 ]
 
+const TYPE_OPTIONS = (
+  ["FIGURA", "MANGA", "PELUCHE", "LLAVERO", "ROPA", "MERCH"] as ProductType[]
+).map((value) => ({ id: value.toLowerCase(), label: PRODUCT_TYPE_LABELS[value], value }))
+
 export function FilterSidebar({ filters, onFiltersChange }: FilterSidebarProps) {
   const { categories, lines, brands } = useProductsStore()
 
@@ -27,6 +31,7 @@ export function FilterSidebar({ filters, onFiltersChange }: FilterSidebarProps) 
     filters.categories.length > 0 ||
     filters.lines.length > 0 ||
     filters.status.length > 0 ||
+    filters.types.length > 0 ||
     filters.priceRange[0] > 0 ||
     filters.priceRange[1] < 10000
 
@@ -36,6 +41,7 @@ export function FilterSidebar({ filters, onFiltersChange }: FilterSidebarProps) 
       categories: [],
       lines: [],
       status: [],
+      types: [],
       priceRange: [0, 10000],
       sortBy: filters.sortBy,
     })
@@ -57,6 +63,15 @@ export function FilterSidebar({ filters, onFiltersChange }: FilterSidebarProps) 
           </Button>
         )}
       </div>
+
+      <FilterSection
+        title="Tipo de producto"
+        options={TYPE_OPTIONS}
+        selected={filters.types}
+        onChange={(types) =>
+          onFiltersChange({ ...filters, types: types as ProductType[] })
+        }
+      />
 
       <FilterSection
         title="Anime / Serie"

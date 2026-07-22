@@ -1,11 +1,21 @@
+import { auth } from "@/lib/auth"
+import { prisma } from "@/lib/prisma"
 import { ProfileSidebar } from "@/components/profile/ProfileSidebar"
 import { ProfileMobileNav } from "@/components/profile/ProfileMobileNav"
 
-export default function ProfileLayout({
+export default async function ProfileLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
+  const session = await auth()
+  const user = session?.user?.id
+    ? await prisma.user.findUnique({
+        where: { id: session.user.id },
+        select: { avatarFileName: true },
+      })
+    : null
+
   return (
     <div className="container mx-auto px-4 py-6">
       <h1 className="text-2xl font-bold mb-6">Mi Cuenta</h1>
@@ -17,7 +27,7 @@ export default function ProfileLayout({
         {/* Sidebar - Desktop */}
         <div className="hidden lg:block w-64 shrink-0">
           <div className="sticky top-24">
-            <ProfileSidebar />
+            <ProfileSidebar avatarFileName={user?.avatarFileName ?? null} />
           </div>
         </div>
 

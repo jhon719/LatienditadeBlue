@@ -33,6 +33,7 @@ export async function GET(request: NextRequest) {
 
 const categorySchema = z.object({
   name: z.string().min(2),
+  imageUrl: z.string().url().optional().nullable(),
   isActive: z.boolean().default(true),
   isTrending: z.boolean().default(false),
   hasNewArrivals: z.boolean().default(false),
@@ -57,8 +58,8 @@ export async function POST(request: NextRequest) {
       data: {
         name: parsed.data.name,
         slug,
-        // El admin debe colocar el archivo en public/Imagenes/Lista de Animes/[slug].(png|webp)
-        imageUrl: `/Imagenes/Lista de Animes/${slug}.png`,
+        // Imagen subida a Cloudinary (carpeta latiendita/categories) desde el admin
+        imageUrl: parsed.data.imageUrl ?? null,
         isActive: parsed.data.isActive,
         isTrending: parsed.data.isTrending,
         hasNewArrivals: parsed.data.hasNewArrivals,

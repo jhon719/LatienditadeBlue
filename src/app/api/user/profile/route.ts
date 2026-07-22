@@ -22,6 +22,8 @@ export async function GET() {
       department: true,
       avatarFileName: true,
       marketingOptIn: true,
+      tiktokUsername: true,
+      tiktokUrl: true,
       createdAt: true,
     },
   })
@@ -48,6 +50,14 @@ const profileSchema = z.object({
   // Departamento del Perú para el mapa de calor (bóveda 05.01)
   department: z.enum(DEPARTMENT_CODES).optional().nullable().or(z.literal("")),
   marketingOptIn: z.boolean().optional(),
+  // Identidad social (opcional): usuario y enlace de TikTok
+  tiktokUsername: z.string().max(40).optional().nullable(),
+  tiktokUrl: z
+    .string()
+    .url("Enlace de TikTok no válido")
+    .optional()
+    .nullable()
+    .or(z.literal("")),
 })
 
 export async function PATCH(request: NextRequest) {
@@ -65,7 +75,16 @@ export async function PATCH(request: NextRequest) {
 
   const data = Object.fromEntries(
     Object.entries(parsed.data).map(([k, v]) => [k, v === "" ? null : v])
-  )
+  ) as Record<string, unknown>
+
+  // Normaliza el handle de TikTok (guarda con @) y deriva el enlace si falta
+  if (typeof data.tiktokUsername === "string") {
+    const handle = data.tiktokUsername.trim().replace(/^@+/, "")
+    data.tiktokUsername = handle ? `@${handle}` : null
+    if (data.tiktokUsername && !data.tiktokUrl) {
+      data.tiktokUrl = `https://www.tiktok.com/@${handle}`
+    }
+  }
 
   const user = await prisma.user.update({
     where: { id: session!.user.id },
@@ -78,6 +97,8 @@ export async function PATCH(request: NextRequest) {
       address: true,
       department: true,
       marketingOptIn: true,
+      tiktokUsername: true,
+      tiktokUrl: true,
     },
   })
 

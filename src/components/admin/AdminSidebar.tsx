@@ -1,5 +1,6 @@
 "use client"
 
+import Image from "next/image"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import {
@@ -12,6 +13,8 @@ import {
   Users,
   Settings,
   Store,
+  Boxes,
+  FileText,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
@@ -20,10 +23,12 @@ const navigation = [
   { name: "Dashboard", href: "/admin", icon: LayoutDashboard },
   { name: "Bandeja POS", href: "/admin/manual-payments", icon: Inbox },
   { name: "Órdenes", href: "/admin/orders", icon: ClipboardList },
+  { name: "Logística", href: "/admin/logistics", icon: Boxes },
   { name: "Productos", href: "/admin/products", icon: Package },
   { name: "Campañas", href: "/admin/campaigns", icon: Megaphone },
   { name: "Categorías y Líneas", href: "/admin/categories", icon: Tags },
   { name: "Usuarios", href: "/admin/users", icon: Users },
+  { name: "Reportes", href: "/admin/reports", icon: FileText },
   { name: "Configuración", href: "/admin/settings", icon: Settings },
 ]
 
@@ -33,17 +38,29 @@ export function AdminSidebar() {
   return (
     <aside className="hidden lg:flex lg:flex-col lg:w-64 lg:fixed lg:inset-y-0 border-r bg-card">
       {/* Logo */}
-      <div className="flex h-16 items-center gap-2 border-b px-6">
-        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
-          <span className="text-sm font-bold text-primary-foreground">LT</span>
+      <Link
+        href="/"
+        className="group flex h-16 items-center gap-2 border-b px-6 transition-colors hover:bg-muted/50"
+      >
+        <div className="relative h-9 w-9 shrink-0 overflow-hidden rounded-xl shadow-sm transition-transform duration-300 group-hover:scale-110 group-hover:rotate-3">
+          <Image
+            src="/Imagenes/LOGO BLUE.jpeg"
+            alt="La Tiendita de Blue"
+            fill
+            sizes="36px"
+            className="object-cover"
+          />
         </div>
         <span className="font-bold">La Tiendita de Blue</span>
-      </div>
+      </Link>
 
       {/* Navigation */}
       <nav className="flex-1 space-y-1 p-4">
         {navigation.map((item) => {
-          const isActive = pathname === item.href
+          const isActive =
+            item.href === "/admin"
+              ? pathname === "/admin"
+              : pathname === item.href || pathname.startsWith(`${item.href}/`)
           return (
             <Link
               key={item.name}

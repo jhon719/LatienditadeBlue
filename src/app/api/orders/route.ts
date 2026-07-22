@@ -11,6 +11,7 @@ import {
   applyDiscountRules,
   validateCoupon,
 } from "@/lib/campaigns"
+import { sendOrderReceivedEmail } from "@/lib/email"
 
 export async function GET() {
   const { session, response } = await requireUser()
@@ -261,6 +262,16 @@ export async function POST(request: NextRequest) {
       })
 
       return created
+    })
+
+    // Correo "pedido recibido" (bóveda 05.04) — no bloquea la respuesta si falla
+    await sendOrderReceivedEmail({
+      email: session!.user.email ?? "",
+      processCode: order.processCode,
+      totalAmount: Number(order.totalAmount),
+      paymentMethod: order.paymentMethod,
+      shippingType: order.shippingType,
+      receiverName: order.receiverName,
     })
 
     return NextResponse.json(

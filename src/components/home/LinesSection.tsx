@@ -3,6 +3,7 @@
 import Link from "next/link"
 import Image from "next/image"
 import { AnimatedContent } from "@/components/react-bits/AnimatedContent"
+import { GradientText } from "@/components/common/GradientText"
 import type { Line } from "@/types"
 
 // Líneas de figuras con sus imágenes locales (public/Imagenes/Lineas de figuras)
@@ -17,8 +18,8 @@ export function LinesSection({ lines }: { lines: Line[] }) {
           <p className="text-sm font-extrabold uppercase text-[#4A80BE]">
             Busca por colección
           </p>
-          <h2 className="font-display text-5xl leading-none text-[#142F5C] dark:text-foreground">
-            Líneas de figuras
+          <h2 className="font-display text-5xl leading-none">
+            <GradientText>Líneas de figuras</GradientText>
           </h2>
         </div>
         <div className="flex gap-5 overflow-x-auto pb-3">

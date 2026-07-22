@@ -23,6 +23,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { OrderSummary } from "@/components/checkout/OrderSummary"
 import { ManualPaymentSection } from "@/components/checkout/ManualPaymentSection"
 import { CouponInput, type AppliedCoupon } from "@/components/checkout/CouponInput"
+import { WhatsappIcon } from "@/components/common/WhatsappIcon"
 import { useCartStore } from "@/stores/cart-store"
 import { calculateBundleDiscount, effectivePrice } from "@/lib/pricing"
 
@@ -245,13 +246,24 @@ export default function CheckoutPage() {
                   )}
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="receiverPhone">Teléfono (WhatsApp)</Label>
-                  <Input
-                    id="receiverPhone"
-                    placeholder="999888777"
-                    maxLength={9}
-                    {...register("receiverPhone")}
-                  />
+                  <Label htmlFor="receiverPhone" className="flex items-center gap-1.5">
+                    <WhatsappIcon className="h-4 w-4 text-[#25D366]" />
+                    Número de WhatsApp
+                  </Label>
+                  <div className="relative">
+                    <WhatsappIcon className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#25D366]" />
+                    <Input
+                      id="receiverPhone"
+                      placeholder="999888777"
+                      maxLength={9}
+                      inputMode="numeric"
+                      className="pl-10"
+                      {...register("receiverPhone")}
+                    />
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Solo WhatsApp: coordinamos la entrega por este número.
+                  </p>
                   {errors.receiverPhone && (
                     <p className="text-xs text-destructive">
                       {errors.receiverPhone.message}

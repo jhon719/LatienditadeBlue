@@ -4,6 +4,7 @@ import Link from "next/link"
 import Image from "next/image"
 import { Flame } from "lucide-react"
 import { AnimatedContent } from "@/components/react-bits/AnimatedContent"
+import { GradientText } from "@/components/common/GradientText"
 import type { Category } from "@/types"
 
 // Fila horizontal de categorías (animes) con imágenes locales y badge
@@ -18,8 +19,8 @@ export function CategoryTrends({ categories }: { categories: Category[] }) {
   return (
     <section className="blue-container py-8">
       <div className="mb-5 flex items-center gap-2">
-        <h2 className="font-display text-5xl leading-none text-[#142F5C] dark:text-foreground">
-          Tendencias!
+        <h2 className="font-display text-5xl leading-none">
+          <GradientText>Tendencias!</GradientText>
         </h2>
         <Flame className="h-8 w-8 fill-[#F5B400] text-[#F5B400]" />
       </div>

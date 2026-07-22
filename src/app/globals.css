@@ -153,6 +153,109 @@
   .animate-marquee-slow {
     animation: marquee-slow 24s linear infinite;
   }
+
+  .animate-blob {
+    animation: blob-drift 14s ease-in-out infinite;
+  }
+
+  .animate-fade-up {
+    animation: fade-up 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  .animate-twinkle {
+    animation: twinkle 3s ease-in-out infinite;
+  }
+
+  /* Tarjeta translúcida sobre fondos decorados (login/register) */
+  .glass-card {
+    @apply rounded-3xl border border-white/60 bg-white/80 shadow-xl shadow-[#142F5C]/10 backdrop-blur-xl dark:border-white/10 dark:bg-white/5;
+  }
+
+  /* Botón degradado con barrido de brillo al hover */
+  .btn-shine {
+    position: relative;
+    overflow: hidden;
+    background-image: linear-gradient(100deg, #4a80be, #142f5c);
+  }
+
+  .btn-shine::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      105deg,
+      transparent 40%,
+      rgba(255, 255, 255, 0.35) 50%,
+      transparent 60%
+    );
+    transform: translateX(-120%);
+  }
+
+  .btn-shine:hover::after {
+    animation: shine-sweep 0.9s ease forwards;
+  }
+
+  /* Patrón de puntos para paneles de marca */
+  .dots-overlay {
+    background-image: radial-gradient(rgba(255, 255, 255, 0.16) 1px, transparent 1px);
+    background-size: 22px 22px;
+  }
+
+  /* Texto con degradado de marca animado (react-bits GradientText) */
+  .text-gradient-brand {
+    background-image: linear-gradient(
+      100deg,
+      #142f5c,
+      #4a80be,
+      #f5b400,
+      #4a80be,
+      #142f5c
+    );
+    background-size: 220% auto;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .animate-gradient-text {
+    animation: gradient-pan 6s linear infinite;
+  }
+
+  /* Barrido de brillo sobre tarjetas al hover (usa el grupo padre) */
+  .card-shine {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: linear-gradient(
+      105deg,
+      transparent 42%,
+      rgba(255, 255, 255, 0.45) 50%,
+      transparent 58%
+    );
+    transform: translateX(-130%);
+  }
+
+  .group:hover .card-shine {
+    animation: shine-sweep 0.85s ease forwards;
+  }
+}
+
+/* Accesibilidad: respeta a quien prefiere menos movimiento */
+@media (prefers-reduced-motion: reduce) {
+  .animate-float-soft,
+  .animate-marquee-slow,
+  .animate-blob,
+  .animate-twinkle,
+  .animate-gradient-text,
+  .group:hover .card-shine {
+    animation: none !important;
+  }
+}
+
+@keyframes gradient-pan {
+  0% { background-position: 0% center; }
+  100% { background-position: 220% center; }
 }
 
 @keyframes float-soft {
@@ -163,4 +266,25 @@
 @keyframes marquee-slow {
   0% { transform: translateX(0); }
   100% { transform: translateX(-50%); }
+}
+
+@keyframes blob-drift {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33% { transform: translate(24px, -32px) scale(1.08); }
+  66% { transform: translate(-18px, 20px) scale(0.94); }
+}
+
+@keyframes fade-up {
+  0% { opacity: 0; transform: translateY(18px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes twinkle {
+  0%, 100% { opacity: 0.35; transform: scale(0.85); }
+  50% { opacity: 1; transform: scale(1.1); }
+}
+
+@keyframes shine-sweep {
+  0% { transform: translateX(-120%); }
+  100% { transform: translateX(120%); }
 }

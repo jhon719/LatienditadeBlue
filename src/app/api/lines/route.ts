@@ -16,6 +16,7 @@ export async function GET(request: NextRequest) {
         _count: {
           select: { products: { where: { isActive: true } } },
         },
+        brand: true,
       },
       orderBy: [{ isFeatured: "desc" }, { name: "asc" }],
     })
@@ -32,6 +33,8 @@ export async function GET(request: NextRequest) {
 
 const lineSchema = z.object({
   name: z.string().min(2),
+  imageUrl: z.string().url().optional().nullable(),
+  brandId: z.string().optional().nullable(),
   isActive: z.boolean().default(true),
   isFeatured: z.boolean().default(false),
 })
@@ -55,12 +58,13 @@ export async function POST(request: NextRequest) {
       data: {
         name: parsed.data.name,
         slug,
-        // El admin debe colocar el archivo en public/Imagenes/Lineas de figuras/[slug].(png|webp)
-        imageUrl: `/Imagenes/Lineas de figuras/${slug}.png`,
+        // Imagen subida a Cloudinary (carpeta latiendita/lines) desde el admin
+        imageUrl: parsed.data.imageUrl ?? null,
+        brandId: parsed.data.brandId || null,
         isActive: parsed.data.isActive,
         isFeatured: parsed.data.isFeatured,
       },
-      include: { _count: { select: { products: true } } },
+      include: { _count: { select: { products: true } }, brand: true },
     })
 
     return NextResponse.json(transformLine(line), { status: 201 })

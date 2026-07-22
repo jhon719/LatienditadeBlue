@@ -9,9 +9,12 @@ import { getActiveDiscountRules, getActiveBanners } from "@/lib/campaigns"
 import { HeroBanner } from "@/components/home/HeroBanner"
 import { QuickAccessPanel } from "@/components/home/QuickAccessPanel"
 import { CategoryTrends } from "@/components/home/CategoryTrends"
+import { BenefitsMarquee } from "@/components/home/BenefitsMarquee"
+import { StatsBand } from "@/components/home/StatsBand"
 import { FeaturedProducts } from "@/components/home/FeaturedProducts"
 import { LinesSection } from "@/components/home/LinesSection"
 import { ReviewsSection } from "@/components/home/ReviewsSection"
+import { FollowUs } from "@/components/home/FollowUs"
 import { BuyMeACoffee } from "@/components/home/BuyMeACoffee"
 import { BluetBubble } from "@/components/layout/BluetBubble"
 
@@ -47,9 +50,11 @@ export default async function HomePage() {
     }),
   ])
 
-  const [rules, banners] = await Promise.all([
+  const [rules, banners, productCount, reviewCount] = await Promise.all([
     getActiveDiscountRules(),
     getActiveBanners(),
+    prisma.product.count({ where: { isActive: true } }),
+    prisma.review.count(),
   ])
 
   return (
@@ -66,9 +71,17 @@ export default async function HomePage() {
       />
       <QuickAccessPanel />
       <CategoryTrends categories={categories.map(transformCategory)} />
+      <BenefitsMarquee />
+      <StatsBand
+        products={productCount}
+        animes={categories.length}
+        lines={lines.length}
+        reviews={reviewCount}
+      />
       <FeaturedProducts products={featured.map((p) => transformProduct(p, rules))} />
       <LinesSection lines={lines.map(transformLine)} />
       <ReviewsSection reviews={reviews.map((r) => transformReview(r, true))} />
+      <FollowUs />
       <BuyMeACoffee />
       <BluetBubble />
     </>

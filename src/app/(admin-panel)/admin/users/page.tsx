@@ -26,6 +26,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
 import { UserAvatar } from "@/components/common/UserAvatar"
+import { ContactBadges } from "@/components/admin/ContactBadges"
 
 interface AdminUser {
   id: string
@@ -37,6 +38,7 @@ interface AdminUser {
   phone: string | null
   address: string | null
   avatarFileName: string | null
+  tiktokUsername: string | null
   role: string
   loyaltyTier: string
   mustChangePassword: boolean
@@ -185,8 +187,12 @@ export default function AdminUsersPage() {
                         </p>
                         <p className="text-xs text-muted-foreground">
                           {user.dni ? `DNI ${user.dni}` : "Sin DNI"}
-                          {user.phone ? ` · ${user.phone}` : ""}
                         </p>
+                        <ContactBadges
+                          tiktokUsername={user.tiktokUsername}
+                          phone={user.phone}
+                          whatsappMessage={`¡Hola @${user.username}! Te escribo desde La Tiendita de Blue. ✨`}
+                        />
                       </TableCell>
                       <TableCell>
                         <Badge

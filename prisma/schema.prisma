@@ -23,6 +23,16 @@ enum ProductStatus {
   AGOTADO
 }
 
+// Tipo de mercancía para la navegación estilo Homidori (Figuras, Mangas, etc.)
+enum ProductType {
+  FIGURA
+  MANGA
+  PELUCHE
+  LLAVERO
+  ROPA
+  MERCH // Otros: posters, tazas, accesorios varios
+}
+
 enum ShippingType {
   PICKUP           // Recojo en tienda
   LOCAL_DELIVERY   // Motorizado Lima
@@ -103,6 +113,10 @@ model User {
   role               Role    @default(CUSTOMER)
   mustChangePassword Boolean @default(false)
 
+  // Identidad social (opcional): ayuda a reconocer al cliente por su TikTok
+  tiktokUsername String? // Ej. @empresa0043 (sin dominio)
+  tiktokUrl      String? // Enlace completo al perfil de TikTok
+
   // CRM / Ficha 360° (bóveda 05.04)
   loyaltyTier    LoyaltyTier @default(NUEVO)
   adminNotes     String?     @db.Text // Recordatorios internos del admin
@@ -165,15 +179,20 @@ model Line {
   id         String  @id @default(cuid())
   name       String  @unique // Ej. "Ichiban Kuji"
   slug       String  @unique
-  imageUrl   String? // Ruta local: /Imagenes/Lineas de figuras/ichiban kuji.png
+  imageUrl   String? // Cloudinary (carpeta latiendita/lines)
   isActive   Boolean @default(true)
   isFeatured Boolean @default(false)
+
+  // La mayoría de líneas son fabricadas por una marca (ej. Grandista → Banpresto)
+  brandId String?
+  brand   Brand?  @relation(fields: [brandId], references: [id])
 
   products      Product[]
   discountRules DiscountRule[]
   createdAt     DateTime       @default(now())
   updatedAt     DateTime       @updatedAt
 
+  @@index([brandId])
   @@map("lines")
 }
 
@@ -181,10 +200,11 @@ model Brand {
   id       String  @id @default(cuid())
   name     String  @unique // Ej. "Banpresto"
   slug     String  @unique
-  imageUrl String?
+  imageUrl String? // Cloudinary (carpeta latiendita/brands)
   isActive Boolean @default(true)
 
   products  Product[]
+  lines     Line[]
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
 
@@ -198,6 +218,7 @@ model Product {
   description  String        @db.Text
   price        Decimal       @db.Decimal(10, 2)
   status       ProductStatus @default(STOCK)
+  type         ProductType   @default(FIGURA) // Categoría de mercancía (nav por tipo)
   expectedDate DateTime? // Fecha estimada de llegada (solo PREVENTA)
   stockQty     Int           @default(0)
   images       String[] // Galería (URLs de Cloudinary)
@@ -224,6 +245,7 @@ model Product {
   @@index([categoryId])
   @@index([lineId])
   @@index([brandId])
+  @@index([type])
   @@index([slug])
   @@map("products")
 }
@@ -467,12 +489,79 @@ model ImportBatchItem {
   @@map("import_batch_items")
 }
 
-// Apartados de preventa con adelanto (deposit) y saldo por cobrar
+// Ledger de Adquisiciones (hoja ADQUISICIONES del Excel "La Tiendita de Blue"):
+// registro contable por ítem de importación con costos, envío internacional,
+// tipo de cambio, IGV/aduanas y utilidad estimada por caja/envío.
+model Acquisition {
+  id     String @id @default(cuid())
+  month  String // MES (DICIEMBRE, ENERO, ...)
+  type   String @default("NEW") // TIPO (JUNK, NEW, GACHA, ...)
+  lote   Int? // N° de LOTE
+  weight Float? // PESO en gramos
+
+  // Costos en moneda de origen (inputs del Excel)
+  commission  Decimal @default(0) @db.Decimal(12, 2) // COMISION
+  cost        Decimal @default(0) @db.Decimal(12, 2) // COSTO
+  shippingNac Decimal @default(0) @db.Decimal(12, 2) // ENVIO NAC
+  shippingInt Decimal @default(0) @db.Decimal(12, 2) // ENVIO INT (por lookup de peso)
+
+  exchangeRate Float? // TIPO DE CAMBIO aplicado
+
+  // Derivados (calculados con las fórmulas del Excel)
+  total         Decimal @default(0) @db.Decimal(12, 2) // TOTAL = comision + costo + envioNac
+  totalSoles    Decimal @default(0) @db.Decimal(12, 2) // SOLES (convertido)
+  igv           Decimal @default(0) @db.Decimal(12, 2) // (+SUNAT) impuesto/aduanas
+  approxRevenue Decimal @default(0) @db.Decimal(12, 2) // APROX (venta estimada)
+  revenue       Decimal @default(0) @db.Decimal(12, 2) // REVENUE = aprox - sunat
+
+  boxNumber      Int? // N° CAJA
+  shipmentNumber Int? // N ENVIO
+
+  // Campos añadidos para el panel: código, fecha de compra e imagen del lote
+  code         String? // Código interno del lote
+  purchaseDate DateTime? // Fecha de compra
+  imageUrl     String? // Foto del lote (Cloudinary)
+  notes        String?   @db.Text
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([month])
+  @@index([boxNumber])
+  @@map("acquisitions")
+}
+
+// Directorio de envíos Shalom (importado de ACCOUNTBILITY, hoja "SHALOM ENVIOS"):
+// clientes con su usuario de TikTok, DNI, WhatsApp y la agencia Shalom más
+// cercana para coordinar despachos a provincia. Complementa el reporte de entregas.
+model ShalomContact {
+  id             String    @id @default(cuid())
+  tiktokUsername String? // Usuario de TikTok (identidad del cliente)
+  fullName       String // Nombre completo
+  dni            String?
+  phone          String? // WhatsApp
+  shalomAddress  String?   @db.Text // Agencia Shalom más cercana / dirección destino
+  notes          String?   @db.Text
+  submittedAt    DateTime? // Marca temporal del formulario original
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  @@index([fullName])
+  @@map("shalom_contacts")
+}
+
+// Separaciones / Apartados con adelanto (deposit) y saldo por cobrar (bóveda 05.06 / 05.07)
 enum PreorderStatus {
-  PENDING   // Figura en tránsito, adelanto pagado
-  ARRIVED   // Llegó a almacén: cobrando saldo (dueDate activo, semáforo)
-  COMPLETED // Cliente pagó el saldo y recibió su figura
-  CANCELLED // Abandono: adelanto retenido, figura liberada al stock
+  PENDING   // Separación activa: saldo pendiente (stock o preventa en tránsito)
+  ARRIVED   // Preventa llegó a almacén: cobrando saldo final (dueDate activo, semáforo)
+  COMPLETED // Cliente pagó el 100% (PAGO_COMPLETADO)
+  CANCELLED // Abandono/liberación: adelanto retenido, figura liberada al stock
+}
+
+// Tipo de separación: define la regla de plazos (bóveda 05.07 §3)
+enum SeparationKind {
+  STOCK    // Producto disponible: saldo a la quincena/fin de mes (~15 días)
+  PREORDER // Preventa: 50% a fin de mes, 50% al llegar a almacén
 }
 
 model PreorderReservation {
@@ -487,12 +576,16 @@ model PreorderReservation {
   batchId String?
   batch   ImportBatch? @relation(fields: [batchId], references: [id])
 
-  totalPrice  Decimal @db.Decimal(10, 2)
-  depositPaid Decimal @db.Decimal(10, 2) // Adelanto no reembolsable (bóveda 07.01)
+  kind        SeparationKind @default(PREORDER)
+  totalPrice  Decimal        @db.Decimal(10, 2)
+  // Total abonado y aprobado hasta ahora (suma de payments APPROVED); saldo = total - depositPaid
+  depositPaid Decimal        @db.Decimal(10, 2) @default(0)
 
   status  PreorderStatus @default(PENDING)
-  dueDate DateTime? // Plazo límite para cancelar el saldo tras la llegada
+  dueDate DateTime? // Plazo límite para completar el saldo (semáforo)
   notes   String?        @db.Text
+
+  payments SeparationPayment[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -500,4 +593,30 @@ model PreorderReservation {
   @@index([status])
   @@index([userId])
   @@map("preorder_reservations")
+}
+
+// Abonos parciales de una separación (cuenta corriente por producto, bóveda 05.07 §2)
+enum SeparationPaymentStatus {
+  PENDING  // Abono subido por el cliente, esperando validación en Bandeja POS
+  APPROVED // Verificado por el admin: resta del saldo
+  REJECTED // Comprobante inválido
+}
+
+model SeparationPayment {
+  id            String              @id @default(cuid())
+  reservationId String
+  reservation   PreorderReservation @relation(fields: [reservationId], references: [id], onDelete: Cascade)
+
+  amount          Decimal                 @db.Decimal(10, 2)
+  operationNumber String? // N° de operación Yape/Plin/transferencia
+  imageUrl        String? // Voucher en Cloudinary
+  status          SeparationPaymentStatus @default(PENDING)
+  note            String?                 @db.Text
+
+  createdAt  DateTime  @default(now())
+  approvedAt DateTime?
+
+  @@index([reservationId])
+  @@index([status])
+  @@map("separation_payments")
 }

@@ -14,7 +14,9 @@ export async function GET(request: NextRequest) {
     const category = searchParams.get("category")
     const line = searchParams.get("line")
     const brand = searchParams.get("brand")
-    const status = searchParams.get("status")
+    // status/type se aceptan sin distinguir mayúsculas (los links usan minúsculas)
+    const status = searchParams.get("status")?.toUpperCase()
+    const type = searchParams.get("type")?.toUpperCase()
     const minPrice = searchParams.get("minPrice")
     const maxPrice = searchParams.get("maxPrice")
     const sortBy = searchParams.get("sortBy") || "newest"
@@ -30,6 +32,12 @@ export async function GET(request: NextRequest) {
     if (brand) where.brand = { slug: brand }
     if (status && ["STOCK", "PREVENTA", "AGOTADO", "ONLINE"].includes(status)) {
       where.status = status as Prisma.ProductWhereInput["status"]
+    }
+    if (
+      type &&
+      ["FIGURA", "MANGA", "PELUCHE", "LLAVERO", "ROPA", "MERCH"].includes(type)
+    ) {
+      where.type = type as Prisma.ProductWhereInput["type"]
     }
 
     if (minPrice || maxPrice) {
@@ -99,6 +107,9 @@ const createProductSchema = z.object({
   description: z.string().min(10),
   price: z.number().positive(),
   status: z.enum(["STOCK", "PREVENTA", "AGOTADO", "ONLINE"]).default("STOCK"),
+  type: z
+    .enum(["FIGURA", "MANGA", "PELUCHE", "LLAVERO", "ROPA", "MERCH"])
+    .default("FIGURA"),
   expectedDate: z.string().datetime().optional().nullable(),
   stockQty: z.number().int().min(0).default(0),
   images: z.array(z.string()).default([]),
@@ -138,6 +149,7 @@ export async function POST(request: NextRequest) {
         description: data.description,
         price: data.price,
         status: data.status,
+        type: data.type,
         expectedDate: data.expectedDate ? new Date(data.expectedDate) : null,
         stockQty: data.stockQty,
         images: data.images,

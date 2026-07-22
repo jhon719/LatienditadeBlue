@@ -6,8 +6,26 @@ import { requireAdmin } from "@/lib/api-guards"
 
 type Params = Promise<{ id: string }>
 
+// GET: detalle para la página de edición del admin
+export async function GET(_request: NextRequest, { params }: { params: Params }) {
+  const { response } = await requireAdmin()
+  if (response) return response
+
+  const { id } = await params
+  const line = await prisma.line.findUnique({
+    where: { id },
+    include: { _count: { select: { products: true } }, brand: true },
+  })
+  if (!line) {
+    return NextResponse.json({ error: "Línea no encontrada" }, { status: 404 })
+  }
+  return NextResponse.json(transformLine(line))
+}
+
 const updateSchema = z.object({
   name: z.string().min(2).optional(),
+  imageUrl: z.string().url().nullable().optional(),
+  brandId: z.string().nullable().optional(),
   isActive: z.boolean().optional(),
   isFeatured: z.boolean().optional(),
 })
@@ -33,7 +51,7 @@ export async function PATCH(
     const line = await prisma.line.update({
       where: { id },
       data: parsed.data,
-      include: { _count: { select: { products: true } } },
+      include: { _count: { select: { products: true } }, brand: true },
     })
 
     return NextResponse.json(transformLine(line))

@@ -1,10 +1,10 @@
 "use client"
 
 import { useRef, useState } from "react"
-import Image from "next/image"
 import { UploadCloud, CheckCircle, Loader2 } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { ImageLightbox } from "@/components/common/ImageLightbox"
 
 interface ManualPaymentSectionProps {
   voucherUrl: string | null
@@ -55,49 +55,46 @@ export function ManualPaymentSection({
         </p>
       </div>
 
-      {/* QRs locales (bóveda 03.02) */}
+      {/* QRs locales (bóveda 03.02) — click para ampliar */}
       <div className="flex flex-col justify-center gap-6 py-2 sm:flex-row">
         <div className="space-y-2 text-center">
-          <div className="relative mx-auto h-36 w-36 overflow-hidden rounded-xl border-2 border-[#742284]">
-            <Image
-              src="/Imagenes/Pagos/YAPE QR.jpeg"
-              alt="QR Yape"
-              fill
-              className="object-cover"
-              sizes="144px"
-            />
-          </div>
+          <ImageLightbox
+            src="/Imagenes/Pagos/YAPE QR.jpeg"
+            alt="QR Yape"
+            caption="Escanea el QR de Yape desde tu app"
+            className="mx-auto h-36 w-36 rounded-xl border-2 border-[#742284]"
+            imgClassName="object-cover"
+          />
           <span className="block text-sm font-bold text-[#742284]">Yape</span>
         </div>
 
         <div className="space-y-2 text-center">
-          <div className="relative mx-auto h-36 w-36 overflow-hidden rounded-xl border-2 border-[#00B4D8]">
-            <Image
-              src="/Imagenes/Pagos/PLIN QR.jpeg"
-              alt="QR Plin"
-              fill
-              className="object-cover"
-              sizes="144px"
-            />
-          </div>
+          <ImageLightbox
+            src="/Imagenes/Pagos/PLIN QR.jpeg"
+            alt="QR Plin"
+            caption="Escanea el QR de Plin desde tu app"
+            className="mx-auto h-36 w-36 rounded-xl border-2 border-[#00B4D8]"
+            imgClassName="object-cover"
+          />
           <span className="block text-sm font-bold text-[#00B4D8]">Plin</span>
         </div>
 
         <div className="space-y-2 text-center">
-          <div className="relative mx-auto h-36 w-36 overflow-hidden rounded-xl border-2 border-border">
-            <Image
-              src="/Imagenes/Pagos/NRO Banco.jpg"
-              alt="Cuenta bancaria"
-              fill
-              className="object-contain bg-white"
-              sizes="144px"
-            />
-          </div>
+          <ImageLightbox
+            src="/Imagenes/Pagos/NRO Banco.jpg"
+            alt="Cuenta bancaria"
+            caption="Datos de la cuenta para transferencia bancaria"
+            className="mx-auto h-36 w-36 rounded-xl border-2 border-border bg-white"
+            imgClassName="object-contain"
+          />
           <span className="block text-sm font-bold text-muted-foreground">
             Transferencia bancaria
           </span>
         </div>
       </div>
+      <p className="-mt-3 text-center text-xs text-muted-foreground">
+        💡 Haz click en cualquier imagen para verla en grande
+      </p>
 
       {/* Número de operación */}
       <div className="space-y-2">
@@ -145,12 +142,22 @@ export function ManualPaymentSection({
             />
           </>
         ) : (
-          <div className="flex items-center justify-between rounded-xl border border-green-200 bg-green-50 p-4 dark:border-green-900 dark:bg-green-950">
-            <div className="flex items-center gap-2 text-green-700 dark:text-green-400">
-              <CheckCircle size={20} />
-              <span className="text-sm font-semibold">
-                Comprobante adjuntado con éxito
-              </span>
+          <div className="flex items-center justify-between gap-3 rounded-xl border border-green-200 bg-green-50 p-4 dark:border-green-900 dark:bg-green-950">
+            <div className="flex items-center gap-3">
+              <ImageLightbox
+                src={voucherUrl}
+                alt="Comprobante de pago"
+                caption="Tu comprobante de pago"
+                className="h-14 w-14 shrink-0 rounded-lg border border-green-300 bg-white dark:border-green-800"
+                imgClassName="object-cover"
+                sizes="56px"
+              />
+              <div className="flex items-center gap-2 text-green-700 dark:text-green-400">
+                <CheckCircle size={20} />
+                <span className="text-sm font-semibold">
+                  Comprobante adjuntado con éxito
+                </span>
+              </div>
             </div>
             <button
               type="button"

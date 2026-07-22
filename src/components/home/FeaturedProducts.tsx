@@ -3,6 +3,7 @@
 import Link from "next/link"
 import { ArrowRight } from "lucide-react"
 import { AnimatedContent } from "@/components/react-bits/AnimatedContent"
+import { GradientText } from "@/components/common/GradientText"
 import { ProductCard } from "@/components/products/ProductCard"
 import type { Product } from "@/types"
 
@@ -16,8 +17,8 @@ export function FeaturedProducts({ products }: { products: Product[] }) {
           <p className="text-sm font-extrabold uppercase text-[#4A80BE]">
             Novedades seleccionadas
           </p>
-          <h2 className="font-display text-5xl leading-none text-[#142F5C] dark:text-foreground">
-            Figuras destacadas
+          <h2 className="font-display text-5xl leading-none">
+            <GradientText>Figuras destacadas</GradientText>
           </h2>
         </div>
         <Link

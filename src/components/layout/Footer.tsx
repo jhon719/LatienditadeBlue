@@ -1,7 +1,9 @@
 import Image from "next/image"
 import Link from "next/link"
-import { Instagram, Mail, MapPin, MessageCircle, Music2, Phone } from "lucide-react"
+import { Mail, MapPin, Phone } from "lucide-react"
 import { Separator } from "@/components/ui/separator"
+import { SocialIcon } from "@/components/common/SocialIcon"
+import { SOCIAL_LINKS } from "@/lib/social"
 
 export function Footer() {
   return (
@@ -28,11 +30,18 @@ export function Footer() {
               Figuras y merch anime para coleccionistas. Stock, preventas y
               pedidos online con atencion cercana.
             </p>
-            <div className="mt-5 flex gap-3">
-              {[Instagram, Music2, MessageCircle].map((Icon, index) => (
-                <Link key={index} href="#" className="rounded-full bg-white/10 p-3 transition hover:bg-[#F5B400] hover:text-[#142F5C]">
-                  <Icon className="h-5 w-5" />
-                </Link>
+            <div className="mt-5 flex flex-wrap gap-3">
+              {SOCIAL_LINKS.map((s) => (
+                <a
+                  key={s.url}
+                  href={s.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  title={`${s.label} · ${s.handle}`}
+                  className="rounded-full bg-white/10 p-3 transition hover:-translate-y-0.5 hover:bg-[#F5B400] hover:text-[#142F5C]"
+                >
+                  <SocialIcon platform={s.platform} className="h-5 w-5" />
+                </a>
               ))}
             </div>
           </div>

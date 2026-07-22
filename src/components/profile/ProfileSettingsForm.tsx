@@ -9,6 +9,8 @@ import { Loader2, Save } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { WhatsappIcon } from "@/components/common/WhatsappIcon"
+import { TiktokIcon } from "@/components/common/TiktokIcon"
 import {
   Card,
   CardContent,
@@ -41,6 +43,13 @@ const settingsSchema = z.object({
   department: z.string(),
   // Opt-in de promociones (bóveda 05.04 §4, Ley 29733)
   marketingOptIn: z.boolean(),
+  // Identidad de TikTok (opcional)
+  tiktokUsername: z.string().max(40).optional(),
+  tiktokUrl: z
+    .string()
+    .url("Enlace de TikTok no válido")
+    .optional()
+    .or(z.literal("")),
 })
 
 type SettingsFormData = z.infer<typeof settingsSchema>
@@ -160,8 +169,25 @@ export function ProfileSettingsForm({
                 )}
               </div>
               <div className="space-y-2">
-                <Label htmlFor="phone">Teléfono (WhatsApp)</Label>
-                <Input id="phone" placeholder="999888777" maxLength={9} {...register("phone")} />
+                <Label htmlFor="phone" className="flex items-center gap-1.5">
+                  <WhatsappIcon className="h-4 w-4 text-[#25D366]" />
+                  Número de WhatsApp
+                </Label>
+                <div className="relative">
+                  <WhatsappIcon className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#25D366]" />
+                  <Input
+                    id="phone"
+                    placeholder="999888777"
+                    maxLength={9}
+                    inputMode="numeric"
+                    className="pl-10"
+                    {...register("phone")}
+                  />
+                </div>
+                <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                  <WhatsappIcon className="h-3.5 w-3.5 text-[#25D366]" />
+                  Solo WhatsApp: por aquí coordinamos tu pedido, pago y envío.
+                </p>
                 {errors.phone && (
                   <p className="text-xs text-destructive">{errors.phone.message}</p>
                 )}
@@ -192,6 +218,38 @@ export function ProfileSettingsForm({
                   </SelectContent>
                 </Select>
               </div>
+              {/* Identidad social (opcional): reconocerte por tu TikTok */}
+              <div className="space-y-2 sm:col-span-2">
+                <Label htmlFor="tiktokUsername" className="flex items-center gap-1.5">
+                  <TiktokIcon className="h-4 w-4" />
+                  Usuario de TikTok <span className="text-muted-foreground">(opcional)</span>
+                </Label>
+                <div className="relative">
+                  <TiktokIcon className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-foreground/70" />
+                  <Input
+                    id="tiktokUsername"
+                    placeholder="@tu_usuario"
+                    className="pl-10"
+                    {...register("tiktokUsername")}
+                  />
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Nos ayuda a reconocerte como apareces en TikTok. Si dejas el
+                  enlace vacío, lo generamos con tu usuario.
+                </p>
+              </div>
+              <div className="space-y-2 sm:col-span-2">
+                <Label htmlFor="tiktokUrl">Enlace de tu perfil de TikTok (opcional)</Label>
+                <Input
+                  id="tiktokUrl"
+                  placeholder="https://www.tiktok.com/@tu_usuario"
+                  {...register("tiktokUrl")}
+                />
+                {errors.tiktokUrl && (
+                  <p className="text-xs text-destructive">{errors.tiktokUrl.message}</p>
+                )}
+              </div>
+
               <label className="flex cursor-pointer items-start gap-2 text-xs text-muted-foreground sm:col-span-2">
                 <input
                   type="checkbox"

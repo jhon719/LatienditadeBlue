@@ -74,16 +74,16 @@ export function HeroBanner({ banners = [] }: { banners?: BannerView[] }) {
   }
 
   return (
-    <section className="relative overflow-hidden bg-[#142F5C] text-white">
+    <section className="group relative overflow-hidden bg-[#142F5C] text-white">
       <div className="absolute inset-0">
         <Image
-          src="https://images.unsplash.com/photo-1607604276583-eef5d076aa5f?w=1800&h=900&fit=crop"
-          alt="Figuras anime coleccionables"
+          src="/Imagenes/banner principal tienda.png"
+          alt="Banner principal La Tiendita de Blue"
           fill
           priority
-          className="object-cover opacity-45"
+          className="object-cover transition-transform duration-700 ease-out group-hover:scale-105"
         />
-        <div className="absolute inset-0 bg-[#142F5C]/60" />
+        <div className="absolute inset-0 bg-[#142F5C]/70" />
       </div>
       <div className="blue-container relative grid min-h-[520px] items-center gap-10 py-16 lg:grid-cols-[1fr_420px]">
         <AnimatedContent className="max-w-3xl">

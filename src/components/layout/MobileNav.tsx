@@ -2,18 +2,20 @@
 
 import * as React from "react"
 import Link from "next/link"
-import { Heart, Menu, Package, ShoppingBag, Sparkles, User } from "lucide-react"
+import { BookOpen, Heart, Menu, Package, Shirt, ShoppingBag, Sparkles, Tag, User } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
 
+// Navegación por tipo de mercancía (estilo Homidori) + preventas
 const links = [
-  { name: "Figuras en Stock", href: "/products?status=stock", icon: Package },
-  { name: "Preventa", href: "/products?status=preventa", icon: Sparkles },
-  { name: "Online", href: "/products?status=online", icon: ShoppingBag },
-  { name: "Peluches", href: "/products?category=peluches", icon: Heart },
-  { name: "Mangas", href: "/products?category=mangas", icon: Package },
-  { name: "Merch", href: "/products?category=merch", icon: ShoppingBag },
+  { name: "Figuras", href: "/products?type=figura", icon: Package },
+  { name: "Mangas", href: "/products?type=manga", icon: BookOpen },
+  { name: "Peluches", href: "/products?type=peluche", icon: Heart },
+  { name: "Llaveros", href: "/products?type=llavero", icon: Tag },
+  { name: "Ropa", href: "/products?type=ropa", icon: Shirt },
+  { name: "Merch", href: "/products?type=merch", icon: ShoppingBag },
+  { name: "Preventas", href: "/products?status=preventa", icon: Sparkles },
 ]
 
 export function MobileNav() {
@@ -27,12 +29,12 @@ export function MobileNav() {
           <span className="sr-only">Menu</span>
         </Button>
       </SheetTrigger>
-      <SheetContent side="left" className="w-[320px] bg-white">
+      <SheetContent side="left" className="w-[320px] bg-background">
         <SheetHeader>
-          <SheetTitle className="text-left font-display text-4xl text-[#142F5C]">La Tiendita de Blue</SheetTitle>
+          <SheetTitle className="text-left font-display text-4xl text-foreground">La Tiendita de Blue</SheetTitle>
         </SheetHeader>
         <div className="mt-6 space-y-5">
-          <Link onClick={() => setOpen(false)} href="/profile" className="flex items-center gap-3 rounded-3xl bg-[#F2F2F2] px-4 py-3 font-bold text-[#142F5C]">
+          <Link onClick={() => setOpen(false)} href="/profile" className="flex items-center gap-3 rounded-3xl bg-secondary px-4 py-3 font-bold text-foreground">
             <User className="h-5 w-5" /> Mi cuenta
           </Link>
           <Separator />
@@ -42,7 +44,7 @@ export function MobileNav() {
                 key={item.href}
                 href={item.href}
                 onClick={() => setOpen(false)}
-                className="flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-extrabold text-[#142F5C] transition hover:bg-[#F2F2F2]"
+                className="flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-extrabold text-foreground transition hover:bg-secondary"
               >
                 <item.icon className="h-5 w-5 text-[#4A80BE]" />
                 {item.name}

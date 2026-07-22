@@ -63,9 +63,9 @@ export function ProductCard({ product }: ProductCardProps) {
   }
 
   return (
-    <Card className="group overflow-hidden transition-all hover:shadow-lg">
+    <Card className="group overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:shadow-xl">
       <div className="relative aspect-square overflow-hidden bg-muted">
-        <div className="absolute left-2 top-2 z-10 flex flex-col gap-1">
+        <div className="absolute left-2 top-2 z-20 flex flex-col gap-1">
           <StatusBadge product={product} />
           <OfferBadge product={product} />
         </div>
@@ -76,11 +76,14 @@ export function ProductCard({ product }: ProductCardProps) {
               src={productImage}
               alt={product.name}
               fill
-              className="object-cover transition-transform group-hover:scale-105"
+              className="object-cover transition-transform duration-500 group-hover:scale-110"
               sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
             />
           </div>
         </Link>
+
+        {/* Barrido de brillo al pasar el mouse */}
+        <span className="card-shine z-10" />
 
         <div className="pointer-events-none absolute bottom-2 left-2 right-2 z-20 translate-y-full opacity-0 transition-all group-hover:pointer-events-auto group-hover:translate-y-0 group-hover:opacity-100">
           <Button

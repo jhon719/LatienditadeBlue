@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/card"
 import { UserAvatar } from "@/components/common/UserAvatar"
 import { CrmPanel } from "@/components/admin/CrmPanel"
+import { ContactBadges } from "@/components/admin/ContactBadges"
 
 export const dynamic = "force-dynamic"
 
@@ -119,6 +120,7 @@ export default async function CustomerProfilePage({
                 <div>
                   <dt className="text-muted-foreground">Teléfono</dt>
                   <dd className="font-medium">{user.phone ?? "—"}</dd>
+                  <ContactBadges phone={user.phone} whatsappMessage={`¡Hola @${user.username}! Te escribo desde La Tiendita de Blue. ✨`} />
                 </div>
                 <div>
                   <dt className="text-muted-foreground">Marketing opt-in</dt>
@@ -131,6 +133,11 @@ export default async function CustomerProfilePage({
                       "No suscrito"
                     )}
                   </dd>
+                </div>
+                <div>
+                  <dt className="text-muted-foreground">TikTok</dt>
+                  <dd className="font-medium">{user.tiktokUsername ?? "—"}</dd>
+                  <ContactBadges tiktokUsername={user.tiktokUsername} />
                 </div>
                 <div className="sm:col-span-2">
                   <dt className="text-muted-foreground">Dirección</dt>

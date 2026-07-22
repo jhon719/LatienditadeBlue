@@ -32,6 +32,7 @@ export async function GET(request: NextRequest) {
               lastName: true,
               dni: true,
               phone: true,
+              tiktokUsername: true,
             },
           },
           items: {

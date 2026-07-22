@@ -21,9 +21,19 @@ export async function POST(request: NextRequest) {
   try {
     const formData = await request.formData()
     const file = formData.get("file") as File | null
-    // Subcarpeta lógica: products | vouchers | reviews | banners
+    // Subcarpeta lógica: products | vouchers | reviews | banners | categories | lines | brands
     const folder = (formData.get("folder") as string | null) ?? "products"
-    if (!["products", "vouchers", "reviews", "banners"].includes(folder)) {
+    const VALID_FOLDERS = [
+      "products",
+      "vouchers",
+      "reviews",
+      "banners",
+      "categories",
+      "lines",
+      "brands",
+      "acquisitions",
+    ]
+    if (!VALID_FOLDERS.includes(folder)) {
       return NextResponse.json({ error: "Carpeta no válida" }, { status: 400 })
     }
 

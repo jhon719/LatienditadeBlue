@@ -9,6 +9,25 @@ import {
 
 type Params = Promise<{ type: string; id: string }>
 
+export async function GET(_request: NextRequest, { params }: { params: Params }) {
+  const { response } = await requireAdmin()
+  if (response) return response
+
+  const { type, id } = await params
+  if (!isCampaignType(type)) {
+    return NextResponse.json({ error: "Tipo no válido" }, { status: 404 })
+  }
+
+  const item = await (campaignModel(type) as never as {
+    findUnique: (args: { where: { id: string } }) => Promise<unknown>
+  }).findUnique({ where: { id } })
+
+  if (!item) {
+    return NextResponse.json({ error: "Campaña no encontrada" }, { status: 404 })
+  }
+  return NextResponse.json(item)
+}
+
 export async function PATCH(request: NextRequest, { params }: { params: Params }) {
   const { response } = await requireAdmin()
   if (response) return response

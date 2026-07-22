@@ -6,8 +6,25 @@ import { requireAdmin } from "@/lib/api-guards"
 
 type Params = Promise<{ id: string }>
 
+// GET: detalle para la página de edición del admin
+export async function GET(_request: NextRequest, { params }: { params: Params }) {
+  const { response } = await requireAdmin()
+  if (response) return response
+
+  const { id } = await params
+  const category = await prisma.category.findUnique({
+    where: { id },
+    include: { _count: { select: { products: true } } },
+  })
+  if (!category) {
+    return NextResponse.json({ error: "Categoría no encontrada" }, { status: 404 })
+  }
+  return NextResponse.json(transformCategory(category))
+}
+
 const updateSchema = z.object({
   name: z.string().min(2).optional(),
+  imageUrl: z.string().url().nullable().optional(),
   isActive: z.boolean().optional(),
   isTrending: z.boolean().optional(),
   hasNewArrivals: z.boolean().optional(),

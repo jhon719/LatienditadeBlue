@@ -5,10 +5,13 @@ import { transformBrand } from "@/lib/transformers"
 import { requireAdmin } from "@/lib/api-guards"
 import { slugify } from "@/lib/utils"
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
+    const { searchParams } = new URL(request.url)
+    const includeInactive = searchParams.get("all") === "true"
+
     const brands = await prisma.brand.findMany({
-      where: { isActive: true },
+      where: includeInactive ? undefined : { isActive: true },
       include: {
         _count: {
           select: { products: { where: { isActive: true } } },
@@ -29,7 +32,8 @@ export async function GET() {
 
 const brandSchema = z.object({
   name: z.string().min(2),
-  imageUrl: z.string().optional().nullable(),
+  imageUrl: z.string().url().optional().nullable(),
+  isActive: z.boolean().default(true),
 })
 
 export async function POST(request: NextRequest) {
@@ -51,6 +55,7 @@ export async function POST(request: NextRequest) {
         name: parsed.data.name,
         slug: slugify(parsed.data.name),
         imageUrl: parsed.data.imageUrl ?? null,
+        isActive: parsed.data.isActive,
       },
       include: { _count: { select: { products: true } } },
     })

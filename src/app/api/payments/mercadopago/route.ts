@@ -2,11 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { z } from "zod"
 import { prisma } from "@/lib/prisma"
 import { requireUser } from "@/lib/api-guards"
-import {
-  isMercadoPagoEnabled,
-  isMercadoPagoSandbox,
-  getPreferenceClient,
-} from "@/lib/mercadopago"
+import { isMercadoPagoEnabled, getPreferenceClient } from "@/lib/mercadopago"
 
 // El checkout consulta este endpoint para saber si mostrar la opción de pasarela
 export async function GET() {
@@ -92,10 +88,10 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       preferenceId: preference.id,
-      // En sandbox se navega por el init_point de pruebas
-      initPoint: isMercadoPagoSandbox()
-        ? (preference.sandbox_init_point ?? preference.init_point)
-        : preference.init_point,
+      // Siempre init_point: con credenciales TEST el flujo de pruebas ya se
+      // resuelve por las credenciales. sandbox_init_point está deprecado y
+      // provocaba un salto extra (sandbox.mercadopago → www.mercadopago).
+      initPoint: preference.init_point,
     })
   } catch (error) {
     console.error("Error creando preferencia de Mercado Pago:", error)

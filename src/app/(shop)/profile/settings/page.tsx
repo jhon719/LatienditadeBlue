@@ -19,6 +19,8 @@ export default async function SettingsPage() {
       address: true,
       department: true,
       marketingOptIn: true,
+      tiktokUsername: true,
+      tiktokUrl: true,
       passwordHash: true,
     },
   })
@@ -43,6 +45,8 @@ export default async function SettingsPage() {
           address: user.address ?? "",
           department: user.department ?? "",
           marketingOptIn: user.marketingOptIn,
+          tiktokUsername: user.tiktokUsername ?? "",
+          tiktokUrl: user.tiktokUrl ?? "",
         }}
         hasPassword={!!user.passwordHash}
       />

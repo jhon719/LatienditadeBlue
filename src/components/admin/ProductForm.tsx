@@ -39,6 +39,7 @@ const productSchema = z.object({
   description: z.string().min(10, "La descripción es requerida (mín. 10 caracteres)"),
   price: z.number().positive("El precio debe ser mayor a 0"),
   status: z.enum(["STOCK", "PREVENTA", "ONLINE", "AGOTADO"]),
+  type: z.enum(["FIGURA", "MANGA", "PELUCHE", "LLAVERO", "ROPA", "MERCH"]),
   expectedDate: z.string().optional(),
   stockQty: z.number().int().min(0, "El stock debe ser 0 o más"),
   categoryId: z.string().min(1, "La categoría (anime) es requerida"),
@@ -83,6 +84,7 @@ export function ProductForm({ product }: ProductFormProps) {
           description: product.description,
           price: product.price,
           status: product.status,
+          type: product.type,
           expectedDate: product.expectedDate
             ? product.expectedDate.slice(0, 10)
             : "",
@@ -94,6 +96,7 @@ export function ProductForm({ product }: ProductFormProps) {
         }
       : {
           status: "STOCK",
+          type: "FIGURA",
           stockQty: 0,
           isFeatured: false,
         },
@@ -126,6 +129,7 @@ export function ProductForm({ product }: ProductFormProps) {
         description: data.description,
         price: data.price,
         status: data.status,
+        type: data.type,
         expectedDate:
           data.status === "PREVENTA" && data.expectedDate
             ? new Date(data.expectedDate).toISOString()
@@ -281,10 +285,36 @@ export function ProductForm({ product }: ProductFormProps) {
           <CardHeader>
             <CardTitle>Clasificación</CardTitle>
             <CardDescription>
-              Anime, línea de figura y fabricante (bóveda 02.05)
+              Tipo de mercancía, anime, línea de figura y fabricante (bóveda 02.05)
             </CardDescription>
           </CardHeader>
-          <CardContent className="grid gap-4 sm:grid-cols-3">
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <Label>Tipo de producto</Label>
+              <Select
+                value={watch("type") ?? "FIGURA"}
+                onValueChange={(v) =>
+                  setValue("type", v as ProductFormData["type"])
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="FIGURA">Figura</SelectItem>
+                  <SelectItem value="MANGA">Manga</SelectItem>
+                  <SelectItem value="PELUCHE">Peluche</SelectItem>
+                  <SelectItem value="LLAVERO">Llavero</SelectItem>
+                  <SelectItem value="ROPA">Ropa</SelectItem>
+                  <SelectItem value="MERCH">Merch (otros)</SelectItem>
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground">
+                Define en qué sección del menú aparece (Figuras, Mangas, etc.).
+              </p>
+            </div>
+
+            <div className="grid gap-4 sm:grid-cols-3">
             <div className="space-y-2">
               <Label>Anime / Serie</Label>
               <Select
@@ -347,6 +377,7 @@ export function ProductForm({ product }: ProductFormProps) {
               {errors.brandId && (
                 <p className="text-xs text-destructive">{errors.brandId.message}</p>
               )}
+            </div>
             </div>
           </CardContent>
         </Card>

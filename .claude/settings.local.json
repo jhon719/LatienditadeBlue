@@ -10,7 +10,8 @@
       "Bash(tar xzf *)",
       "Bash(cygpath -w /tmp/package/AGENTS.md)",
       "Read(//tmp/**)",
-      "Bash(tasklist)"
+      "Bash(tasklist)",
+      "WebSearch"
     ]
   }
 }

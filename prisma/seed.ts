@@ -1,7 +1,7 @@
 import "dotenv/config"
 import fs from "node:fs"
 import path from "node:path"
-import { PrismaClient, ProductStatus } from "@prisma/client"
+import { PrismaClient, ProductStatus, ProductType } from "@prisma/client"
 import { PrismaPg } from "@prisma/adapter-pg"
 import { Pool } from "pg"
 import bcrypt from "bcryptjs"
@@ -149,6 +149,7 @@ async function main() {
     brand: string
     price: number
     status: ProductStatus
+    type?: ProductType // default FIGURA
     stockQty: number
     expectedDate?: Date
     isFeatured?: boolean
@@ -308,6 +309,94 @@ async function main() {
         "Set de Frieren y Fern en la línea Trio Try It de FuRyu. Dos figuras de 18 cm con bases independientes.",
       images: [img("photo-1620428268482-cf1851a36764")],
     },
+    // ---- Mercancía de otros tipos (para la navegación por tipo estilo Homidori) ----
+    {
+      name: "One Piece Vol. 105 - Manga Tomo",
+      category: "one-piece",
+      brand: "bandai",
+      price: 29.9,
+      status: "STOCK",
+      type: "MANGA",
+      stockQty: 15,
+      isFeatured: true,
+      description:
+        "Tomo 105 del manga de One Piece, edición en español. Tapa blanda, ~200 páginas. Ideal para completar tu colección.",
+      images: [img("photo-1544716278-ca5e3f4abd8c")],
+    },
+    {
+      name: "Demon Slayer Vol. 23 - Manga Final",
+      category: "demon-slayer",
+      brand: "bandai",
+      price: 27.9,
+      status: "STOCK",
+      type: "MANGA",
+      stockQty: 12,
+      description:
+        "Tomo final (23) del manga de Kimetsu no Yaiba en español. Cierre épico de la saga de Tanjiro.",
+      images: [img("photo-1612178537253-bccd437b730e")],
+    },
+    {
+      name: "Peluche Rem Chibi 25 cm",
+      category: "re-zero",
+      brand: "furyu",
+      price: 79.9,
+      status: "STOCK",
+      type: "PELUCHE",
+      stockQty: 8,
+      isFeatured: true,
+      description:
+        "Peluche suave de Rem en versión chibi, 25 cm. Material de felpa premium, ideal para regalo.",
+      images: [img("photo-1558877385-8c1b8e6b1a8e")],
+    },
+    {
+      name: "Peluche Frieren Plush 30 cm",
+      category: "frieren",
+      brand: "sega",
+      price: 89.9,
+      status: "PREVENTA",
+      type: "PELUCHE",
+      stockQty: 10,
+      expectedDate: new Date("2026-11-30"),
+      description:
+        "Peluche de Frieren de 30 cm con báculo bordado. Preventa con adelanto, llegada estimada noviembre 2026.",
+      images: [img("photo-1607252650355-f7fd0460ccdb")],
+    },
+    {
+      name: "Llavero Acrílico Goku - Dragon Ball",
+      category: "dragon-ball",
+      brand: "banpresto",
+      price: 14.9,
+      status: "STOCK",
+      type: "LLAVERO",
+      stockQty: 30,
+      description:
+        "Llavero de acrílico de doble cara de Goku SSJ, 6 cm. Resistente a rayaduras, con argolla metálica.",
+      images: [img("photo-1622560480605-d83c853bc5c3")],
+    },
+    {
+      name: "Polo Anime Luffy Gear 5 - Talla M",
+      category: "one-piece",
+      brand: "banpresto",
+      price: 49.9,
+      status: "STOCK",
+      type: "ROPA",
+      stockQty: 20,
+      description:
+        "Polo de algodón con estampado de Luffy Gear 5, talla M. Corte unisex, tela premium 100% algodón.",
+      images: [img("photo-1521572163474-6864f9cf17ab")],
+    },
+    {
+      name: "Taza Mágica Hatsune Miku - Vocaloid",
+      category: "vocaloid",
+      brand: "furyu",
+      price: 34.9,
+      status: "ONLINE",
+      type: "MERCH",
+      stockQty: 25,
+      description:
+        "Taza cerámica de 350 ml que revela a Miku con el calor. Apta para microondas (no lavavajillas).",
+      images: [img("photo-1514228742587-6b1558fcca3d")],
+    },
   ]
 
   const productIds: Record<string, string> = {}
@@ -320,6 +409,7 @@ async function main() {
         description: p.description,
         price: p.price,
         status: p.status,
+        type: p.type ?? "FIGURA",
         expectedDate: p.expectedDate,
         stockQty: p.stockQty,
         images: p.images,

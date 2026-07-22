@@ -97,6 +97,8 @@ export default function AdminProductsPage() {
   const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState("")
   const [categoryFilter, setCategoryFilter] = useState("all")
+  const [statusFilter, setStatusFilter] = useState("all")
+  const [stockFilter, setStockFilter] = useState("all")
   const [deleteId, setDeleteId] = useState<string | null>(null)
   const [deleting, setDeleting] = useState(false)
 
@@ -141,11 +143,22 @@ export default function AdminProductsPage() {
     }
   }
 
+  // Umbral de "stock bajo" (bóveda 05.03 §4: alertas de pocas unidades)
+  const LOW_STOCK_THRESHOLD = 5
+
   const filteredProducts = products.filter((product) => {
     const matchesSearch = product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       product.brand.name.toLowerCase().includes(searchQuery.toLowerCase())
     const matchesCategory = categoryFilter === "all" || product.category.slug === categoryFilter
-    return matchesSearch && matchesCategory
+    const matchesStatus = statusFilter === "all" || product.status === statusFilter
+    const matchesStock =
+      stockFilter === "all" ||
+      (stockFilter === "in" && product.stockQty > 0) ||
+      (stockFilter === "out" && product.stockQty === 0) ||
+      (stockFilter === "low" &&
+        product.stockQty > 0 &&
+        product.stockQty <= LOW_STOCK_THRESHOLD)
+    return matchesSearch && matchesCategory && matchesStatus && matchesStock
   })
 
   const inStockCount = products.filter((p) => p.stockQty > 0).length
@@ -226,16 +239,39 @@ export default function AdminProductsPage() {
           />
         </div>
         <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-          <SelectTrigger className="w-[180px]">
+          <SelectTrigger className="w-[160px]">
             <SelectValue placeholder="Categoria" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">Todas</SelectItem>
+            <SelectItem value="all">Todas las series</SelectItem>
             {categories.map((cat) => (
               <SelectItem key={cat.id} value={cat.slug}>
                 {cat.name}
               </SelectItem>
             ))}
+          </SelectContent>
+        </Select>
+        <Select value={statusFilter} onValueChange={setStatusFilter}>
+          <SelectTrigger className="w-[150px]">
+            <SelectValue placeholder="Estado" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Todos los estados</SelectItem>
+            <SelectItem value="STOCK">En stock</SelectItem>
+            <SelectItem value="PREVENTA">Preventa</SelectItem>
+            <SelectItem value="ONLINE">Online</SelectItem>
+            <SelectItem value="AGOTADO">Agotado</SelectItem>
+          </SelectContent>
+        </Select>
+        <Select value={stockFilter} onValueChange={setStockFilter}>
+          <SelectTrigger className="w-[150px]">
+            <SelectValue placeholder="Inventario" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Todo el inventario</SelectItem>
+            <SelectItem value="in">Con stock</SelectItem>
+            <SelectItem value="low">Stock bajo (≤5)</SelectItem>
+            <SelectItem value="out">Sin stock</SelectItem>
           </SelectContent>
         </Select>
       </div>

@@ -7,11 +7,10 @@ import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
 import { signIn } from "next-auth/react"
-import { Loader2, Mail, Lock, Eye, EyeOff } from "lucide-react"
+import { Loader2, Mail, Lock, Eye, EyeOff, ArrowRight } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { GoogleButton } from "./GoogleButton"
 
 const loginSchema = z.object({
@@ -59,100 +58,115 @@ export function LoginForm({ googleEnabled = false }: { googleEnabled?: boolean }
   }
 
   return (
-    <div className="w-full max-w-md px-4">
-      <Card>
-        <CardHeader className="space-y-1 text-center">
-          <CardTitle className="text-2xl font-bold">Iniciar Sesión</CardTitle>
-          <CardDescription>
-            Ingresa tus credenciales para acceder a tu cuenta
-          </CardDescription>
-        </CardHeader>
-        <form onSubmit={handleSubmit(onSubmit)}>
-          <CardContent className="space-y-4">
-            {error && (
-              <div className="rounded-md bg-destructive/15 p-3 text-sm text-destructive">
-                {error}
-              </div>
-            )}
+    <div className="glass-card p-7 sm:p-9">
+      <div className="mb-7 text-center">
+        <h1 className="font-display text-4xl">
+          <span className="bg-gradient-to-r from-[#142F5C] to-[#4A80BE] bg-clip-text text-transparent dark:from-white dark:to-[#7FB3E8]">
+            Bienvenido de vuelta
+          </span>
+        </h1>
+        <p className="mt-1.5 text-sm text-muted-foreground">
+          Inicia sesión para seguir tus pedidos y preventas
+        </p>
+      </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <div className="relative">
-                <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="tu@email.com"
-                  className="pl-10"
-                  {...register("email")}
-                />
-              </div>
-              {errors.email && (
-                <p className="text-sm text-destructive">{errors.email.message}</p>
-              )}
-            </div>
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
+        {error && (
+          <div className="rounded-xl border border-destructive/20 bg-destructive/10 p-3 text-sm font-medium text-destructive">
+            {error}
+          </div>
+        )}
 
-            <div className="space-y-2">
-              <Label htmlFor="password">Contraseña</Label>
-              <div className="relative">
-                <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                <Input
-                  id="password"
-                  type={showPassword ? "text" : "password"}
-                  placeholder="••••••••"
-                  className="pl-10 pr-10"
-                  {...register("password")}
-                />
-                <button
-                  type="button"
-                  tabIndex={-1}
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                >
-                  {showPassword ? (
-                    <EyeOff className="h-4 w-4" />
-                  ) : (
-                    <Eye className="h-4 w-4" />
-                  )}
-                </button>
-              </div>
-              {errors.password && (
-                <p className="text-sm text-destructive">{errors.password.message}</p>
-              )}
-            </div>
-          </CardContent>
+        <div className="space-y-2">
+          <Label htmlFor="email" className="font-semibold">
+            Email
+          </Label>
+          <div className="group relative">
+            <Mail className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground transition-colors group-focus-within:text-primary" />
+            <Input
+              id="email"
+              type="email"
+              placeholder="tu@email.com"
+              className="h-11 rounded-xl bg-background/60 pl-10"
+              {...register("email")}
+            />
+          </div>
+          {errors.email && (
+            <p className="text-sm text-destructive">{errors.email.message}</p>
+          )}
+        </div>
 
-          <CardFooter className="flex flex-col gap-4">
-            <Button type="submit" className="w-full" disabled={isSubmitting}>
-              {isSubmitting ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Iniciando sesión...
-                </>
+        <div className="space-y-2">
+          <Label htmlFor="password" className="font-semibold">
+            Contraseña
+          </Label>
+          <div className="group relative">
+            <Lock className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground transition-colors group-focus-within:text-primary" />
+            <Input
+              id="password"
+              type={showPassword ? "text" : "password"}
+              placeholder="••••••••"
+              className="h-11 rounded-xl bg-background/60 pl-10 pr-10"
+              {...register("password")}
+            />
+            <button
+              type="button"
+              tabIndex={-1}
+              onClick={() => setShowPassword(!showPassword)}
+              className="absolute right-3.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+            >
+              {showPassword ? (
+                <EyeOff className="h-4 w-4" />
               ) : (
-                "Iniciar Sesión"
+                <Eye className="h-4 w-4" />
               )}
-            </Button>
+            </button>
+          </div>
+          {errors.password && (
+            <p className="text-sm text-destructive">{errors.password.message}</p>
+          )}
+        </div>
 
-            {googleEnabled && (
-              <>
-                <div className="relative w-full text-center text-xs text-muted-foreground">
-                  <span className="relative z-10 bg-card px-2">o</span>
-                  <div className="absolute inset-x-0 top-1/2 h-px bg-border" />
-                </div>
-                <GoogleButton callbackUrl={callbackUrl} />
-              </>
-            )}
+        <Button
+          type="submit"
+          disabled={isSubmitting}
+          className="btn-shine h-11 w-full rounded-xl text-sm font-bold text-white shadow-lg shadow-[#4A80BE]/30 transition-transform hover:scale-[1.015] active:scale-[0.99]"
+        >
+          {isSubmitting ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              Iniciando sesión...
+            </>
+          ) : (
+            <>
+              Iniciar Sesión
+              <ArrowRight className="ml-1 h-4 w-4" />
+            </>
+          )}
+        </Button>
 
-            <p className="text-center text-sm text-muted-foreground">
-              ¿No tienes una cuenta?{" "}
-              <Link href="/register" className="text-primary hover:underline">
-                Regístrate
-              </Link>
-            </p>
-          </CardFooter>
-        </form>
-      </Card>
+        {googleEnabled && (
+          <>
+            <div className="relative text-center text-xs text-muted-foreground">
+              <span className="relative z-10 bg-transparent px-2 backdrop-blur-sm">
+                o continúa con
+              </span>
+              <div className="absolute inset-x-0 top-1/2 h-px bg-border" />
+            </div>
+            <GoogleButton callbackUrl={callbackUrl} />
+          </>
+        )}
+
+        <p className="pt-1 text-center text-sm text-muted-foreground">
+          ¿No tienes una cuenta?{" "}
+          <Link
+            href="/register"
+            className="font-semibold text-primary underline-offset-4 hover:underline"
+          >
+            Regístrate gratis
+          </Link>
+        </p>
+      </form>
     </div>
   )
 }

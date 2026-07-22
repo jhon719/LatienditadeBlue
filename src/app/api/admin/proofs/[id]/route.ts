@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { z } from "zod"
 import { prisma } from "@/lib/prisma"
 import { requireAdmin } from "@/lib/api-guards"
+import { sendPaymentApprovedEmail } from "@/lib/email"
 
 type Params = Promise<{ id: string }>
 
@@ -29,7 +30,7 @@ export async function POST(
 
     const proof = await prisma.paymentProof.findUnique({
       where: { id },
-      include: { order: { include: { items: true } } },
+      include: { order: { include: { items: true, user: { select: { email: true } } } } },
     })
 
     if (!proof) {
@@ -56,6 +57,15 @@ export async function POST(
           data: { status: "PAID_APPROVED" },
         }),
       ])
+      // Correo "pago confirmado" (bóveda 05.04) — no bloquea la respuesta
+      await sendPaymentApprovedEmail({
+        email: proof.order.user.email,
+        processCode: proof.order.processCode,
+        totalAmount: Number(proof.order.totalAmount),
+        paymentMethod: proof.order.paymentMethod,
+        shippingType: proof.order.shippingType,
+        receiverName: proof.order.receiverName,
+      })
       return NextResponse.json({ success: true, status: "APPROVED" })
     }
 
