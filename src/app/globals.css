@@ -49,11 +49,11 @@
 
 :root {
   --radius: 0.625rem;
-  --background: #ffffff;
+  --background: #faf9f6;
   --foreground: #142f5c;
-  --card: #ffffff;
+  --card: #faf9f6;
   --card-foreground: #142f5c;
-  --popover: #ffffff;
+  --popover: #faf9f6;
   --popover-foreground: #142f5c;
   --primary: #4a80be;
   --primary-foreground: #ffffff;
@@ -72,7 +72,7 @@
   --chart-3: #142f5c;
   --chart-4: #7fb3e8;
   --chart-5: #f2f2f2;
-  --sidebar: #ffffff;
+  --sidebar: #faf9f6;
   --sidebar-foreground: #142f5c;
   --sidebar-primary: #4a80be;
   --sidebar-primary-foreground: #ffffff;
@@ -250,6 +250,57 @@
   .animate-gradient-text,
   .group:hover .card-shine {
     animation: none !important;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   Optimización móvil/táctil: en dispositivos sin cursor (hover: none) las
+   animaciones ambientales infinitas y los blurs pesados consumen batería y
+   GPU sin aportar (no hay hover). El layout de escritorio no se toca: estas
+   reglas SOLO aplican cuando el dispositivo es táctil.
+--------------------------------------------------------------------------- */
+@media (hover: none), (pointer: coarse) {
+  /* Animaciones infinitas decorativas: quietas en móvil */
+  .animate-float-soft,
+  .animate-blob,
+  .animate-twinkle,
+  .animate-gradient-text {
+    animation: none !important;
+  }
+
+  /* La marquee es funcional (muestra los beneficios en bucle): se mantiene
+     pero más lenta = menos frames de trabajo por segundo */
+  .animate-marquee-slow {
+    animation-duration: 40s;
+  }
+
+  /* Barridos de brillo dependen de hover: overlay fuera del compositor */
+  .card-shine,
+  .btn-shine::after {
+    display: none;
+  }
+
+  /* backdrop-filter es lo más caro en GPU móvil: blur mínimo (el fondo
+     bg-background/95 ya es casi opaco, la diferencia visual es nula) */
+  .backdrop-blur-xl {
+    -webkit-backdrop-filter: blur(4px);
+    backdrop-filter: blur(4px);
+  }
+
+  .glass-card {
+    -webkit-backdrop-filter: blur(6px);
+    backdrop-filter: blur(6px);
+    background-color: rgba(255, 255, 255, 0.94);
+  }
+
+  .dark .glass-card {
+    background-color: rgba(20, 47, 92, 0.94);
+  }
+
+  /* Entradas al hacer scroll: más cortas y con menos desplazamiento
+     (los taps no deben esperar 700ms de transición) */
+  .transition-all.duration-700 {
+    transition-duration: 350ms;
   }
 }
 

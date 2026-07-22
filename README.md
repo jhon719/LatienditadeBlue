@@ -1,14 +1,14 @@
-# BasicTechShop
+# La Tiendita de Blue
 
-E-commerce de productos de computación construido con Next.js 16, TypeScript y Tailwind CSS.
+E-commerce peruano de figuras coleccionables y merchandising de anime, construido con Next.js 16, TypeScript y Tailwind CSS.
 
 ## Descripción
 
-BasicTechShop es una tienda online especializada en hardware, periféricos y componentes de computación. Incluye:
+**La Tiendita de Blue** es una tienda online de figuras de anime, peluches, mangas y merch, con catálogo por anime (categoría), línea de figura y marca (fabricante). Incluye:
 
-- **Tienda pública**: Catálogo con filtros, carrito y checkout
-- **Panel de usuario**: Perfil, historial de pedidos y direcciones
-- **Panel de administración**: Gestión de productos, usuarios y pedidos
+- **Tienda pública**: Catálogo con filtros (anime/línea/marca/estado), carrito, checkout con pago manual (Yape/Plin/transferencia) y Mercado Pago
+- **Panel de usuario**: Perfil con avatar, historial de pedidos, separaciones (preventa) y rastreo Shalom
+- **Panel de administración**: Bandeja POS (validación de vouchers), órdenes, logística, productos, campañas, usuarios y reportes
 
 ## Stack Tecnológico
 
@@ -18,23 +18,22 @@ BasicTechShop es una tienda online especializada en hardware, periféricos y com
 | TypeScript | Lenguaje |
 | Tailwind CSS v4 | Estilos |
 | shadcn/ui | Componentes UI |
-| Prisma | ORM |
+| Prisma 7 | ORM |
 | PostgreSQL | Base de datos |
 | Zustand | Estado global |
-| NextAuth.js | Autenticación |
+| NextAuth.js v5 | Autenticación (Credentials + Google) |
 
 ## Requisitos
 
 - Node.js 18+
-- PostgreSQL (para backend)
-- Docker (opcional)
+- PostgreSQL 18 (local, DB `latiendita_blue`)
 
 ## Instalación
 
 ```bash
 # Clonar repositorio
 git clone <repo-url>
-cd ecommerce-basictech
+cd la-tiendita-de-blue
 
 # Instalar dependencias
 npm install
@@ -43,14 +42,11 @@ npm install
 cp .env.example .env
 # Editar .env con tus credenciales
 
-# Iniciar base de datos con Docker (opcional)
-docker-compose up -d
-
 # Ejecutar migraciones
 npx prisma migrate dev
 
 # Sembrar datos iniciales
-npx prisma db seed
+npm run db:seed
 ```
 
 ## Desarrollo
@@ -62,14 +58,17 @@ npm run dev
 # Abrir http://localhost:3000
 ```
 
+Usuarios seed: `admin@latienditadeblue.com` (ADMIN) y `cliente@demo.com` (cliente demo) — credenciales en `prisma/seed.ts`.
+
 ## Scripts Disponibles
 
 | Script | Descripción |
 |--------|-------------|
 | `npm run dev` | Inicia servidor de desarrollo |
-| `npm run build` | Genera build de producción |
+| `npm run build` | Genera build de producción (incluye `prisma generate`) |
 | `npm run start` | Inicia servidor de producción |
 | `npm run lint` | Ejecuta ESLint |
+| `npm run db:seed` | Siembra datos iniciales |
 
 ## Estructura del Proyecto
 
@@ -79,25 +78,25 @@ src/
 │   ├── (shop)/          # Rutas públicas (tienda)
 │   ├── (admin-panel)/   # Panel de administración
 │   ├── (auth)/          # Login y registro
-│   └── api/             # API Routes
+│   └── api/             # Route handlers
 ├── components/
 │   ├── ui/              # shadcn/ui
 │   ├── layout/          # Header, Footer, Nav
+│   ├── home/            # Secciones de la home
 │   ├── products/        # Componentes de productos
-│   ├── cart/            # Carrito
-│   └── admin/           # Panel admin
-├── data/                # Datos mock
-├── lib/                 # Utilidades
+│   ├── cart/ checkout/  # Carrito y checkout
+│   ├── admin/           # Panel admin
+│   └── profile/         # Perfil de usuario
+├── lib/                 # Utilidades (prisma, auth, social, transformers)
 ├── stores/              # Zustand stores
 └── types/               # Tipos TypeScript
 ```
 
 ## Documentación
 
-- [PRD](./docs/PRD.md) - Documento de requisitos del producto
+- [CLAUDE.md](./CLAUDE.md) - Guía del proyecto para desarrollo asistido
 - [Plan](./docs/PLAN.md) - Plan de implementación
-- [Modelo de datos](./docs/DATA-MODEL.md) - Schema de base de datos
-- [Páginas](./docs/PAGES.md) - Listado de rutas y endpoints
+- Bóveda Obsidian (`docs/Boveda-Proyecto-Ecommerce`) - Especificación completa del negocio
 
 ## Licencia
 

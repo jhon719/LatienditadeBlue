@@ -154,4 +154,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
   session: {
     strategy: "jwt",
   },
+  // Necesario para aceptar el host del túnel (ngrok) en desarrollo: sin esto
+  // NextAuth rechaza el login con "UntrustedHost" al no ser localhost.
+  trustHost: true,
 })
