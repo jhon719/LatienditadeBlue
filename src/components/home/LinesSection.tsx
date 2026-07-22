@@ -22,7 +22,7 @@ export function LinesSection({ lines }: { lines: Line[] }) {
             <GradientText>Líneas de figuras</GradientText>
           </h2>
         </div>
-        <div className="flex gap-5 overflow-x-auto pb-3">
+        <div className="flex gap-5 overflow-x-auto overflow-y-hidden pt-1 pb-3">
           {active.map((line, index) => (
             <AnimatedContent key={line.id} delay={index * 45} className="shrink-0">
               <Link

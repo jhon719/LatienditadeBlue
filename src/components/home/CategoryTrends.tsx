@@ -25,7 +25,7 @@ export function CategoryTrends({ categories }: { categories: Category[] }) {
         <Flame className="h-8 w-8 fill-[#F5B400] text-[#F5B400]" />
       </div>
 
-      <div className="flex snap-x gap-4 overflow-x-auto pb-4">
+      <div className="flex snap-x gap-4 overflow-x-auto overflow-y-hidden pt-1 pb-4">
         {sorted.map((cat, index) => (
           <AnimatedContent key={cat.id} delay={index * 55} className="shrink-0 snap-start">
             <Link
