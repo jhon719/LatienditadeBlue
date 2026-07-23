@@ -1,10 +1,23 @@
 import "dotenv/config"
+import crypto from "node:crypto"
 import fs from "node:fs"
 import path from "node:path"
 import { PrismaClient, ProductStatus, ProductType } from "@prisma/client"
 import { PrismaPg } from "@prisma/adapter-pg"
 import { Pool } from "pg"
 import bcrypt from "bcryptjs"
+
+// Las contraseñas de los usuarios seed se leen de variables de entorno para no
+// versionar credenciales. Si no se definen, se genera una aleatoria por corrida
+// y se imprime en consola (solo para desarrollo local).
+const generatedPasswords: Record<string, string> = {}
+function seedPassword(envVar: string): string {
+  const fromEnv = process.env[envVar]
+  if (fromEnv && fromEnv.length > 0) return fromEnv
+  const generated = crypto.randomBytes(9).toString("base64url")
+  generatedPasswords[envVar] = generated
+  return generated
+}
 
 const pool = new Pool({ connectionString: process.env.DATABASE_URL })
 const adapter = new PrismaPg(pool)
@@ -116,7 +129,7 @@ async function main() {
     data: {
       email: "admin@latienditadeblue.com",
       username: "blue.admin",
-      passwordHash: await bcrypt.hash("Admin-Blue-2026", 10),
+      passwordHash: await bcrypt.hash(seedPassword("SEED_ADMIN_PASSWORD"), 10),
       firstName: "Admin",
       lastName: "Blue",
       role: "ADMIN",
@@ -127,7 +140,7 @@ async function main() {
     data: {
       email: "cliente@demo.com",
       username: "coleccionista01",
-      passwordHash: await bcrypt.hash("Cliente-Demo-2026", 10),
+      passwordHash: await bcrypt.hash(seedPassword("SEED_DEMO_PASSWORD"), 10),
       firstName: "Cliente",
       lastName: "Demo",
       dni: "45678128",
@@ -137,6 +150,12 @@ async function main() {
     },
   })
   console.log("Usuarios creados: admin@latienditadeblue.com / cliente@demo.com")
+  if (generatedPasswords.SEED_ADMIN_PASSWORD) {
+    console.log(`  ADMIN (generada): ${generatedPasswords.SEED_ADMIN_PASSWORD}  — define SEED_ADMIN_PASSWORD en .env para fijarla`)
+  }
+  if (generatedPasswords.SEED_DEMO_PASSWORD) {
+    console.log(`  CLIENTE (generada): ${generatedPasswords.SEED_DEMO_PASSWORD}  — define SEED_DEMO_PASSWORD en .env para fijarla`)
+  }
 
   // ==================== PRODUCTOS ====================
   const img = (seed: string) =>

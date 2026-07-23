@@ -87,8 +87,10 @@ Usuarios seed:
 
 | Rol | Email | Contraseña |
 |-----|-------|------------|
-| ADMIN | `admin@latienditadeblue.com` | `Admin-Blue-2026` |
-| Cliente demo | `cliente@demo.com` | `Cliente-Demo-2026` |
+| ADMIN | `admin@latienditadeblue.com` | `SEED_ADMIN_PASSWORD` (env) |
+| Cliente demo | `cliente@demo.com` | `SEED_DEMO_PASSWORD` (env) |
+
+Las contraseñas de los usuarios seed **no están hardcodeadas**: define `SEED_ADMIN_PASSWORD` y `SEED_DEMO_PASSWORD` en tu `.env` local antes de correr `npm run db:seed`. Si no las defines, el seed genera una contraseña aleatoria por usuario y la imprime en la consola.
 
 ## Variables de entorno
 
@@ -106,6 +108,8 @@ Crea un archivo `.env` en la raíz. Solo `DATABASE_URL` y `AUTH_SECRET` son obli
 | `RESEND_API_KEY` / `EMAIL_FROM` | Opcional | Correos transaccionales |
 | `CRON_SECRET` | Opcional | Protege el endpoint de liberación de stock (Vercel Cron) |
 | `STOCK_RELEASE_MINUTES` | Opcional | Minutos para cancelar órdenes de pasarela colgadas (por defecto 60) |
+| `SEED_ADMIN_PASSWORD` | Opcional (seed) | Contraseña del usuario ADMIN sembrado; si falta, se genera aleatoria |
+| `SEED_DEMO_PASSWORD` | Opcional (seed) | Contraseña del cliente demo sembrado; si falta, se genera aleatoria |
 
 ## Scripts disponibles
 

@@ -49,7 +49,7 @@ src/components/
 ### Base de datos local
 - PostgreSQL 18 en `localhost:5432`, DB `latiendita_blue` (credenciales en `.env`)
 - `npx prisma migrate dev` para migraciones, `npm run db:seed` para seed
-- Usuarios seed: `admin@latienditadeblue.com` / `Admin-Blue-2026` (ADMIN) y `cliente@demo.com` / `Cliente-Demo-2026`
+- Usuarios seed: `admin@latienditadeblue.com` (ADMIN) y `cliente@demo.com` (CUSTOMER); contraseñas vía `SEED_ADMIN_PASSWORD` / `SEED_DEMO_PASSWORD` en `.env` (si faltan, el seed genera una aleatoria y la imprime)
 
 ### Styling System
 - Tailwind CSS v4, paleta de marca en hex: azul `#4A80BE`, azul oscuro `#142F5C`, amarillo `#F5B400`, pasteles (`#E1F0FF`, `#FFF5D1`, `#FFEAEA`, `#E2FBE9`)
