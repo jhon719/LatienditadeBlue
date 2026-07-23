@@ -1,0 +1,24 @@
+# SpotlightCard.tsx
+
+- **Type:** code
+- **Source:** `src/components/react-bits/SpotlightCard.tsx`:L1
+- **Community:** [[Quick Access & Magnetic Button]]
+
+## Outgoing Relations
+
+- **imports_from** → [[use-coarse-pointer.ts]]
+- **imports** → [[useCoarsePointer()]]
+- **imports_from** → [[utils.ts]]
+- **imports** → [[cn()]]
+- **contains** → [[SpotlightCard()]]
+- **contains** → [[SpotlightCardProps]]
+
+## Incoming Relations
+
+- [[2982ca1 iniciar proyecto]] **MODIFIES** → this
+- [[8b3e1a0 version 5]] **MODIFIES** → this
+- [[QuickAccessPanel.tsx]] **imports_from** → this
+- [[ReviewsSection.tsx]] **imports_from** → this
+
+---
+_Part of the graphify knowledge graph. See [[index]] to navigate._

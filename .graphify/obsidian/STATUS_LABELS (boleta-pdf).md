@@ -1,0 +1,12 @@
+# STATUS_LABELS
+
+- **Type:** code
+- **Source:** `src/lib/boleta-pdf.ts`:L25
+- **Community:** [[Boleta PDF Generation]]
+
+## Incoming Relations
+
+- [[boleta-pdf.ts]] **contains** → this
+
+---
+_Part of the graphify knowledge graph. See [[index]] to navigate._

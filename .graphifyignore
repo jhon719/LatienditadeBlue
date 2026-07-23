@@ -1,0 +1,7 @@
+# Config interna de Obsidian, no es contenido documental
+docs/Boveda-Proyecto-Ecommerce/.obsidian/
+
+# Imagenes de marketing/producto: no aportan al grafo de arquitectura o negocio,
+# y cada una dispara un subagente de vision individual (costo alto, valor bajo)
+public/Imagenes/
+public/*.svg
