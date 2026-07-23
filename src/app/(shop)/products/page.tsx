@@ -1,7 +1,7 @@
 "use client"
 
 import { Suspense, useEffect, useState, useCallback } from "react"
-import { useSearchParams } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -13,6 +13,7 @@ import {
 import { FilterSidebar } from "@/components/products/FilterSidebar"
 import { FilterMobile } from "@/components/products/FilterMobile"
 import { ProductGrid } from "@/components/products/ProductGrid"
+import { Pagination } from "@/components/products/Pagination"
 import {
   ManchasStoreBanner,
   ManchasStoreVerticals,
@@ -23,9 +24,24 @@ import { useProductsStore } from "@/stores/products-store"
 import { FilterState, PRODUCT_TYPE_LABELS } from "@/types"
 
 function ProductsContent() {
+  const router = useRouter()
   const searchParams = useSearchParams()
-  const { products, loading, filters, setFilters, setSearch, search, fetchProducts, fetchCatalogData } = useProductsStore()
+  const {
+    products,
+    loading,
+    filters,
+    setFilters,
+    setSearch,
+    search,
+    fetchProducts,
+    fetchCatalogData,
+    page,
+    pageSize,
+    total,
+    setPage,
+  } = useProductsStore()
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid")
+  const totalPages = Math.max(1, Math.ceil(total / pageSize))
 
   // Inicializar filtros desde la URL (?category=, ?line=, ?brand=, ?status=, ?type=, ?sortBy=)
   useEffect(() => {
@@ -75,17 +91,35 @@ function ProductsContent() {
     })
     setSearch(searchParams.get("search") ?? "")
 
-    fetchCatalogData()
-  }, [searchParams, setFilters, setSearch, fetchCatalogData])
+    // setFilters/setSearch reinician a la página 1; si la URL trae ?page=,
+    // se aplica después para no perder el número de página al recargar
+    const pageParam = Number(searchParams.get("page"))
+    setPage(pageParam > 0 ? pageParam : 1)
 
-  // Fetch products when filters change
+    fetchCatalogData()
+  }, [searchParams, setFilters, setSearch, setPage, fetchCatalogData])
+
+  // Fetch products when filters or page change
   useEffect(() => {
     fetchProducts()
-  }, [filters, search, fetchProducts])
+  }, [filters, search, page, fetchProducts])
 
   const handleFiltersChange = useCallback((newFilters: FilterState) => {
     setFilters(newFilters)
   }, [setFilters])
+
+  // Cambiar de página refleja ?page= en la URL (para que cada página sea un
+  // enlace propio, compartible/bookmarkeable); el efecto de sincronización de
+  // arriba es la única fuente de verdad que aplica el número de página al store
+  const handlePageChange = useCallback(
+    (newPage: number) => {
+      const params = new URLSearchParams(searchParams.toString())
+      if (newPage > 1) params.set("page", String(newPage))
+      else params.delete("page")
+      router.push(`/products?${params.toString()}`, { scroll: false })
+    },
+    [router, searchParams]
+  )
 
   const activeFilterCount =
     filters.brands.length +
@@ -123,7 +157,7 @@ function ProductsContent() {
               : "Todos los Productos"}
           </h1>
           <p className="text-sm text-muted-foreground">
-            {loading ? "Cargando..." : `${products.length} productos encontrados`}
+            {loading ? "Cargando..." : `${total} productos encontrados`}
           </p>
         </div>
 
@@ -168,6 +202,9 @@ function ProductsContent() {
             onViewModeChange={setViewMode}
             loading={loading}
           />
+          {!loading && (
+            <Pagination page={page} totalPages={totalPages} onPageChange={handlePageChange} />
+          )}
         </div>
 
         {/* Aside derecho con banners verticales de Manchas Store (solo secciones no-figura) */}

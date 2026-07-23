@@ -1,6 +1,8 @@
 import { create } from "zustand"
 import type { Product, Category, Line, Brand, FilterState } from "@/types"
 
+const PAGE_SIZE = 12
+
 interface ProductsState {
   products: Product[]
   categories: Category[]
@@ -12,12 +14,19 @@ interface ProductsState {
   loading: boolean
   error: string | null
 
+  // Paginación numerada del catálogo: el total viene del servidor, la página
+  // vive en el store (y se refleja en la URL desde products/page.tsx)
+  page: number
+  pageSize: number
+  total: number
+
   // Actions
   fetchProducts: (filters?: Partial<FilterState>) => Promise<void>
   fetchFeaturedProducts: () => Promise<void>
   fetchCatalogData: () => Promise<void>
   setFilters: (filters: Partial<FilterState>) => void
   setSearch: (search: string) => void
+  setPage: (page: number) => void
   resetFilters: () => void
 }
 
@@ -41,12 +50,18 @@ export const useProductsStore = create<ProductsState>((set, get) => ({
   search: "",
   loading: false,
   error: null,
+  page: 1,
+  pageSize: PAGE_SIZE,
+  total: 0,
 
   fetchProducts: async (filterOverrides) => {
     set({ loading: true, error: null })
     try {
       const filters = { ...get().filters, ...filterOverrides }
+      const { page, pageSize } = get()
       const params = new URLSearchParams()
+      params.set("limit", String(pageSize))
+      params.set("offset", String((page - 1) * pageSize))
 
       if (filters.categories.length === 1) {
         params.set("category", filters.categories[0])
@@ -81,7 +96,7 @@ export const useProductsStore = create<ProductsState>((set, get) => ({
       if (!response.ok) throw new Error("No se pudieron cargar los productos")
 
       const data = await response.json()
-      set({ products: data.products, loading: false })
+      set({ products: data.products, total: data.total ?? 0, loading: false })
     } catch (error) {
       set({ error: (error as Error).message, loading: false })
     }
@@ -118,16 +133,23 @@ export const useProductsStore = create<ProductsState>((set, get) => ({
   },
 
   setFilters: (newFilters) => {
+    // Cambiar de filtro reinicia a la página 1: la página anterior podría
+    // no existir para el nuevo conjunto de resultados
     set((state) => ({
       filters: { ...state.filters, ...newFilters },
+      page: 1,
     }))
   },
 
   setSearch: (search) => {
-    set({ search })
+    set({ search, page: 1 })
+  },
+
+  setPage: (page) => {
+    set({ page })
   },
 
   resetFilters: () => {
-    set({ filters: defaultFilters })
+    set({ filters: defaultFilters, page: 1 })
   },
 }))
