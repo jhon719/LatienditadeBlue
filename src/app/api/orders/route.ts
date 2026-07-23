@@ -156,12 +156,19 @@ export async function POST(request: NextRequest) {
         subtotal += unitPrice(product) * item.quantity
       }
 
-      // Reservar stock (se restaura si el pago es rechazado)
+      // Reservar stock de forma atómica (se restaura si el pago es rechazado).
+      // El guard `stockQty >= quantity` dentro del WHERE evita la sobreventa por
+      // condición de carrera: si dos checkouts compiten por la última unidad, el
+      // UPDATE toma un lock de fila y solo uno afecta count=1; el otro obtiene 0.
       for (const item of data.items) {
-        await tx.product.update({
-          where: { id: item.productId },
+        const reserved = await tx.product.updateMany({
+          where: { id: item.productId, stockQty: { gte: item.quantity } },
           data: { stockQty: { decrement: item.quantity } },
         })
+        if (reserved.count === 0) {
+          const p = products.find((x) => x.id === item.productId)!
+          throw new Error(`SIN_STOCK:${p.name}`)
+        }
       }
       // Marcar agotados los que llegaron a 0
       await tx.product.updateMany({

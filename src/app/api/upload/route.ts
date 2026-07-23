@@ -4,13 +4,22 @@ import path from "node:path"
 import crypto from "node:crypto"
 import { auth } from "@/lib/auth"
 import { cloudinary, isCloudinaryEnabled } from "@/lib/cloudinary"
+import { IMAGE_EXT, sniffImageType } from "@/lib/image-validation"
 
-const VALID_TYPES: Record<string, string> = {
-  "image/jpeg": "jpg",
-  "image/png": "png",
-  "image/webp": "webp",
-}
 const MAX_SIZE = 5 * 1024 * 1024
+
+// Carpetas que puede usar cualquier usuario autenticado (checkout/preventas) vs.
+// carpetas del catálogo/marketing reservadas a ADMIN. Sin esta separación, un
+// cliente podía subir a `banners`, `products`, etc. con solo estar logueado.
+const USER_FOLDERS = ["vouchers", "reviews"]
+const ADMIN_FOLDERS = [
+  "products",
+  "banners",
+  "categories",
+  "lines",
+  "brands",
+  "acquisitions",
+]
 
 export async function POST(request: NextRequest) {
   const session = await auth()
@@ -21,32 +30,18 @@ export async function POST(request: NextRequest) {
   try {
     const formData = await request.formData()
     const file = formData.get("file") as File | null
-    // Subcarpeta lógica: products | vouchers | reviews | banners | categories | lines | brands
+    // Subcarpeta lógica: vouchers/reviews (usuario) | products/banners/... (admin)
     const folder = (formData.get("folder") as string | null) ?? "products"
-    const VALID_FOLDERS = [
-      "products",
-      "vouchers",
-      "reviews",
-      "banners",
-      "categories",
-      "lines",
-      "brands",
-      "acquisitions",
-    ]
-    if (!VALID_FOLDERS.includes(folder)) {
+    if (![...USER_FOLDERS, ...ADMIN_FOLDERS].includes(folder)) {
       return NextResponse.json({ error: "Carpeta no válida" }, { status: 400 })
+    }
+    if (ADMIN_FOLDERS.includes(folder) && session.user.role !== "ADMIN") {
+      return NextResponse.json({ error: "Acceso restringido" }, { status: 403 })
     }
 
     if (!file) {
       return NextResponse.json(
         { error: "No se proporcionó ningún archivo" },
-        { status: 400 }
-      )
-    }
-
-    if (!VALID_TYPES[file.type]) {
-      return NextResponse.json(
-        { error: "Tipo de archivo no válido. Solo se permiten imágenes JPG, PNG o WebP" },
         { status: 400 }
       )
     }
@@ -60,6 +55,15 @@ export async function POST(request: NextRequest) {
 
     const bytes = await file.arrayBuffer()
     const buffer = Buffer.from(bytes)
+
+    // Validación real por contenido, no por el Content-Type declarado
+    const mime = sniffImageType(buffer)
+    if (!mime) {
+      return NextResponse.json(
+        { error: "El archivo no es una imagen válida (solo JPG, PNG o WebP)" },
+        { status: 400 }
+      )
+    }
 
     if (isCloudinaryEnabled()) {
       const result = await new Promise<{ secure_url: string; public_id: string }>(
@@ -91,7 +95,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Fallback local: sin credenciales de Cloudinary se guarda en public/uploads/
-    const ext = VALID_TYPES[file.type]
+    const ext = IMAGE_EXT[mime]
     const fileName = `${crypto.randomUUID()}.${ext}`
     const dir = path.join(process.cwd(), "public", "uploads", folder)
     await mkdir(dir, { recursive: true })

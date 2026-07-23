@@ -4,6 +4,7 @@ import path from "node:path"
 import { prisma } from "@/lib/prisma"
 import { requireUser } from "@/lib/api-guards"
 import { cloudinary, isCloudinaryEnabled } from "@/lib/cloudinary"
+import { IMAGE_EXT, sniffImageType } from "@/lib/image-validation"
 
 // Avatares de usuario (bóveda 02.04).
 // Con Cloudinary configurado se suben a `latiendita/avatars` (carpeta aislada
@@ -13,11 +14,6 @@ import { cloudinary, isCloudinaryEnabled } from "@/lib/cloudinary"
 const AVATAR_DIR = path.join(process.cwd(), "public", "Imagenes", "avatar")
 const CLOUD_FOLDER = "latiendita/avatars"
 
-const VALID_TYPES: Record<string, string> = {
-  "image/jpeg": "jpg",
-  "image/png": "png",
-  "image/webp": "webp",
-}
 const MAX_SIZE = 2 * 1024 * 1024 // 2MB
 
 export async function POST(request: NextRequest) {
@@ -30,12 +26,6 @@ export async function POST(request: NextRequest) {
 
     if (!file) {
       return NextResponse.json({ error: "No se envió ningún archivo" }, { status: 400 })
-    }
-    if (!VALID_TYPES[file.type]) {
-      return NextResponse.json(
-        { error: "Solo se permiten imágenes JPG, PNG o WebP" },
-        { status: 400 }
-      )
     }
     if (file.size > MAX_SIZE) {
       return NextResponse.json(
@@ -50,6 +40,15 @@ export async function POST(request: NextRequest) {
       select: { avatarFileName: true },
     })
     const buffer = Buffer.from(await file.arrayBuffer())
+
+    // Validación real por contenido, no por el Content-Type declarado
+    const mime = sniffImageType(buffer)
+    if (!mime) {
+      return NextResponse.json(
+        { error: "El archivo no es una imagen válida (solo JPG, PNG o WebP)" },
+        { status: 400 }
+      )
+    }
 
     if (isCloudinaryEnabled()) {
       const result = await new Promise<{ secure_url: string }>((resolve, reject) => {
@@ -91,7 +90,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Fallback local
-    const ext = VALID_TYPES[file.type]
+    const ext = IMAGE_EXT[mime]
     const fileName = `${userId}.${ext}`
     await mkdir(AVATAR_DIR, { recursive: true })
 
