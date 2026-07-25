@@ -41,6 +41,11 @@ RUN npm ci
 COPY . .
 RUN npm run build
 
+# Prepare Prisma CLI for runner in a clean directory to capture all dependencies (effect, c12, etc.)
+RUN mkdir /prisma-cli && cd /prisma-cli \
+  && npm init -y \
+  && npm install prisma@7.8.0 dotenv@17.2.3
+
 # ---------- Etapa de runtime ----------
 FROM base AS runner
 ENV NODE_ENV=production \
@@ -60,10 +65,8 @@ COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 COPY --from=builder --chown=nextjs:nodejs /app/prisma ./prisma
 COPY --from=builder --chown=nextjs:nodejs /app/prisma.config.ts ./
 
-# Install Prisma CLI and dotenv in the runner to ensure all transitive dependencies
-# (like 'effect', 'c12') are present. This fixes MODULE_NOT_FOUND errors.
-RUN npm install prisma@7.8.0 dotenv@17.2.3 --no-save \
-  && chown -R nextjs:nodejs /app/node_modules
+# Merge Prisma CLI dependencies into node_modules
+COPY --from=builder --chown=nextjs:nodejs /prisma-cli/node_modules ./node_modules
 
 COPY docker-entrypoint.sh ./
 RUN chmod +x docker-entrypoint.sh && chown nextjs:nodejs docker-entrypoint.sh
