@@ -56,22 +56,14 @@ COPY --from=builder /app/public ./public
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 
-# CLI de Prisma + schema/migraciones: el standalone no las incluye porque
-# `prisma` es devDependency, pero se necesitan para `migrate deploy` al arrancar.
-# Se invocan vía `node node_modules/prisma/build/index.js` en el entrypoint,
-# así que copiamos solo las carpetas necesarias (sin el .bin/prisma que hace require rotos).
-COPY --from=builder /app/prisma ./prisma
-COPY --from=builder /app/node_modules/prisma ./node_modules/prisma
-COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
+# Prisma schema and configuration
+COPY --from=builder --chown=nextjs:nodejs /app/prisma ./prisma
+COPY --from=builder --chown=nextjs:nodejs /app/prisma.config.ts ./
 
-# prisma.config.ts es OBLIGATORIO en runtime: el bloque `datasource db` del
-# schema no declara `url`, así que sin este archivo `migrate deploy` aborta con
-# "The datasource.url property is required in your Prisma config file".
-# El CLI transpila el .ts con su propio loader (no hace falta typescript), pero
-# el config hace `import "dotenv/config"` y dotenv no lo traza el standalone
-# porque ningún módulo de src/ lo importa: hay que copiarlo a mano.
-COPY --from=builder /app/prisma.config.ts ./
-COPY --from=builder /app/node_modules/dotenv ./node_modules/dotenv
+# Install Prisma CLI and dotenv in the runner to ensure all transitive dependencies
+# (like 'effect', 'c12') are present. This fixes MODULE_NOT_FOUND errors.
+RUN npm install prisma@7.8.0 dotenv@17.2.3 --no-save \
+  && chown -R nextjs:nodejs /app/node_modules
 
 COPY docker-entrypoint.sh ./
 RUN chmod +x docker-entrypoint.sh && chown nextjs:nodejs docker-entrypoint.sh
