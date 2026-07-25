@@ -2,7 +2,7 @@
 set -e
 
 echo "Aplicando migraciones de Prisma..."
-npx prisma migrate deploy
+node node_modules/prisma/build/index.js migrate deploy
 
 echo "Iniciando servidor Next.js..."
 exec "$@"

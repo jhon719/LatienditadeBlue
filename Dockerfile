@@ -58,10 +58,11 @@ COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 
 # CLI de Prisma + schema/migraciones: el standalone no las incluye porque
 # `prisma` es devDependency, pero se necesitan para `migrate deploy` al arrancar.
+# Se invocan vía `node node_modules/prisma/build/index.js` en el entrypoint,
+# así que copiamos solo las carpetas necesarias (sin el .bin/prisma que hace require rotos).
 COPY --from=builder /app/prisma ./prisma
 COPY --from=builder /app/node_modules/prisma ./node_modules/prisma
 COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
-COPY --from=builder /app/node_modules/.bin/prisma ./node_modules/.bin/prisma
 
 # prisma.config.ts es OBLIGATORIO en runtime: el bloque `datasource db` del
 # schema no declara `url`, así que sin este archivo `migrate deploy` aborta con
