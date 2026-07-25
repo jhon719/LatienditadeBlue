@@ -5,6 +5,7 @@ import { requireUser } from "@/lib/api-guards"
 import { MIN_DEPOSIT, defaultDueDate } from "@/lib/separations"
 import { SEPARATION_INCLUDE, serializeSeparation } from "@/lib/separations-server"
 import { applyDiscountRules, getActiveDiscountRules } from "@/lib/campaigns"
+import { sendAdminPaymentAlertEmail } from "@/lib/email"
 
 // Separaciones del propio cliente (bóveda 05.06 §4: panel "Mi Cuenta")
 export async function GET() {
@@ -50,6 +51,7 @@ export async function POST(request: NextRequest) {
       where: { id: d.productId, isActive: true },
       select: {
         id: true,
+        name: true,
         price: true,
         status: true,
         stockQty: true,
@@ -130,6 +132,14 @@ export async function POST(request: NextRequest) {
         })
       }
       return created
+    })
+
+    // Aviso al admin: nuevo adelanto por validar en la Bandeja POS (no bloquea)
+    await sendAdminPaymentAlertEmail({
+      kind: "separation_deposit",
+      amount: d.deposit,
+      customerName: `@${session!.user.username}`,
+      reference: product.name,
     })
 
     return NextResponse.json({ id: separation.id }, { status: 201 })

@@ -40,7 +40,7 @@ export function BuyMeACoffee() {
             <div className="flex flex-col items-center gap-3 border-t-2 border-dashed border-[#142F5C]/20 p-6">
               <div className="relative h-44 w-44 overflow-hidden rounded-2xl border-2 border-[#742284] bg-white">
                 <Image
-                  src="/Imagenes/Pagos/YAPE QR.jpeg"
+                  src="/Imagenes/Pagos/QR YAPE DESARROLLADOR.jpeg"
                   alt="QR de Yape para donaciones"
                   fill
                   className="object-cover"

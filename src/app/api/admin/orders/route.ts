@@ -11,8 +11,18 @@ export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
     const status = searchParams.get("status")
-    const limit = parseInt(searchParams.get("limit") || "50")
-    const offset = parseInt(searchParams.get("offset") || "0")
+
+    // Paginación con límites de seguridad
+    const MAX_LIMIT = 100
+    const MAX_OFFSET = 100000
+    const limit = Math.min(
+      Math.max(1, parseInt(searchParams.get("limit") || "50", 10)),
+      MAX_LIMIT
+    )
+    const offset = Math.min(
+      Math.max(0, parseInt(searchParams.get("offset") || "0", 10)),
+      MAX_OFFSET
+    )
 
     const where: Prisma.OrderWhereInput = {}
     if (status && status !== "all") {

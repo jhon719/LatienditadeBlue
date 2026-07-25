@@ -50,12 +50,6 @@ export function CategoryTrends({ categories }: { categories: Category[] }) {
                   target.src = "/Imagenes/Mascota BLUE.png"
                 }}
               />
-
-              <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
-
-              <span className="absolute bottom-3 left-4 text-sm font-bold tracking-wide text-white transition-colors group-hover:text-[#CCFF00]">
-                {cat.name}
-              </span>
             </Link>
           </AnimatedContent>
         ))}

@@ -1,11 +1,13 @@
 "use client"
 
+import { useEffect, useState } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { useSession, signOut } from "next-auth/react"
-import { User, Package, Settings, LogOut, PiggyBank } from "lucide-react"
+import { User, Package, Settings, LogOut, PiggyBank, MessageSquare } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
 import { UserAvatar } from "@/components/common/UserAvatar"
 
@@ -13,6 +15,7 @@ const navigation = [
   { name: "Mi Perfil", href: "/profile", icon: User },
   { name: "Mis Pedidos", href: "/profile/orders", icon: Package },
   { name: "Mis Separaciones", href: "/profile/separations", icon: PiggyBank },
+  { name: "Mensajes", href: "/profile/messages", icon: MessageSquare },
   { name: "Configuración", href: "/profile/settings", icon: Settings },
 ]
 
@@ -23,6 +26,28 @@ export function ProfileSidebar({
 }) {
   const pathname = usePathname()
   const { data: session } = useSession()
+  const [unread, setUnread] = useState(0)
+
+  useEffect(() => {
+    let active = true
+    const load = async () => {
+      try {
+        const res = await fetch("/api/user/notifications")
+        if (!active || !res.ok) return
+        const data = await res.json()
+        setUnread(data.messagesUnread ?? 0)
+      } catch {
+        // silencioso
+      }
+    }
+    load()
+    const onUpdate = () => load()
+    window.addEventListener("messages:updated", onUpdate)
+    return () => {
+      active = false
+      window.removeEventListener("messages:updated", onUpdate)
+    }
+  }, [])
 
   return (
     <aside className="space-y-6">
@@ -59,7 +84,12 @@ export function ProfileSidebar({
               )}
             >
               <item.icon className="h-4 w-4" />
-              {item.name}
+              <span className="flex-1">{item.name}</span>
+              {item.href === "/profile/messages" && unread > 0 && (
+                <Badge className="h-5 min-w-5 justify-center rounded-full bg-[#F5B400] px-1.5 text-xs text-[#142F5C]">
+                  {unread > 9 ? "9+" : unread}
+                </Badge>
+              )}
             </Link>
           )
         })}

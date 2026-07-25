@@ -32,7 +32,6 @@ export async function PATCH(request: NextRequest, { params }: { params: Params }
       return NextResponse.json({ error: "Abono no encontrado" }, { status: 404 })
     }
 
-    let liberated = false
     await prisma.$transaction(async (tx) => {
       await tx.separationPayment.update({
         where: { id: paymentId },
@@ -41,32 +40,14 @@ export async function PATCH(request: NextRequest, { params }: { params: Params }
           approvedAt: parsed.data.action === "approve" ? new Date() : null,
         },
       })
-      const recalc = await recalcSeparation(tx, id)
-
-      // Si se rechazó y la separación quedó sin ningún abono aprobado (típico
-      // del adelanto inicial rechazado), se libera: devuelve stock y cancela.
-      if (parsed.data.action === "reject" && recalc && recalc.paid === 0) {
-        const sep = await tx.preorderReservation.findUnique({
-          where: { id },
-          select: { kind: true, status: true, productId: true },
-        })
-        if (sep && sep.status === "PENDING") {
-          if (sep.kind === "STOCK") {
-            await tx.product.update({
-              where: { id: sep.productId },
-              data: { stockQty: { increment: 1 }, status: "STOCK" },
-            })
-          }
-          await tx.preorderReservation.update({
-            where: { id },
-            data: { status: "CANCELLED" },
-          })
-          liberated = true
-        }
-      }
+      // Recalcula el saldo (suma de abonos APPROVED). Rechazar un abono NO libera
+      // la separación: el stock sigue reservado y el cliente puede subir otro
+      // comprobante (p. ej. si mandó una captura equivocada). La liberación es una
+      // acción deliberada aparte (POST /release, con doble confirmación).
+      await recalcSeparation(tx, id)
     })
 
-    return NextResponse.json({ success: true, liberated })
+    return NextResponse.json({ success: true })
   } catch (error) {
     console.error("Error updating separation payment:", error)
     return NextResponse.json({ error: "Error al actualizar el abono" }, { status: 500 })

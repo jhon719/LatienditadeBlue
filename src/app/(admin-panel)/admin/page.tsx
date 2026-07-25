@@ -31,6 +31,7 @@ import { AnimatedContent } from "@/components/react-bits/AnimatedContent"
 import { CashFlowChart } from "@/components/admin/charts/CashFlowChart"
 import { LogisticsDonut } from "@/components/admin/charts/LogisticsDonut"
 import { PeruHeatMap } from "@/components/admin/charts/PeruHeatMap"
+import { StockAlerts } from "@/components/admin/StockAlerts"
 
 export const dynamic = "force-dynamic"
 
@@ -67,16 +68,27 @@ export default async function AdminDashboardPage({
     ? (params.range as TimeRange)
     : "30d"
 
-  const [kpis, cashFlow, logistics, customerMap, lowStock, recentOrders] =
+  const [kpis, cashFlow, logistics, customerMap, lowStock, outOfStock, recentOrders] =
     await Promise.all([
       getKpis(range),
       getCashFlowSeries(range),
       getLogisticsDonut(),
       getCustomerMap(),
+      // Stock bajo (1–5 uds): advertencia naranja
       prisma.product.findMany({
-        where: { isActive: true, status: "STOCK", stockQty: { lte: 2, gt: 0 } },
-        select: { id: true, name: true, stockQty: true },
-        take: 5,
+        where: { isActive: true, status: "STOCK", stockQty: { gte: 1, lte: 5 } },
+        select: { id: true, name: true, slug: true, stockQty: true, images: true },
+        orderBy: { stockQty: "asc" },
+        take: 8,
+      }),
+      // Agotados: crítico rojo (AGOTADO o stock físico en 0)
+      prisma.product.findMany({
+        where: {
+          isActive: true,
+          OR: [{ status: "AGOTADO" }, { status: "STOCK", stockQty: 0 }],
+        },
+        select: { id: true, name: true, slug: true, stockQty: true, images: true },
+        take: 8,
       }),
       prisma.order.findMany({
         include: { user: { select: { username: true } } },
@@ -84,6 +96,20 @@ export default async function AdminDashboardPage({
         take: 6,
       }),
     ])
+
+  const toStockProduct = (p: {
+    id: string
+    name: string
+    slug: string
+    stockQty: number
+    images: string[]
+  }) => ({
+    id: p.id,
+    name: p.name,
+    slug: p.slug,
+    stockQty: p.stockQty,
+    image: p.images[0] ?? null,
+  })
 
   const criticalTasks = kpis.pendingProofs + kpis.pendingShipments
 
@@ -290,32 +316,20 @@ export default async function AdminDashboardPage({
           </CardContent>
         </Card>
 
-        {/* Alertas de stock bajo (bóveda 05.03) */}
+        {/* Alertas de stock: agotados (rojo) y stock bajo (naranja), animadas
+            y accionables (bóveda 05.03) */}
         <Card className="lg:col-span-3">
           <CardHeader>
-            <CardTitle>Stock bajo</CardTitle>
+            <CardTitle>Alertas de inventario</CardTitle>
             <CardDescription>
-              Figuras populares que se están agotando
+              Agotados y figuras que se están agotando — clic para gestionar
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-3">
-            {lowStock.length === 0 ? (
-              <p className="py-6 text-center text-sm text-muted-foreground">
-                Todo el inventario está saludable ✨
-              </p>
-            ) : (
-              lowStock.map((product) => (
-                <div
-                  key={product.id}
-                  className="flex items-center justify-between rounded-lg border border-[#FFF5D1] bg-[#FFF5D1]/30 p-3"
-                >
-                  <p className="text-sm font-medium">{product.name}</p>
-                  <Badge className="bg-[#FFEAEA] text-red-600">
-                    Quedan {product.stockQty}
-                  </Badge>
-                </div>
-              ))
-            )}
+          <CardContent>
+            <StockAlerts
+              lowStock={lowStock.map(toStockProduct)}
+              outOfStock={outOfStock.map(toStockProduct)}
+            />
           </CardContent>
         </Card>
       </div>

@@ -130,6 +130,7 @@ model User {
   reviews       Review[]
   paymentProofs PaymentProof[]
   preorders     PreorderReservation[]
+  messages      Message[]             @relation("UserMessages")
 
   @@map("users")
 }
@@ -154,6 +155,39 @@ model Account {
   @@unique([provider, providerAccountId])
   @@index([userId])
   @@map("accounts")
+}
+
+// ==================== MENSAJERÍA INTERNA ====================
+// El admin envía mensajes internos a los clientes (1-a-1 o difusión). El texto
+// se guarda con marcadores seguros (**negrita** *cursiva* ~~tachado~~), NO HTML.
+
+model Sticker {
+  id        String    @id @default(cuid())
+  name      String
+  imageUrl  String // Cloudinary latiendita/stickers (o /uploads local)
+  createdAt DateTime  @default(now())
+  messages  Message[]
+
+  @@map("stickers")
+}
+
+model Message {
+  id          String @id @default(cuid())
+  recipientId String
+  recipient   User   @relation("UserMessages", fields: [recipientId], references: [id], onDelete: Cascade)
+  senderId    String // Admin que envió (auditoría)
+
+  body      String   @db.Text // Texto con marcadores seguros
+  stickerId String?
+  sticker   Sticker? @relation(fields: [stickerId], references: [id])
+
+  batchId   String? // Agrupa una difusión (vista "enviados" del admin)
+  readAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([recipientId, readAt])
+  @@index([batchId])
+  @@map("messages")
 }
 
 // ==================== CATÁLOGO ====================

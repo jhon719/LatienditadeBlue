@@ -3,6 +3,7 @@ import { z } from "zod"
 import { prisma } from "@/lib/prisma"
 import { requireUser } from "@/lib/api-guards"
 import { computeBalance, validatePaymentAmount } from "@/lib/separations"
+import { sendAdminPaymentAlertEmail } from "@/lib/email"
 
 type Params = Promise<{ id: string }>
 
@@ -32,7 +33,10 @@ export async function POST(request: NextRequest, { params }: { params: Params })
 
     const sep = await prisma.preorderReservation.findUnique({
       where: { id },
-      include: { payments: { where: { status: "APPROVED" } } },
+      include: {
+        payments: { where: { status: "APPROVED" } },
+        product: { select: { name: true } },
+      },
     })
     if (!sep || sep.userId !== session!.user.id) {
       return NextResponse.json({ error: "Separación no encontrada" }, { status: 404 })
@@ -58,6 +62,14 @@ export async function POST(request: NextRequest, { params }: { params: Params })
         imageUrl: d.imageUrl,
         status: "PENDING",
       },
+    })
+
+    // Aviso al admin: nuevo abono por validar en la Bandeja POS (no bloquea)
+    await sendAdminPaymentAlertEmail({
+      kind: "separation_payment",
+      amount: d.amount,
+      customerName: `@${session!.user.username}`,
+      reference: sep.product.name,
     })
 
     return NextResponse.json({ success: true }, { status: 201 })

@@ -11,10 +11,14 @@
             "id": "e1e1e7f450438f1b",
             "type": "leaf",
             "state": {
-              "type": "graph",
-              "state": {},
-              "icon": "lucide-git-fork",
-              "title": "Vista gráfica"
+              "type": "markdown",
+              "state": {
+                "file": "getServerSnapshot() (use-coarse-pointer).md",
+                "mode": "source",
+                "source": false
+              },
+              "icon": "lucide-file",
+              "title": "getServerSnapshot() (use-coarse-pointer)"
             }
           }
         ]
@@ -178,6 +182,24 @@
   },
   "active": "e1e1e7f450438f1b",
   "lastOpenFiles": [
+    "getLogisticsDonut().md",
+    "getServerSnapshot() (Header).md",
+    "globalForPrisma.md",
+    "GoogleIcon().md",
+    "GRAY (boleta-pdf).md",
+    "GET() (route 12).md",
+    "Footer.tsx.md",
+    "FollowUs().md",
+    "Footer & Social Icons.md",
+    "Flujo E2E de Pago (Checkout -- Preference -- Pago -- Webhook -- Estado PAID-FAILED).md",
+    "FollowUs.tsx.md",
+    "ENDPOINT (CatalogEntryForm).md",
+    "ef3a883 version 7.md",
+    "EditProductPage().md",
+    "EditCatalogEntryPage().md",
+    "03.01 — Pasarela Automatizada Mercado Pago.md",
+    "01.04 — Libreria de Animaciones y Diseno Visual (nota referenciada, no incluida en este chunk).md",
+    "Acquisitions & Shalom API Routes.md",
     "page.tsx (page 13).md",
     "TC004 User Login Failure (Passed).md",
     "UserAvatar.tsx.md",
@@ -185,8 +207,6 @@
     "Header.tsx.md",
     "badge.tsx.md",
     "AvatarUploaderProps.md",
-    "AvatarFallback().md",
-    "Avatar().md",
-    "avatar.tsx.md"
+    "AvatarFallback().md"
   ]
 }

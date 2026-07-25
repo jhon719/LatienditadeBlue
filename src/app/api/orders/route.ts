@@ -11,7 +11,7 @@ import {
   applyDiscountRules,
   validateCoupon,
 } from "@/lib/campaigns"
-import { sendOrderReceivedEmail } from "@/lib/email"
+import { sendOrderReceivedEmail, sendAdminPaymentAlertEmail } from "@/lib/email"
 
 export async function GET() {
   const { session, response } = await requireUser()
@@ -280,6 +280,16 @@ export async function POST(request: NextRequest) {
       shippingType: order.shippingType,
       receiverName: order.receiverName,
     })
+
+    // Aviso al admin: solo pagos manuales traen comprobante a validar en la Bandeja POS
+    if (order.paymentMethod === "MANUAL_TRANSFER") {
+      await sendAdminPaymentAlertEmail({
+        kind: "order_voucher",
+        amount: Number(order.totalAmount),
+        customerName: order.receiverName,
+        reference: order.processCode,
+      })
+    }
 
     return NextResponse.json(
       {

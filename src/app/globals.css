@@ -166,6 +166,11 @@
     animation: twinkle 3s ease-in-out infinite;
   }
 
+  /* Sacudida de advertencia (modales de acciones irreversibles) */
+  .animate-shake {
+    animation: shake 0.7s ease-in-out infinite;
+  }
+
   /* Tarjeta translúcida sobre fondos decorados (login/register) */
   .glass-card {
     @apply rounded-3xl border border-white/60 bg-white/80 shadow-xl shadow-[#142F5C]/10 backdrop-blur-xl dark:border-white/10 dark:bg-white/5;
@@ -338,4 +343,12 @@
 @keyframes shine-sweep {
   0% { transform: translateX(-120%); }
   100% { transform: translateX(120%); }
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0) rotate(0deg); }
+  20% { transform: translateX(-2px) rotate(-7deg); }
+  40% { transform: translateX(2px) rotate(7deg); }
+  60% { transform: translateX(-2px) rotate(-5deg); }
+  80% { transform: translateX(2px) rotate(5deg); }
 }

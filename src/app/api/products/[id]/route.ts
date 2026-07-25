@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma"
 import { transformProduct } from "@/lib/transformers"
 import { requireAdmin } from "@/lib/api-guards"
 import { getActiveDiscountRules } from "@/lib/campaigns"
+import { deleteImageByUrl } from "@/lib/cloudinary"
 
 type Params = Promise<{ id: string }>
 
@@ -124,13 +125,24 @@ export async function DELETE(
     const { id } = await params
 
     // Si el producto tiene órdenes asociadas, se desactiva en lugar de borrarse
+    // (conserva el historial de ventas y sus imágenes)
     const orderCount = await prisma.orderItem.count({ where: { productId: id } })
     if (orderCount > 0) {
       await prisma.product.update({ where: { id }, data: { isActive: false } })
       return NextResponse.json({ success: true, deactivated: true })
     }
 
+    // Borrado real: además de la fila, se eliminan las imágenes (Cloudinary o
+    // local) para no dejar archivos huérfanos. Así, si el producto vuelve a
+    // stock más adelante, se re-agrega sin duplicar la imagen anterior.
+    const product = await prisma.product.findUnique({
+      where: { id },
+      select: { images: true },
+    })
     await prisma.product.delete({ where: { id } })
+    if (product?.images?.length) {
+      await Promise.all(product.images.map((url) => deleteImageByUrl(url)))
+    }
     return NextResponse.json({ success: true })
   } catch (error) {
     console.error("Error deleting product:", error)

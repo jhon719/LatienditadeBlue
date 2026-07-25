@@ -1,7 +1,6 @@
 "use client"
 
 import { use, useCallback, useEffect, useState } from "react"
-import { useRouter } from "next/navigation"
 import Link from "next/link"
 import Image from "next/image"
 import {
@@ -26,17 +25,14 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import {
   AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
   AlertDialogContent,
   AlertDialogDescription,
-  AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
 import { ImageLightbox } from "@/components/common/ImageLightbox"
 import { SemaphoreBadge, ProgressBar, type SemaphoreLevel } from "@/components/admin/SeparationBits"
+import { HoldToConfirm } from "@/components/admin/HoldToConfirm"
 
 interface Payment {
   id: string
@@ -87,7 +83,6 @@ export default function SeparationDetailPage({
   params: Promise<{ id: string }>
 }) {
   const { id } = use(params)
-  const router = useRouter()
   const [sep, setSep] = useState<Separation | null>(null)
   const [notFound, setNotFound] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -164,9 +159,21 @@ export default function SeparationDetailPage({
     }
   }
 
+  // Liberar separación (retiene adelanto, devuelve stock). Acción irreversible:
+  // se confirma manteniendo presionado (HoldToConfirm) para evitar clics accidentales.
+  const [releaseOpen, setReleaseOpen] = useState(false)
+  const [releasing, setReleasing] = useState(false)
   const release = async () => {
-    const res = await fetch(`/api/admin/separations/${id}/release`, { method: "POST" })
-    if (res.ok) await load()
+    setReleasing(true)
+    try {
+      const res = await fetch(`/api/admin/separations/${id}/release`, { method: "POST" })
+      if (res.ok) {
+        setReleaseOpen(false)
+        await load()
+      }
+    } finally {
+      setReleasing(false)
+    }
   }
 
   if (notFound) {
@@ -209,27 +216,44 @@ export default function SeparationDetailPage({
           <p className="text-muted-foreground">{STATUS_LABEL[sep.status] ?? sep.status}</p>
         </div>
         {!isClosed && (
-          <AlertDialog>
-            <AlertDialogTrigger asChild>
-              <Button variant="outline" className="text-destructive">
-                <Unlock className="mr-2 h-4 w-4" />
-                Liberar
-              </Button>
-            </AlertDialogTrigger>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>Liberar separación</AlertDialogTitle>
-                <AlertDialogDescription>
-                  El producto vuelve al inventario general y el adelanto pagado queda
-                  retenido (no reembolsable). Esta acción no se puede deshacer.
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                <AlertDialogAction onClick={release}>Liberar separación</AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
+          <>
+            <Button
+              variant="outline"
+              className="text-destructive"
+              onClick={() => setReleaseOpen(true)}
+            >
+              <Unlock className="mr-2 h-4 w-4" />
+              Liberar
+            </Button>
+            <AlertDialog open={releaseOpen} onOpenChange={(o) => !releasing && setReleaseOpen(o)}>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <div className="mx-auto mb-2 flex h-14 w-14 items-center justify-center rounded-full bg-[#FFEAEA] text-destructive dark:bg-red-500/15">
+                    <Unlock className="h-7 w-7 animate-shake" />
+                  </div>
+                  <AlertDialogTitle className="text-center">
+                    ¿Liberar esta separación?
+                  </AlertDialogTitle>
+                  <AlertDialogDescription className="text-center">
+                    El producto vuelve al inventario general y el adelanto pagado queda
+                    <strong> retenido (no reembolsable)</strong>. Esta acción no se puede
+                    deshacer.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <div className="space-y-2">
+                  <HoldToConfirm onConfirm={release} loading={releasing} />
+                  <Button
+                    variant="ghost"
+                    className="w-full"
+                    onClick={() => setReleaseOpen(false)}
+                    disabled={releasing}
+                  >
+                    Cancelar
+                  </Button>
+                </div>
+              </AlertDialogContent>
+            </AlertDialog>
+          </>
         )}
       </div>
 

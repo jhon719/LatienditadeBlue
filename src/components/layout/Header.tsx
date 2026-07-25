@@ -20,6 +20,7 @@ import { Input } from "@/components/ui/input"
 import { useCartStore } from "@/stores/cart-store"
 import { MobileNav } from "./MobileNav"
 import { AnimatedThemeToggle } from "./AnimatedThemeToggle"
+import { UserNotificationBell } from "./UserNotificationBell"
 
 // Navegación por tipo de mercancía (estilo Homidori) + preventas y catálogo
 const navLinks = [
@@ -100,6 +101,7 @@ export function Header() {
 
           <div className="ml-auto flex items-center gap-1">
             <AnimatedThemeToggle className="mr-1" />
+            {mounted && status !== "loading" && session && <UserNotificationBell />}
             <Link href="/cart">
               <Button variant="ghost" size="icon" className="relative rounded-full">
                 <ShoppingCart className="h-5 w-5" />
@@ -115,15 +117,17 @@ export function Header() {
             {mounted && status !== "loading" && session ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="outline" className="group hidden items-center gap-2 rounded-full py-1 pl-1.5 pr-4 font-bold sm:flex">
-                    <span className="flex h-6 w-6 shrink-0 rounded-full ring-2 ring-transparent transition-all duration-300 group-hover:scale-110 group-hover:ring-[#F5B400]">
+                  <Button variant="ghost" className="group hidden h-auto items-center gap-2.5 rounded-full py-1.5 pl-1.5 pr-4 sm:flex">
+                    <span className="flex h-10 w-10 shrink-0 rounded-full ring-2 ring-transparent transition-all duration-300 group-hover:scale-105 group-hover:ring-[#F5B400]">
                       <UserAvatar
                         username={session.user?.username ?? "usuario"}
                         avatarFileName={avatarFileName}
-                        size={24}
+                        size={40}
                       />
                     </span>
-                    {session.user?.name?.split(" ")[0] || "Cuenta"}
+                    <span className="text-base font-bold">
+                      {session.user?.name?.split(" ")[0] || "Cuenta"}
+                    </span>
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-56">

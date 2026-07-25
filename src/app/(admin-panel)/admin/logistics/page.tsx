@@ -11,6 +11,7 @@ import {
   Truck,
   Trash2,
   Pencil,
+  BellRing,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -55,6 +56,7 @@ interface Separation {
   balance: number
   progress: number
   dueDate: string | null
+  pendingPaymentsCount: number
   semaphore: { level: SemaphoreLevel; label: string }
   product: { name: string; image: string | null }
   customer: { username: string; name: string | null }
@@ -168,8 +170,14 @@ function SeparationsTab() {
                           )}
                         </div>
                         <div>
-                          <p className="text-sm font-medium">
+                          <p className="flex items-center gap-2 text-sm font-medium">
                             {s.customer.name ?? `@${s.customer.username}`}
+                            {s.pendingPaymentsCount > 0 && (
+                              <Badge className="animate-pulse gap-1 bg-[#FFF5D1] text-[#8a6d00] hover:bg-[#FFF5D1]">
+                                <BellRing className="h-3 w-3" />
+                                {s.pendingPaymentsCount} por validar
+                              </Badge>
+                            )}
                           </p>
                           <p className="max-w-[220px] truncate text-xs text-muted-foreground">
                             {s.product.name}

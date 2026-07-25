@@ -145,6 +145,41 @@ export async function sendOrderShippedEmail(
   await send(o.email, `Pedido ${o.processCode} enviado`, html)
 }
 
+// ---- Aviso al ADMINISTRADOR (solo pagos/abonos, bóveda 05.02) ----
+// Correo interno cuando un cliente sube un pago que requiere validación en la
+// Bandeja POS. Destinatario configurable por env; por defecto el admin del negocio.
+const ADMIN_ALERT_EMAIL =
+  process.env.ADMIN_NOTIFICATION_EMAIL ?? "frizio.trabajo@gmail.com"
+
+const ADMIN_ALERT_LABELS: Record<string, string> = {
+  order_voucher: "Nuevo comprobante de pedido",
+  separation_deposit: "Nuevo adelanto de separación",
+  separation_payment: "Nuevo abono de separación",
+}
+
+export async function sendAdminPaymentAlertEmail(a: {
+  kind: "order_voucher" | "separation_deposit" | "separation_payment"
+  amount: number
+  customerName: string
+  reference: string
+}): Promise<void> {
+  const title = ADMIN_ALERT_LABELS[a.kind] ?? "Nuevo pago por validar"
+  const html = layout({
+    title: `${title} 🔔`,
+    accent: "#F5B400",
+    intro:
+      "Un cliente subió un pago que espera tu validación en la Bandeja POS. Revísalo cuando puedas.",
+    body:
+      orderRow("Tipo", title) +
+      orderRow("Cliente", a.customerName) +
+      orderRow("Referencia", a.reference) +
+      orderRow("Monto", `S/ ${a.amount.toFixed(2)}`),
+    ctaLabel: "Ir a la Bandeja POS",
+    ctaUrl: `${APP_URL}/admin/manual-payments`,
+  })
+  await send(ADMIN_ALERT_EMAIL, `${title} — S/ ${a.amount.toFixed(2)}`, html)
+}
+
 // 4) Pedido entregado: pedir reseña
 export async function sendOrderDeliveredEmail(o: OrderEmailData): Promise<void> {
   const html = layout({

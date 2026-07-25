@@ -1,6 +1,6 @@
 import Link from "next/link"
 import { notFound } from "next/navigation"
-import { ArrowLeft, BadgeCheck } from "lucide-react"
+import { ArrowLeft, BadgeCheck, MessageSquare } from "lucide-react"
 import { prisma } from "@/lib/prisma"
 import { requireAdmin } from "@/lib/api-guards"
 import { Button } from "@/components/ui/button"
@@ -73,6 +73,12 @@ export default async function CustomerProfilePage({
             <p className="text-sm text-muted-foreground">{user.email}</p>
           </div>
         </div>
+        <Button asChild className="ml-auto">
+          <Link href={`/admin/messages/new?userId=${id}`}>
+            <MessageSquare className="mr-2 h-4 w-4" />
+            Enviar mensaje
+          </Link>
+        </Button>
       </div>
 
       <div className="grid gap-6 lg:grid-cols-[1fr_380px]">

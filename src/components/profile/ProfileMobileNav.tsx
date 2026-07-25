@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { User, Package, Settings, PiggyBank } from "lucide-react"
+import { User, Package, Settings, PiggyBank, MessageSquare } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area"
 
@@ -10,6 +10,7 @@ const navigation = [
   { name: "Perfil", href: "/profile", icon: User },
   { name: "Pedidos", href: "/profile/orders", icon: Package },
   { name: "Separaciones", href: "/profile/separations", icon: PiggyBank },
+  { name: "Mensajes", href: "/profile/messages", icon: MessageSquare },
   { name: "Config", href: "/profile/settings", icon: Settings },
 ]
 

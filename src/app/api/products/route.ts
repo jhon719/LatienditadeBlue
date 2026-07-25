@@ -21,9 +21,19 @@ export async function GET(request: NextRequest) {
     const maxPrice = searchParams.get("maxPrice")
     const sortBy = searchParams.get("sortBy") || "newest"
     const featured = searchParams.get("featured")
-    const limit = searchParams.get("limit")
-    const offset = searchParams.get("offset")
     const search = searchParams.get("search")
+
+    // Paginación con límites de seguridad (DoS, memoria)
+    const MAX_LIMIT = 100
+    const MAX_OFFSET = 100000
+    const limit = Math.min(
+      Math.max(1, parseInt(searchParams.get("limit") || "12", 10)),
+      MAX_LIMIT
+    )
+    const offset = Math.min(
+      Math.max(0, parseInt(searchParams.get("offset") || "0", 10)),
+      MAX_OFFSET
+    )
 
     const where: Prisma.ProductWhereInput = { isActive: true }
 
@@ -80,8 +90,8 @@ export async function GET(request: NextRequest) {
           brand: true,
           reviews: { select: { rating: true } },
         },
-        take: limit ? Number(limit) : undefined,
-        skip: offset ? Number(offset) : undefined,
+        take: limit,
+        skip: offset,
       }),
       prisma.product.count({ where }),
       getActiveDiscountRules(),
@@ -90,8 +100,8 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       products: dbProducts.map((p) => transformProduct(p, rules)),
       total,
-      limit: limit ? Number(limit) : null,
-      offset: offset ? Number(offset) : 0,
+      limit,
+      offset,
     })
   } catch (error) {
     console.error("Error in products API route:", error)

@@ -52,6 +52,9 @@ export function serializeSeparation(r: SeparationWithRelations) {
     dueDate: r.dueDate?.toISOString() ?? null,
     notes: r.notes,
     createdAt: r.createdAt.toISOString(),
+    // Abonos subidos por el cliente esperando validación (para el badge de la
+    // lista admin y la Bandeja POS). No confundir con depositPaid (solo APPROVED).
+    pendingPaymentsCount: r.payments.filter((p) => p.status === "PENDING").length,
     semaphore,
     product: {
       name: r.product.name,

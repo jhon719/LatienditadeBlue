@@ -15,9 +15,12 @@ import {
   Store,
   Boxes,
   FileText,
+  MessageSquare,
+  Sticker,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
+import { NotificationBell } from "./NotificationBell"
 
 const navigation = [
   { name: "Dashboard", href: "/admin", icon: LayoutDashboard },
@@ -28,6 +31,8 @@ const navigation = [
   { name: "Campañas", href: "/admin/campaigns", icon: Megaphone },
   { name: "Categorías y Líneas", href: "/admin/categories", icon: Tags },
   { name: "Usuarios", href: "/admin/users", icon: Users },
+  { name: "Mensajes", href: "/admin/messages", icon: MessageSquare },
+  { name: "Stickers", href: "/admin/stickers", icon: Sticker },
   { name: "Reportes", href: "/admin/reports", icon: FileText },
   { name: "Configuración", href: "/admin/settings", icon: Settings },
 ]
@@ -37,22 +42,25 @@ export function AdminSidebar() {
 
   return (
     <aside className="hidden lg:flex lg:flex-col lg:w-64 lg:fixed lg:inset-y-0 border-r bg-card">
-      {/* Logo */}
-      <Link
-        href="/"
-        className="group flex h-16 items-center gap-2 border-b px-6 transition-colors hover:bg-muted/50"
-      >
-        <div className="relative h-9 w-9 shrink-0 overflow-hidden rounded-xl shadow-sm transition-transform duration-300 group-hover:scale-110 group-hover:rotate-3">
-          <Image
-            src="/Imagenes/LOGO BLUE.jpeg"
-            alt="La Tiendita de Blue"
-            fill
-            sizes="36px"
-            className="object-cover"
-          />
-        </div>
-        <span className="font-bold">La Tiendita de Blue</span>
-      </Link>
+      {/* Logo + campana de notificaciones */}
+      <div className="flex h-16 items-center gap-1 border-b px-4">
+        <Link
+          href="/"
+          className="group flex flex-1 items-center gap-2 transition-colors hover:opacity-80"
+        >
+          <div className="relative h-9 w-9 shrink-0 overflow-hidden rounded-xl shadow-sm transition-transform duration-300 group-hover:scale-110 group-hover:rotate-3">
+            <Image
+              src="/Imagenes/LOGO BLUE.jpeg"
+              alt="La Tiendita de Blue"
+              fill
+              sizes="36px"
+              className="object-cover"
+            />
+          </div>
+          <span className="font-bold">La Tiendita de Blue</span>
+        </Link>
+        <NotificationBell />
+      </div>
 
       {/* Navigation */}
       <nav className="flex-1 space-y-1 p-4">
