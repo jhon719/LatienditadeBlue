@@ -1,0 +1,111 @@
+name: Desplegar La Tiendita de Blue
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - name: Descargar el código del repositorio
+        uses: actions/checkout@v4
+
+      # Las NEXT_PUBLIC_* se incrustan en el bundle del cliente durante
+      # `next build`, no se leen en runtime. Si faltan, la app se despliega
+      # con el botón de WhatsApp roto y sin errores visibles: mejor fallar aquí.
+      - name: Validar variables públicas de build
+        env:
+          APP_URL: ${{ vars.NEXT_PUBLIC_APP_URL }}
+          WHATSAPP: ${{ vars.NEXT_PUBLIC_WHATSAPP_NUMBER }}
+        run: |
+          [ -n "$APP_URL" ] || { echo "::error::Falta la variable de repositorio NEXT_PUBLIC_APP_URL"; exit 1; }
+          [ -n "$WHATSAPP" ] || { echo "::error::Falta la variable de repositorio NEXT_PUBLIC_WHATSAPP_NUMBER"; exit 1; }
+
+      - name: Configurar Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Iniciar sesión en GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extraer metadatos y etiquetas para Docker
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=raw,value=latest
+            type=sha,format=long
+
+      # No hay paso de `npm install && npm run build` en el runner: a diferencia
+      # de Laravel + Vite, aquí el build de Next.js vive dentro del Dockerfile
+      # (etapa `builder`), que produce el server standalone.
+      - name: Construir y subir la imagen (Build & Push)
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          build-args: |
+            NEXT_PUBLIC_APP_URL=${{ vars.NEXT_PUBLIC_APP_URL }}
+            NEXT_PUBLIC_WHATSAPP_NUMBER=${{ vars.NEXT_PUBLIC_WHATSAPP_NUMBER }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  deploy:
+    needs: build-and-push
+    runs-on: ubuntu-latest
+    steps:
+      - name: Conectar al servidor vía SSH y actualizar contenedores
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          port: ${{ secrets.SERVER_PORT || 22 }}
+          script: |
+            set -e
+            cd /opt/latienditadeblue
+
+            echo "${{ secrets.GHCR_PAT }}" | docker login ghcr.io -u jhon719 --password-stdin
+
+            docker compose pull app
+            # Sin `docker compose down`: `up -d` recrea solo el servicio cuya
+            # imagen cambió y deja Postgres intacto. Tampoco se borra ningún
+            # volumen (el de Laravel eliminaba mass_app_code porque compartía
+            # el código por volumen; aquí la imagen es autocontenida y borrar
+            # volúmenes destruiría la base de datos y los uploads).
+            docker compose up -d --remove-orphans
+
+            # Las migraciones las aplica docker-entrypoint.sh con
+            # `prisma migrate deploy` al arrancar: no hace falta un `exec` aparte.
+            echo "Esperando a que la app quede saludable..."
+            for i in $(seq 1 40); do
+              estado=$(docker inspect -f '{{.State.Health.Status}}' latienditadeblue_app 2>/dev/null || echo "sin-contenedor")
+              if [ "$estado" = "healthy" ]; then
+                echo "App saludable tras $((i * 5))s."
+                break
+              fi
+              if [ "$i" = "40" ]; then
+                echo "::error::La app no llegó a estado healthy."
+                docker compose logs --tail=80 app
+                exit 1
+              fi
+              sleep 5
+            done
+
+            docker image prune -f

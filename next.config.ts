@@ -36,6 +36,9 @@ const securityHeaders = [
 ]
 
 const nextConfig: NextConfig = {
+  // Build standalone: copia solo node_modules trazados + server.js mínimo,
+  // necesario para la imagen Docker de producción (VPS).
+  output: "standalone",
   // Permite acceder al servidor de desarrollo a través de túneles ngrok
   // (protección anti DNS-rebinding de Next.js: sin esto, el dev server
   // rechaza peticiones cuyo Host no coincide con localhost).

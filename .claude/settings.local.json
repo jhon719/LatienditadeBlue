@@ -11,7 +11,11 @@
       "Bash(cygpath -w /tmp/package/AGENTS.md)",
       "Read(//tmp/**)",
       "Bash(tasklist)",
-      "WebSearch"
+      "WebSearch",
+      "Bash(rm -rf C:/Users/johna/AppData/Local/Temp/claude/c--Users-johna-Downloads-la-tiendita-de-blue/90b14a70-27d9-450d-b69a-ebee68cd3342/scratchpad/prismatest)",
+      "Bash(mkdir -p C:/Users/johna/AppData/Local/Temp/claude/c--Users-johna-Downloads-la-tiendita-de-blue/90b14a70-27d9-450d-b69a-ebee68cd3342/scratchpad/prismatest/prisma)",
+      "Bash(cp prisma/schema.prisma C:/Users/johna/AppData/Local/Temp/claude/c--Users-johna-Downloads-la-tiendita-de-blue/90b14a70-27d9-450d-b69a-ebee68cd3342/scratchpad/prismatest/prisma/)",
+      "Bash(DATABASE_URL=\"postgresql://blue:x@localhost:5432/latiendita_blue?schema=public\" npx --no-install prisma@7 migrate status)"
     ]
   }
 }

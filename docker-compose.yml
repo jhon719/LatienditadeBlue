@@ -1,12 +1,80 @@
 services:
   postgres:
-    image: postgres:16-alpine
-    container_name: basictech-db
+    image: postgres:18-alpine
+    container_name: blue-db
     restart: unless-stopped
     environment:
-      POSTGRES_USER: basictech
-      POSTGRES_PASSWORD: basictech123
-      POSTGRES_DB: basictech_shop
-    ports:
-      - "5490:5432"
+      POSTGRES_USER: ${POSTGRES_USER:-blue}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?define POSTGRES_PASSWORD en el .env del servidor}
+      POSTGRES_DB: ${POSTGRES_DB:-latiendita_blue}
+    volumes:
+      # postgres:18 declara el volumen en /var/lib/postgresql (no /data como
+      # las versiones anteriores): PGDATA vive en /var/lib/postgresql/18/docker.
+      - postgres_data:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-blue} -d ${POSTGRES_DB:-latiendita_blue}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - blue_network
 
+  app:
+    # Imagen publicada por .github/workflows/deploy.yml en GHCR.
+    # El nombre debe ir en minúsculas aunque el repo sea "LatienditadeBlue".
+    image: ghcr.io/jhon719/latienditadeblue:latest
+    container_name: latienditadeblue_app
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      # El servicio habla con Postgres por el hostname de la red interna,
+      # ignorando el DATABASE_URL de localhost que usa el desarrollo local.
+      DATABASE_URL: postgresql://${POSTGRES_USER:-blue}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-latiendita_blue}?schema=public
+      AUTH_SECRET: ${AUTH_SECRET:?define AUTH_SECRET en el .env del servidor}
+      # La app corre detrás del proxy de red_global_web: sin esto NextAuth v5
+      # rechaza el Host reenviado y rompe el callback de login.
+      AUTH_TRUST_HOST: "true"
+      NEXT_PUBLIC_APP_URL: ${NEXT_PUBLIC_APP_URL}
+      NEXT_PUBLIC_WHATSAPP_NUMBER: ${NEXT_PUBLIC_WHATSAPP_NUMBER}
+      NEXT_TELEMETRY_DISABLED: "1"
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
+      MERCADO_PAGO_ACCESS_TOKEN: ${MERCADO_PAGO_ACCESS_TOKEN:-}
+      CLOUDINARY_CLOUD_NAME: ${CLOUDINARY_CLOUD_NAME:-}
+      CLOUDINARY_API_KEY: ${CLOUDINARY_API_KEY:-}
+      CLOUDINARY_API_SECRET: ${CLOUDINARY_API_SECRET:-}
+      RESEND_API_KEY: ${RESEND_API_KEY:-}
+      EMAIL_FROM: ${EMAIL_FROM:-}
+      ADMIN_NOTIFICATION_EMAIL: ${ADMIN_NOTIFICATION_EMAIL:-}
+      CRON_SECRET: ${CRON_SECRET:-}
+      STOCK_RELEASE_MINUTES: ${STOCK_RELEASE_MINUTES:-60}
+    volumes:
+      # Red de seguridad para el fallback a disco de vouchers y avatares: sin
+      # estos volúmenes, cada despliegue (imagen nueva) borraría lo subido.
+      # Con Cloudinary configurado quedan vacíos, que es lo esperado en prod.
+      - uploads_data:/app/public/uploads
+      - avatars_data:/app/public/Imagenes/avatar
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:3000/ || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 40s
+    expose:
+      - "3000"
+    networks:
+      - blue_network
+      - red_global_web
+
+volumes:
+  postgres_data:
+  uploads_data:
+  avatars_data:
+
+networks:
+  blue_network:
+    driver: bridge
+  red_global_web:
+    external: true

@@ -1,0 +1,88 @@
+# syntax=docker/dockerfile:1
+
+# Node 22 LTS: Node 20 salió de mantenimiento en abril de 2026 (ya no recibe
+# parches de seguridad). package.json declara engines >=20, y Next 16.2 +
+# Prisma 7.9 soportan 22, así que el salto es directo.
+FROM node:22-slim AS base
+RUN apt-get update -y \
+  && apt-get install -y --no-install-recommends openssl ca-certificates wget \
+  && rm -rf /var/lib/apt/lists/*
+WORKDIR /app
+
+# ---------- Etapa de build ----------
+FROM base AS builder
+ENV NEXT_TELEMETRY_DISABLED=1
+
+# Next.js incrusta las NEXT_PUBLIC_* en el bundle durante `next build`; pasarlas
+# solo en runtime (docker-compose) las dejaría como undefined en el cliente
+# (BluetBubble, ProductDetail, LegalPage leen el número de WhatsApp).
+ARG NEXT_PUBLIC_APP_URL
+ARG NEXT_PUBLIC_WHATSAPP_NUMBER
+ENV NEXT_PUBLIC_APP_URL=$NEXT_PUBLIC_APP_URL \
+    NEXT_PUBLIC_WHATSAPP_NUMBER=$NEXT_PUBLIC_WHATSAPP_NUMBER
+
+# Placeholders solo para el build: todas las páginas que tocan Prisma son
+# force-dynamic y no hay generateStaticParams, así que no se abre ninguna
+# conexión, pero los módulos deben poder evaluarse. No llegan a la etapa runner.
+ENV DATABASE_URL="postgresql://build:build@localhost:5432/build?schema=public" \
+    AUTH_SECRET="solo-para-el-build-no-se-usa-en-runtime"
+
+# package.json + prisma primero para cachear `npm ci`: el hook postinstall
+# corre `prisma generate`, que necesita prisma/schema.prisma y prisma.config.ts
+# ya presentes (schema.prisma no declara `url`; vive en el config).
+COPY package.json package-lock.json prisma.config.ts ./
+COPY prisma ./prisma
+RUN npm ci
+
+COPY . .
+RUN npm run build
+
+# ---------- Etapa de runtime ----------
+FROM base AS runner
+ENV NODE_ENV=production \
+    NEXT_TELEMETRY_DISABLED=1 \
+    PORT=3000 \
+    HOSTNAME=0.0.0.0
+
+RUN groupadd --system --gid 1001 nodejs \
+  && useradd --system --uid 1001 --gid nodejs nextjs
+
+# Server standalone de Next.js (mínimo, con solo los node_modules trazados)
+COPY --from=builder /app/public ./public
+COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
+COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+
+# CLI de Prisma + schema/migraciones: el standalone no las incluye porque
+# `prisma` es devDependency, pero se necesitan para `migrate deploy` al arrancar.
+COPY --from=builder /app/prisma ./prisma
+COPY --from=builder /app/node_modules/prisma ./node_modules/prisma
+COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
+COPY --from=builder /app/node_modules/.bin/prisma ./node_modules/.bin/prisma
+
+# prisma.config.ts es OBLIGATORIO en runtime: el bloque `datasource db` del
+# schema no declara `url`, así que sin este archivo `migrate deploy` aborta con
+# "The datasource.url property is required in your Prisma config file".
+# El CLI transpila el .ts con su propio loader (no hace falta typescript), pero
+# el config hace `import "dotenv/config"` y dotenv no lo traza el standalone
+# porque ningún módulo de src/ lo importa: hay que copiarlo a mano.
+COPY --from=builder /app/prisma.config.ts ./
+COPY --from=builder /app/node_modules/dotenv ./node_modules/dotenv
+
+COPY docker-entrypoint.sh ./
+RUN chmod +x docker-entrypoint.sh && chown nextjs:nodejs docker-entrypoint.sh
+
+# Destinos del fallback a disco de /api/upload y /api/user/avatar cuando
+# Cloudinary no está configurado. Deben pertenecer a nextjs para que el proceso
+# pueda escribir, y así los volúmenes de docker-compose heredan esa propiedad
+# al crearse (si quedaran como root, la subida fallaría con EACCES).
+RUN mkdir -p public/uploads public/Imagenes/avatar \
+  && chown -R nextjs:nodejs public/uploads public/Imagenes/avatar
+
+USER nextjs
+EXPOSE 3000
+
+HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
+  CMD wget -qO- http://127.0.0.1:3000/ || exit 1
+
+ENTRYPOINT ["./docker-entrypoint.sh"]
+CMD ["node", "server.js"]
