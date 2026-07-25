@@ -21,11 +21,14 @@ ARG NEXT_PUBLIC_WHATSAPP_NUMBER
 ENV NEXT_PUBLIC_APP_URL=$NEXT_PUBLIC_APP_URL \
     NEXT_PUBLIC_WHATSAPP_NUMBER=$NEXT_PUBLIC_WHATSAPP_NUMBER
 
-# Placeholders solo para el build: todas las páginas que tocan Prisma son
-# force-dynamic y no hay generateStaticParams, así que no se abre ninguna
-# conexión, pero los módulos deben poder evaluarse. No llegan a la etapa runner.
-ENV DATABASE_URL="postgresql://build:build@localhost:5432/build?schema=public" \
-    AUTH_SECRET="solo-para-el-build-no-se-usa-en-runtime"
+# DATABASE_URL es placeholder solo para el build: todas las páginas que tocan
+# Prisma son force-dynamic y no hay generateStaticParams, así que no se abre
+# ninguna conexión real, pero los módulos deben poder evaluarse.
+ENV DATABASE_URL="postgresql://build:build@localhost:5432/build?schema=public"
+# AUTH_SECRET no se necesita en build (ninguna página lo usa), pero si un archivo
+# .env local tuviera un valor, la app lo leería durante el build de Next.js y no
+# sería un problema: las variables privadas nunca viajan al cliente/runner de todos modos.
+ARG AUTH_SECRET="placeholder-no-usado"
 
 # package.json + prisma primero para cachear `npm ci`: el hook postinstall
 # corre `prisma generate`, que necesita prisma/schema.prisma y prisma.config.ts
