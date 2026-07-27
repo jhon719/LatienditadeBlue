@@ -41,6 +41,15 @@ export default function PrivacyPage() {
           ],
         },
         {
+          title: "Autenticación con Google OAuth",
+          items: [
+            "Recolectamos: tu correo electrónico de Google, utilizado únicamente para crear y gestionar tu cuenta en La Tiendita de Blue.",
+            "No recolectamos: tu nombre completo, foto de perfil, género, fecha de nacimiento ni otros datos de tu cuenta de Google.",
+            "Almacenamiento: tu email se almacena en nuestra base de datos. Google OAuth solo autentica tu identidad; los datos permanecen bajo nuestra protección, no bajo la de Google.",
+            "Derechos: puedes desvincularse de Google en cualquier momento desde tu perfil o solicitar la eliminación de tu cuenta.",
+          ],
+        },
+        {
           title: "Seguridad",
           items: [
             "Contraseñas cifradas con bcrypt; nunca almacenamos tu clave en texto plano.",
