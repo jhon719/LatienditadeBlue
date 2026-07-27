@@ -9,6 +9,7 @@ declare module "next-auth" {
       username: string
       mustChangePassword: boolean
       hasAcceptedTerms: boolean
+      justRegistered: boolean
     } & DefaultSession["user"]
   }
 
@@ -17,6 +18,7 @@ declare module "next-auth" {
     username?: string
     mustChangePassword?: boolean
     hasAcceptedTerms?: boolean
+    justRegistered?: boolean
   }
 }
 
@@ -27,5 +29,6 @@ declare module "next-auth/jwt" {
     username: string
     mustChangePassword: boolean
     hasAcceptedTerms: boolean
+    justRegistered: boolean
   }
 }

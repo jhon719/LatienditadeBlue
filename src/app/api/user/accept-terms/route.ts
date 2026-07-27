@@ -11,7 +11,10 @@ export async function POST() {
 
   await prisma.user.update({
     where: { id: session!.user.id },
-    data: { termsAcceptedAt: new Date() },
+    data: {
+      termsAcceptedAt: new Date(),
+      justRegistered: false, // Ya no mostrar /accept-terms en próximos logins
+    },
   })
 
   return NextResponse.json({ success: true })

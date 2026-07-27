@@ -103,6 +103,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
               username,
               passwordHash: null,
               avatarFileName: null, // Fallback automático a Mascota BLUE.png
+              justRegistered: true, // Fuerza /accept-terms en primer login post-registro
             },
           })
         }
@@ -120,6 +121,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             username: true,
             mustChangePassword: true,
             termsAcceptedAt: true,
+            justRegistered: true,
           },
         })
         if (dbUser) {
@@ -128,6 +130,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           token.username = dbUser.username
           token.mustChangePassword = dbUser.mustChangePassword
           token.hasAcceptedTerms = dbUser.termsAcceptedAt !== null
+          token.justRegistered = dbUser.justRegistered
         }
       }
       // Refrescar el flag tras el cambio forzado de contraseña
@@ -139,12 +142,12 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         if (fresh) token.mustChangePassword = fresh.mustChangePassword
       }
       // Refrescar el flag tras aceptar los Términos en /accept-terms
-      if (token.id && !token.hasAcceptedTerms) {
+      if (token.id && token.justRegistered) {
         const fresh = await prisma.user.findUnique({
           where: { id: token.id as string },
-          select: { termsAcceptedAt: true },
+          select: { justRegistered: true },
         })
-        if (fresh) token.hasAcceptedTerms = fresh.termsAcceptedAt !== null
+        if (fresh) token.justRegistered = fresh.justRegistered
       }
       return token
     },
@@ -155,6 +158,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         session.user.username = token.username as string
         session.user.mustChangePassword = token.mustChangePassword as boolean
         session.user.hasAcceptedTerms = token.hasAcceptedTerms as boolean
+        session.user.justRegistered = token.justRegistered as boolean
       }
       return session
     },

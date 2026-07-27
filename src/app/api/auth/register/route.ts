@@ -64,6 +64,7 @@ export async function POST(request: NextRequest) {
         email,
         passwordHash,
         marketingOptIn,
+        justRegistered: true, // Fuerza /accept-terms en primer login post-registro
       },
       select: { id: true, username: true, email: true },
     })

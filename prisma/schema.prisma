@@ -126,6 +126,10 @@ model User {
   // aceptó todavía; el middleware fuerza /accept-terms hasta que se setee.
   termsAcceptedAt DateTime?
 
+  // Flag transitorio: true solo en la primera sesión después de registrarse (normal o Google).
+  // El middleware redirige a /accept-terms mientras sea true. Se resetea al aceptar.
+  justRegistered Boolean @default(true)
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 

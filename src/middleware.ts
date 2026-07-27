@@ -21,7 +21,7 @@ export default auth((req) => {
   const isLoggedIn = !!req.auth
   const isAdmin = req.auth?.user?.role === "ADMIN"
   const mustChangePassword = req.auth?.user?.mustChangePassword === true
-  const hasAcceptedTerms = req.auth?.user?.hasAcceptedTerms === true
+  const justRegistered = req.auth?.user?.justRegistered === true
 
   // Cambio forzado de contraseña (bóveda 02.03.01): bloquear navegación
   // hasta definir una nueva clave, excepto la propia página de reset
@@ -32,16 +32,16 @@ export default auth((req) => {
     return NextResponse.redirect(new URL("/", nextUrl))
   }
 
-  // Aceptación de Términos y Condiciones (bóveda 07.01): recuerda una sola
-  // vez, al registrarse (normal o Google) o al retomar una sesión antigua,
-  // antes de dejar hacer nada más (incluida una separación/preventa).
+  // Aceptación de Términos y Condiciones (bóveda 07.01): solo en primer
+  // login post-registro (normal o Google), fuerza /accept-terms antes de
+  // acceder a cualquier parte del sitio.
   const isLegalReadingRoute = legalReadingRoutes.some((route) =>
     nextUrl.pathname.startsWith(route)
   )
   if (
     isLoggedIn &&
     !mustChangePassword &&
-    !hasAcceptedTerms &&
+    justRegistered &&
     nextUrl.pathname !== "/accept-terms" &&
     !isLegalReadingRoute
   ) {
@@ -49,7 +49,7 @@ export default auth((req) => {
     acceptUrl.searchParams.set("callbackUrl", nextUrl.pathname)
     return NextResponse.redirect(acceptUrl)
   }
-  if (isLoggedIn && hasAcceptedTerms && nextUrl.pathname === "/accept-terms") {
+  if (isLoggedIn && !justRegistered && nextUrl.pathname === "/accept-terms") {
     return NextResponse.redirect(new URL("/", nextUrl))
   }
 
