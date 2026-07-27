@@ -59,20 +59,22 @@ export function Header() {
   return (
     <header className="sticky top-0 z-50 border-b bg-background/95 backdrop-blur-xl">
       <div className="blue-container">
-        <div className="flex min-h-20 items-center gap-4 py-3">
-          <Link href="/" className="flex shrink-0 items-center gap-3">
-            <div className="relative h-12 w-12 overflow-hidden rounded-3xl solid-shadow-yellow">
+        <div className="flex min-h-16 items-center gap-2 py-2 sm:gap-4 sm:py-3 md:min-h-20">
+          <Link href="/" className="flex shrink-0 items-center gap-2 sm:gap-3">
+            <div className="relative h-10 w-10 overflow-hidden rounded-2xl sm:h-12 sm:w-12 sm:rounded-3xl">
               <Image
-                src="/Imagenes/LOGO BLUE.jpeg"
+                src="/Imagenes/LOGO OFICIAL.png"
                 alt="La Tiendita de Blue"
                 fill
                 className="object-cover"
-                sizes="48px"
+                sizes="(max-width: 640px) 40px, 48px"
               />
             </div>
-            <div className="leading-none">
-              <p className="font-display text-3xl text-foreground">La Tiendita</p>
-              <p className="-mt-1 text-xs font-extrabold uppercase tracking-wide text-[#4A80BE]">de Blue</p>
+            {/* El wordmark se oculta en pantallas muy angostas para dejar
+                espacio a los accesos de la derecha */}
+            <div className="leading-none max-[380px]:hidden">
+              <p className="font-display text-2xl text-foreground sm:text-3xl">La Tiendita</p>
+              <p className="-mt-1 text-[10px] font-extrabold uppercase tracking-wide text-[#4A80BE] sm:text-xs">de Blue</p>
             </div>
           </Link>
 
@@ -99,8 +101,8 @@ export function Header() {
             </form>
           </div>
 
-          <div className="ml-auto flex items-center gap-1">
-            <AnimatedThemeToggle className="mr-1" />
+          <div className="ml-auto flex shrink-0 items-center gap-0.5 sm:gap-1">
+            <AnimatedThemeToggle className="mr-0.5 sm:mr-1" />
             {mounted && status !== "loading" && session && <UserNotificationBell />}
             <Link href="/cart">
               <Button variant="ghost" size="icon" className="relative rounded-full">
@@ -145,7 +147,7 @@ export function Header() {
                 <Button className="rounded-full bg-[#142F5C] font-extrabold text-white hover:bg-[#4A80BE]">Ingresar</Button>
               </Link>
             )}
-            <MobileNav />
+            <MobileNav avatarFileName={avatarFileName} />
           </div>
         </div>
       </div>

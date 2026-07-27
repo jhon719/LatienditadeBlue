@@ -15,8 +15,10 @@ import { FeaturedProducts } from "@/components/home/FeaturedProducts"
 import { LinesSection } from "@/components/home/LinesSection"
 import { ReviewsSection } from "@/components/home/ReviewsSection"
 import { FollowUs } from "@/components/home/FollowUs"
+import { StoreLocations } from "@/components/home/StoreLocations"
 import { BuyMeACoffee } from "@/components/home/BuyMeACoffee"
 import { BluetBubble } from "@/components/layout/BluetBubble"
+import { TopBar } from "@/components/layout/TopBar"
 
 export const dynamic = "force-dynamic"
 
@@ -69,7 +71,10 @@ export default async function HomePage() {
           ctaUrl: b.ctaUrl ?? undefined,
         }))}
       />
+      {/* QuickAccessPanel se monta sobre el hero (-mt-8), así que la tira de
+          beneficios va después para no quedar tapada. */}
       <QuickAccessPanel />
+      <TopBar />
       <CategoryTrends categories={categories.map(transformCategory)} />
       <BenefitsMarquee />
       <StatsBand
@@ -81,6 +86,7 @@ export default async function HomePage() {
       <FeaturedProducts products={featured.map((p) => transformProduct(p, rules))} />
       <LinesSection lines={lines.map(transformLine)} />
       <ReviewsSection reviews={reviews.map((r) => transformReview(r, true))} />
+      <StoreLocations />
       <FollowUs />
       <BuyMeACoffee />
       <BluetBubble />

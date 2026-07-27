@@ -36,11 +36,13 @@ export function FilterMobile({
           )}
         </Button>
       </SheetTrigger>
-      <SheetContent side="left" className="w-[300px] sm:w-[350px]">
-        <SheetHeader>
+      {/* Ancho relativo al viewport y cuerpo con scroll: la lista de animes
+          y líneas es larga y no cabe entera en un teléfono. */}
+      <SheetContent side="left" className="flex w-[min(22rem,88vw)] flex-col gap-0 p-0">
+        <SheetHeader className="shrink-0 border-b px-5 py-4">
           <SheetTitle>Filtros</SheetTitle>
         </SheetHeader>
-        <div className="mt-6">
+        <div className="flex-1 overflow-y-auto overscroll-contain px-5 py-5">
           <FilterSidebar filters={filters} onFiltersChange={onFiltersChange} />
         </div>
       </SheetContent>

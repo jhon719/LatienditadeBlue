@@ -119,6 +119,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             role: true,
             username: true,
             mustChangePassword: true,
+            termsAcceptedAt: true,
           },
         })
         if (dbUser) {
@@ -126,6 +127,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           token.role = dbUser.role
           token.username = dbUser.username
           token.mustChangePassword = dbUser.mustChangePassword
+          token.hasAcceptedTerms = dbUser.termsAcceptedAt !== null
         }
       }
       // Refrescar el flag tras el cambio forzado de contraseña
@@ -136,6 +138,14 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         })
         if (fresh) token.mustChangePassword = fresh.mustChangePassword
       }
+      // Refrescar el flag tras aceptar los Términos en /accept-terms
+      if (token.id && !token.hasAcceptedTerms) {
+        const fresh = await prisma.user.findUnique({
+          where: { id: token.id as string },
+          select: { termsAcceptedAt: true },
+        })
+        if (fresh) token.hasAcceptedTerms = fresh.termsAcceptedAt !== null
+      }
       return token
     },
     async session({ session, token }) {
@@ -144,6 +154,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         session.user.role = token.role as string
         session.user.username = token.username as string
         session.user.mustChangePassword = token.mustChangePassword as boolean
+        session.user.hasAcceptedTerms = token.hasAcceptedTerms as boolean
       }
       return session
     },

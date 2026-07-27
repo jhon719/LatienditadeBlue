@@ -3,7 +3,14 @@ import Link from "next/link"
 import { Mail, MapPin, Phone } from "lucide-react"
 import { Separator } from "@/components/ui/separator"
 import { SocialIcon } from "@/components/common/SocialIcon"
-import { SOCIAL_LINKS } from "@/lib/social"
+import { PaymentMethods } from "@/components/common/PaymentMethods"
+import {
+  SOCIAL_LINKS,
+  STORE_EMAIL,
+  STORE_WHATSAPP_DISPLAY,
+  storeWhatsappUrl,
+} from "@/lib/social"
+import { PICKUP_POINTS } from "@/lib/locations"
 
 export function Footer() {
   return (
@@ -12,9 +19,9 @@ export function Footer() {
         <div className="grid gap-8 md:grid-cols-[1.3fr_1fr_1fr_1fr]">
           <div>
             <div className="flex items-center gap-3">
-              <div className="relative h-12 w-12 overflow-hidden rounded-3xl solid-shadow-yellow">
+              <div className="relative h-12 w-12 overflow-hidden rounded-3xl">
                 <Image
-                  src="/Imagenes/LOGO BLUE.jpeg"
+                  src="/Imagenes/BLUE PAGINA.png"
                   alt="La Tiendita de Blue"
                   fill
                   className="object-cover"
@@ -61,25 +68,44 @@ export function Footer() {
               <li><Link href="/returns" className="hover:text-[#F5B400]">Devoluciones y reembolsos</Link></li>
               <li><Link href="/privacy" className="hover:text-[#F5B400]">Politica de privacidad</Link></li>
             </ul>
-            <h3 className="mt-6 font-display text-2xl">Ubicaciones</h3>
+            <h3 className="mt-6 font-display text-2xl">Puntos de recojo</h3>
             <ul className="mt-3 space-y-2 text-sm text-white/75">
-              <li className="flex gap-2"><MapPin className="h-4 w-4 text-[#F5B400]" /> Feria Grau</li>
-              <li className="flex gap-2"><MapPin className="h-4 w-4 text-[#F5B400]" /> Centro Civico</li>
+              {PICKUP_POINTS.map((point) => (
+                <li key={point.id}>
+                  <a
+                    href={point.mapsUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex gap-2 hover:text-[#F5B400]"
+                  >
+                    <MapPin className="h-4 w-4 shrink-0 text-[#F5B400]" /> {point.name}
+                  </a>
+                </li>
+              ))}
             </ul>
           </div>
           <div>
             <h3 className="font-display text-2xl">Contacto</h3>
             <ul className="mt-4 space-y-3 text-sm text-white/75">
               <li>
-                <a href="https://wa.me/51997763962" target="_blank" rel="noopener noreferrer" className="flex gap-2 hover:text-[#F5B400]">
-                  <Phone className="h-4 w-4 text-[#F5B400]" /> +51 997 763 962
+                <a
+                  href={storeWhatsappUrl("¡Hola! Quiero más información sobre sus figuras. ✨")}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex gap-2 hover:text-[#F5B400]"
+                >
+                  <Phone className="h-4 w-4 shrink-0 text-[#F5B400]" /> {STORE_WHATSAPP_DISPLAY}
                 </a>
               </li>
-              <li className="flex gap-2"><Mail className="h-4 w-4 text-[#F5B400]" /> hola@latienditadeblue.com</li>
+              <li className="flex gap-2">
+                <Mail className="h-4 w-4 shrink-0 text-[#F5B400]" /> {STORE_EMAIL}
+              </li>
             </ul>
           </div>
         </div>
         <Separator className="my-8 bg-white/15" />
+        <PaymentMethods variant="dark" />
+        <Separator className="my-6 bg-white/15" />
         <p className="text-sm text-white/60">&copy; {new Date().getFullYear()} La Tiendita de Blue. Todos los derechos reservados.</p>
       </div>
     </footer>

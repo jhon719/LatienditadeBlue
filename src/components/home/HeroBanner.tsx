@@ -28,7 +28,7 @@ export function HeroBanner({ banners = [] }: { banners?: BannerView[] }) {
           <CarouselContent>
             {banners.map((banner) => (
               <CarouselItem key={banner.id}>
-                <div className="relative h-[420px] w-full overflow-hidden bg-[#142F5C] sm:h-[480px]">
+                <div className="relative h-[300px] w-full overflow-hidden bg-[#142F5C] sm:h-[400px] lg:h-[480px]">
                   <Image
                     src={banner.imageUrl}
                     alt={banner.title}
@@ -37,21 +37,23 @@ export function HeroBanner({ banners = [] }: { banners?: BannerView[] }) {
                     className="object-cover"
                     sizes="100vw"
                   />
-                  <div className="absolute inset-0 bg-gradient-to-r from-[#142F5C]/80 via-[#142F5C]/40 to-transparent" />
-                  <div className="blue-container relative flex h-full flex-col justify-center">
+                  {/* En móvil el degradado va de abajo hacia arriba: el texto se
+                      apoya en la parte baja y no tapa el centro de la imagen. */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-[#142F5C]/90 via-[#142F5C]/50 to-transparent sm:bg-gradient-to-r sm:from-[#142F5C]/80 sm:via-[#142F5C]/40 sm:to-transparent" />
+                  <div className="blue-container relative flex h-full flex-col justify-end pb-8 sm:justify-center sm:pb-0">
                     <AnimatedContent className="max-w-2xl text-white">
-                      <h2 className="font-display text-6xl leading-[0.95] drop-shadow sm:text-7xl">
+                      <h2 className="font-display text-4xl leading-[0.95] drop-shadow sm:text-6xl lg:text-7xl">
                         {banner.title}
                       </h2>
                       {banner.subtitle && (
-                        <p className="mt-4 max-w-xl text-lg font-semibold text-white/85">
+                        <p className="mt-3 max-w-xl text-sm font-semibold text-white/85 sm:mt-4 sm:text-lg">
                           {banner.subtitle}
                         </p>
                       )}
                       {banner.ctaLabel && banner.ctaUrl && (
                         <Link
                           href={banner.ctaUrl}
-                          className="mt-7 inline-flex h-12 items-center gap-2 rounded-full bg-[#F5B400] px-7 font-extrabold text-[#142F5C] solid-shadow-blue transition hover:brightness-105"
+                          className="mt-5 inline-flex h-11 items-center gap-2 rounded-full bg-[#F5B400] px-5 text-sm font-extrabold text-[#142F5C] solid-shadow-blue transition hover:brightness-105 sm:mt-7 sm:h-12 sm:px-7 sm:text-base"
                         >
                           {banner.ctaLabel} <ArrowRight className="h-5 w-5" />
                         </Link>
@@ -62,10 +64,12 @@ export function HeroBanner({ banners = [] }: { banners?: BannerView[] }) {
               </CarouselItem>
             ))}
           </CarouselContent>
+          {/* En móvil el carrusel se navega deslizando; las flechas taparían
+              el texto del banner, así que solo aparecen desde sm. */}
           {banners.length > 1 && (
             <>
-              <CarouselPrevious className="left-4" />
-              <CarouselNext className="right-4" />
+              <CarouselPrevious className="left-4 hidden sm:flex" />
+              <CarouselNext className="right-4 hidden sm:flex" />
             </>
           )}
         </Carousel>
@@ -85,24 +89,24 @@ export function HeroBanner({ banners = [] }: { banners?: BannerView[] }) {
         />
         <div className="absolute inset-0 bg-[#142F5C]/70" />
       </div>
-      <div className="blue-container relative grid min-h-[520px] items-center gap-10 py-16 lg:grid-cols-[1fr_420px]">
+      <div className="blue-container relative grid min-h-[420px] items-center gap-10 py-12 sm:min-h-[480px] sm:py-14 lg:min-h-[520px] lg:grid-cols-[1fr_420px] lg:py-16">
         <AnimatedContent className="max-w-3xl">
-          <div className="inline-flex items-center gap-2 rounded-full bg-white/15 px-4 py-2 text-sm font-extrabold backdrop-blur">
-            <Sparkles className="h-4 w-4 text-[#F5B400]" /> Stock, preventas y pedidos online
+          <div className="inline-flex items-center gap-2 rounded-full bg-white/15 px-3 py-1.5 text-xs font-extrabold backdrop-blur sm:px-4 sm:py-2 sm:text-sm">
+            <Sparkles className="h-4 w-4 shrink-0 text-[#F5B400]" /> Stock, preventas y pedidos online
           </div>
-          <h1 className="mt-6 font-display text-7xl leading-[0.9] text-white sm:text-8xl lg:text-9xl">
+          <h1 className="mt-4 font-display text-5xl leading-[0.9] text-white sm:mt-6 sm:text-7xl lg:text-8xl xl:text-9xl">
             La Tiendita de Blue
           </h1>
-          <p className="mt-5 max-w-2xl text-lg font-medium text-white/85">
+          <p className="mt-4 max-w-2xl text-base font-medium text-white/85 sm:mt-5 sm:text-lg">
             Figuras, peluches, mangas y merch anime con una experiencia visual pensada para coleccionistas. Filtra por anime, marca o estado y arma tu vitrina ideal.
           </p>
-          <div className="mt-8 flex flex-col gap-4 sm:flex-row">
-            <Link href="/products">
-              <MagneticButton className="inline-flex h-13 items-center justify-center gap-2 rounded-full bg-[#F5B400] px-7 font-extrabold text-[#142F5C] solid-shadow-blue">
+          <div className="mt-6 flex flex-col gap-3 sm:mt-8 sm:flex-row sm:gap-4">
+            <Link href="/products" className="w-full sm:w-auto">
+              <MagneticButton className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-full bg-[#F5B400] px-7 font-extrabold text-[#142F5C] solid-shadow-blue sm:h-13 sm:w-auto">
                 Explorar catalogo <ArrowRight className="h-5 w-5" />
               </MagneticButton>
             </Link>
-            <Link href="/products?status=preventa" className="inline-flex h-13 items-center justify-center rounded-full border border-white/40 px-7 font-extrabold text-white transition hover:bg-white hover:text-[#142F5C]">
+            <Link href="/products?status=preventa" className="inline-flex h-12 items-center justify-center rounded-full border border-white/40 px-7 font-extrabold text-white transition hover:bg-white hover:text-[#142F5C] sm:h-13">
               Ver preventas
             </Link>
           </div>

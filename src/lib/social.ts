@@ -22,6 +22,27 @@ export const whatsappChatUrl = (phone: string, message?: string) => {
   return `https://wa.me/${withCountry}${text}`
 }
 
+// ---------------------------------------------------------------------------
+// Contacto oficial de la tienda
+// ---------------------------------------------------------------------------
+// Fuente única para TODO enlace de contacto con la tienda. No hardcodear el
+// número en componentes: si cambia, se cambia aquí (o en NEXT_PUBLIC_WHATSAPP_NUMBER).
+// OJO: esto es el número DE LA TIENDA. Para escribirle a un cliente desde el
+// panel admin se usa el teléfono del cliente, no este.
+export const STORE_WHATSAPP = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER ?? "51997763962"
+
+// Mismo número formateado para mostrar en pantalla
+export const STORE_WHATSAPP_DISPLAY = (() => {
+  const d = STORE_WHATSAPP.replace(/\D/g, "").replace(/^51/, "")
+  return `+51 ${d.slice(0, 3)} ${d.slice(3, 6)} ${d.slice(6, 9)}`
+})()
+
+// Enlace de chat con la tienda, con mensaje opcional
+export const storeWhatsappUrl = (message?: string) =>
+  whatsappChatUrl(STORE_WHATSAPP, message)
+
+export const STORE_EMAIL = "hola@latienditadeblue.com"
+
 export const SOCIAL_LINKS: SocialLink[] = [
   {
     platform: "tiktok",

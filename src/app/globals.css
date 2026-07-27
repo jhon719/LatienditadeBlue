@@ -110,16 +110,41 @@
 
   html {
     scroll-behavior: smooth;
+    /* `clip` en vez de `hidden`: evita el scroll horizontal sin crear un
+       contenedor de scroll (que rompería el `sticky` del Header). */
+    overflow-x: clip;
+    -webkit-text-size-adjust: 100%;
   }
 
   body {
     @apply bg-background text-foreground;
     font-family: "Montserrat", system-ui, sans-serif;
+    overflow-x: clip;
   }
 
   button,
   a {
     -webkit-tap-highlight-color: transparent;
+  }
+
+  /* Nada dentro del flujo puede exceder el ancho del viewport en móvil */
+  img,
+  video,
+  canvas,
+  svg {
+    max-width: 100%;
+  }
+
+  /* Evita que palabras largas (SKUs, correos, URLs) rompan la caja */
+  h1,
+  h2,
+  h3,
+  h4,
+  p,
+  li,
+  dd,
+  dt {
+    overflow-wrap: break-word;
   }
 }
 
@@ -129,21 +154,81 @@
     letter-spacing: 0;
   }
 
+  /* Sombras sólidas: el offset se reduce en móvil para que no empujen
+     el layout ni generen scroll horizontal en pantallas angostas. */
   .solid-shadow-blue {
-    box-shadow: 8px 8px 0 #142f5c;
+    box-shadow: 4px 4px 0 #142f5c;
   }
 
   .solid-shadow-yellow {
-    box-shadow: 8px 8px 0 #f5b400;
+    box-shadow: 4px 4px 0 #f5b400;
   }
 
   .solid-shadow-soft {
-    box-shadow: 6px 6px 0 rgba(20, 47, 92, 0.18);
+    box-shadow: 3px 3px 0 rgba(20, 47, 92, 0.18);
   }
 
+  @media (min-width: 768px) {
+    .solid-shadow-blue {
+      box-shadow: 8px 8px 0 #142f5c;
+    }
+
+    .solid-shadow-yellow {
+      box-shadow: 8px 8px 0 #f5b400;
+    }
+
+    .solid-shadow-soft {
+      box-shadow: 6px 6px 0 rgba(20, 47, 92, 0.18);
+    }
+  }
+
+  /* Contenedor central: padding progresivo en vez de ancho calculado,
+     así el contenido nunca toca el borde en móvil. */
   .blue-container {
     margin-inline: auto;
-    width: min(1180px, calc(100% - 2rem));
+    width: 100%;
+    max-width: 1180px;
+    padding-inline: 1rem;
+  }
+
+  @media (min-width: 640px) {
+    .blue-container {
+      padding-inline: 1.5rem;
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .blue-container {
+      padding-inline: 2rem;
+    }
+  }
+
+  /* Fila desplazable en móvil que se vuelve grilla normal en pantallas
+     grandes. Se usa en chips de filtros y tiras de categorías. */
+  .scroll-row {
+    display: flex;
+    gap: 0.5rem;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    padding-bottom: 0.25rem;
+  }
+
+  .scroll-row::-webkit-scrollbar {
+    display: none;
+  }
+
+  .scroll-row > * {
+    scroll-snap-align: start;
+    flex: 0 0 auto;
+  }
+
+  /* Contenedor de tablas anchas: scrollea en sí mismo, nunca la página */
+  .table-scroll {
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
   }
 
   .animate-float-soft {

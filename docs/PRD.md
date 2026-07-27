@@ -171,4 +171,4 @@ ASUS, MSI, Corsair, Logitech, Razer, HyperX, Kingston, Samsung, LG, Dell, NVIDIA
 | 2. Backend (Prisma/PostgreSQL) | 🔄 En progreso | Modelo de datos, API routes |
 | 3. Autenticación | Pendiente | NextAuth.js con credenciales |
 | 4. Integración de pagos | Pendiente | Stripe Checkout |
-| 5. Deploy y optimización | Pendiente | Vercel + PostgreSQL |
+| 5. Deploy y optimización | Pendiente | VPS propio (Docker) + PostgreSQL |

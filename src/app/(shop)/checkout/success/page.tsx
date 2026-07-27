@@ -21,6 +21,7 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { useCartStore } from "@/stores/cart-store"
+import { storeWhatsappUrl } from "@/lib/social"
 
 // Etiquetas de envío para el mensaje de WhatsApp (bóveda 03.03)
 const shippingLabels: Record<string, string> = {
@@ -46,11 +47,10 @@ function SuccessContent() {
     clearCart()
   }, [clearCart])
 
-  const phone = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER ?? "51997763962"
   const shippingLabel = shippingLabels[shippingType] ?? shippingType
   const ShippingIcon = shippingIcons[shippingType] ?? Truck
   const message = `¡Hola! Acabo de realizar un pedido en La Tiendita de Blue. Mi código de orden es *${processCode ?? ""}*. Elegí la modalidad de *${shippingLabel}*. Quedo atento para coordinar los detalles de la entrega. ✨`
-  const whatsappUrl = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`
+  const whatsappUrl = storeWhatsappUrl(message)
 
   return (
     <div className="container mx-auto max-w-xl px-4 py-12">

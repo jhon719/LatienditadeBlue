@@ -122,6 +122,10 @@ model User {
   adminNotes     String?     @db.Text // Recordatorios internos del admin
   marketingOptIn Boolean     @default(false) // Consentimiento explícito (Ley 29733)
 
+  // Aceptación explícita de Términos y Condiciones (bóveda 07.01). Null = no
+  // aceptó todavía; el middleware fuerza /accept-terms hasta que se setee.
+  termsAcceptedAt DateTime?
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 

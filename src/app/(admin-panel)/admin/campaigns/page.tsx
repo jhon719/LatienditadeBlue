@@ -264,7 +264,10 @@ export default function CampaignsPage() {
         <Card>
           <CardContent className="pt-6">
           <Tabs defaultValue="banners">
-            <TabsList className="grid w-full grid-cols-4">
+            {/* TabsList tiene alto fijo (h-9), así que en móvil no puede
+                envolver a 2 filas: la tira scrollea horizontalmente y desde
+                sm vuelve a ser una grilla pareja. */}
+            <TabsList className="flex w-full justify-start overflow-x-auto [scrollbar-width:none] sm:grid sm:grid-cols-4 [&::-webkit-scrollbar]:hidden">
               <TabsTrigger value="banners">Hero Banners</TabsTrigger>
               <TabsTrigger value="announcements">Cinta superior</TabsTrigger>
               <TabsTrigger value="coupons">Cupones</TabsTrigger>

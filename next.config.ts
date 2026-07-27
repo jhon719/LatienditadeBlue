@@ -14,6 +14,10 @@ const csp = [
   "img-src 'self' data: blob: https://res.cloudinary.com https://images.unsplash.com",
   "font-src 'self' data: https://fonts.gstatic.com",
   `connect-src 'self'${isDev ? " ws: wss:" : ""}`,
+  // Mapas embebidos de las tiendas físicas (StoreLocations). Sin esta línea
+  // frame-src hereda de default-src 'self' y el iframe queda bloqueado.
+  // Se limita a los dominios de Google Maps: no habilita iframes de terceros.
+  "frame-src 'self' https://www.google.com https://maps.google.com",
   "frame-ancestors 'none'",
   "object-src 'none'",
   "base-uri 'self'",

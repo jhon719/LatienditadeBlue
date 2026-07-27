@@ -21,6 +21,7 @@ import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
 import { Product } from "@/types"
 import { useCartStore } from "@/stores/cart-store"
+import { STORE_WHATSAPP } from "@/lib/social"
 
 interface ProductDetailProps {
   product: Product
@@ -43,7 +44,6 @@ export function ProductDetail({ product }: ProductDetailProps) {
   const unitPrice = product.salePrice ?? product.price
   const subtotal = unitPrice * quantity
 
-  const whatsappPhone = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER ?? "51997763962"
   const whatsappMessage = encodeURIComponent(
     `¡Hola! Tengo una duda sobre la figura *${product.name}*. ¿Me ayudas? ✨`
   )
@@ -283,7 +283,7 @@ export function ProductDetail({ product }: ProductDetailProps) {
         )}
 
         <a
-          href={`https://wa.me/${whatsappPhone}?text=${whatsappMessage}`}
+          href={`https://wa.me/${STORE_WHATSAPP}?text=${whatsappMessage}`}
           target="_blank"
           rel="noopener noreferrer"
           className="inline-flex items-center justify-center gap-2 rounded-2xl border border-[#25D366]/40 bg-[#25D366]/10 px-4 py-2.5 text-sm font-bold text-[#1E7E34] transition-colors hover:bg-[#25D366]/20"

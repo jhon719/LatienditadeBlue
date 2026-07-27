@@ -394,7 +394,8 @@ export default function LogisticsPage() {
       </div>
 
       <Tabs defaultValue="separations">
-        <TabsList className="grid w-full max-w-3xl grid-cols-2 sm:grid-cols-4">
+        {/* h-9 fijo impide envolver a 2 filas en móvil: se scrollea */}
+        <TabsList className="flex w-full max-w-3xl justify-start overflow-x-auto [scrollbar-width:none] sm:grid sm:grid-cols-4 [&::-webkit-scrollbar]:hidden">
           <TabsTrigger value="separations">Separaciones</TabsTrigger>
           <TabsTrigger value="batches">Lotes en tránsito</TabsTrigger>
           <TabsTrigger value="acquisitions">Adquisiciones (costos)</TabsTrigger>

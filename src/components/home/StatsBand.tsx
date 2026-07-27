@@ -23,17 +23,19 @@ export function StatsBand({
   ]
 
   return (
-    <section className="blue-container py-6">
-      <div className="grid grid-cols-2 gap-3 rounded-3xl bg-gradient-to-r from-[#142F5C] to-[#4A80BE] p-5 text-white sm:grid-cols-4 sm:gap-4 sm:p-6">
+    <section className="blue-container py-5 sm:py-6">
+      <div className="grid grid-cols-2 gap-3 rounded-3xl bg-gradient-to-r from-[#142F5C] to-[#4A80BE] p-4 text-white sm:grid-cols-4 sm:gap-4 sm:p-6">
         {stats.map(({ icon: Icon, value, suffix, label }) => (
-          <div key={label} className="flex flex-col items-center gap-1 text-center">
-            <Icon className="h-5 w-5 text-[#F5B400]" />
+          <div key={label} className="flex flex-col items-center gap-0.5 text-center sm:gap-1">
+            <Icon className="h-4 w-4 text-[#F5B400] sm:h-5 sm:w-5" />
             <CountUp
               value={value}
               suffix={suffix ?? ""}
-              className="font-display text-4xl leading-none sm:text-5xl"
+              className="font-display text-3xl leading-none sm:text-5xl"
             />
-            <span className="text-xs font-medium text-white/80">{label}</span>
+            <span className="text-[11px] font-medium leading-tight text-white/80 sm:text-xs">
+              {label}
+            </span>
           </div>
         ))}
       </div>

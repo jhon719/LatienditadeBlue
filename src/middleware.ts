@@ -12,11 +12,16 @@ const adminRoutes = ["/admin"]
 // Routes only for guests (not logged in)
 const guestRoutes = ["/login", "/register"]
 
+// Páginas legales que deben poder leerse aunque el usuario todavía no haya
+// aceptado los Términos (si no, no podría leerlos antes de aceptar)
+const legalReadingRoutes = ["/terms", "/privacy", "/returns"]
+
 export default auth((req) => {
   const { nextUrl } = req
   const isLoggedIn = !!req.auth
   const isAdmin = req.auth?.user?.role === "ADMIN"
   const mustChangePassword = req.auth?.user?.mustChangePassword === true
+  const hasAcceptedTerms = req.auth?.user?.hasAcceptedTerms === true
 
   // Cambio forzado de contraseña (bóveda 02.03.01): bloquear navegación
   // hasta definir una nueva clave, excepto la propia página de reset
@@ -24,6 +29,27 @@ export default auth((req) => {
     return NextResponse.redirect(new URL("/forced-reset", nextUrl))
   }
   if (isLoggedIn && !mustChangePassword && nextUrl.pathname === "/forced-reset") {
+    return NextResponse.redirect(new URL("/", nextUrl))
+  }
+
+  // Aceptación de Términos y Condiciones (bóveda 07.01): recuerda una sola
+  // vez, al registrarse (normal o Google) o al retomar una sesión antigua,
+  // antes de dejar hacer nada más (incluida una separación/preventa).
+  const isLegalReadingRoute = legalReadingRoutes.some((route) =>
+    nextUrl.pathname.startsWith(route)
+  )
+  if (
+    isLoggedIn &&
+    !mustChangePassword &&
+    !hasAcceptedTerms &&
+    nextUrl.pathname !== "/accept-terms" &&
+    !isLegalReadingRoute
+  ) {
+    const acceptUrl = new URL("/accept-terms", nextUrl)
+    acceptUrl.searchParams.set("callbackUrl", nextUrl.pathname)
+    return NextResponse.redirect(acceptUrl)
+  }
+  if (isLoggedIn && hasAcceptedTerms && nextUrl.pathname === "/accept-terms") {
     return NextResponse.redirect(new URL("/", nextUrl))
   }
 

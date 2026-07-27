@@ -12,15 +12,23 @@ export function LinesSection({ lines }: { lines: Line[] }) {
   if (active.length === 0) return null
 
   return (
-    <section className="bg-[#EAF0F6] py-12 dark:bg-secondary/40">
+    <section className="bg-[#EAF0F6] py-10 sm:py-14 dark:bg-secondary/40">
       <div className="blue-container">
-        <div className="mb-7">
-          <p className="text-sm font-extrabold uppercase text-[#4A80BE]">
-            Busca por colección
-          </p>
-          <h2 className="font-display text-5xl leading-none">
-            <GradientText>Líneas de figuras</GradientText>
-          </h2>
+        <div className="mb-6 flex items-end justify-between gap-4 sm:mb-7">
+          <div className="min-w-0">
+            <p className="text-xs font-extrabold uppercase text-[#4A80BE] sm:text-sm">
+              Busca por colección
+            </p>
+            <h2 className="font-display text-4xl leading-none sm:text-5xl">
+              <GradientText>Líneas de figuras</GradientText>
+            </h2>
+          </div>
+          <Link
+            href="/products"
+            className="shrink-0 rounded-full bg-white px-4 py-2 text-xs font-extrabold text-[#142F5C] transition hover:bg-[#4A80BE] hover:text-white sm:text-sm dark:bg-card dark:text-foreground"
+          >
+            Ver mas
+          </Link>
         </div>
         <div className="flex gap-5 overflow-x-auto overflow-y-hidden pt-1 pb-3">
           {active.map((line, index) => (

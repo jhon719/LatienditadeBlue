@@ -3,7 +3,7 @@ import { auth } from "@/lib/auth"
 import { releaseAbandonedStock } from "@/lib/release-stock"
 
 // Cron de liberación de inventario "secuestrado" (bóveda 06.01 §4).
-// En Vercel: configurar un Cron Job apuntando aquí con el header
+// Programar un cron externo (VPS/CI) apuntando aquí con el header
 // Authorization: Bearer ${CRON_SECRET}. También lo puede invocar el ADMIN.
 export async function GET(request: NextRequest) {
   const cronSecret = process.env.CRON_SECRET

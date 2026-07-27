@@ -17,20 +17,28 @@ export function CategoryTrends({ categories }: { categories: Category[] }) {
   if (sorted.length === 0) return null
 
   return (
-    <section className="blue-container py-8">
-      <div className="mb-5 flex items-center gap-2">
-        <h2 className="font-display text-5xl leading-none">
-          <GradientText>Tendencias!</GradientText>
-        </h2>
-        <Flame className="h-8 w-8 fill-[#F5B400] text-[#F5B400]" />
+    <section className="blue-container py-10 sm:py-14">
+      <div className="mb-5 flex items-center justify-between gap-2">
+        <div className="flex min-w-0 items-center gap-2">
+          <h2 className="font-display text-4xl leading-none sm:text-5xl">
+            <GradientText>Tendencias!</GradientText>
+          </h2>
+          <Flame className="h-6 w-6 shrink-0 fill-[#F5B400] text-[#F5B400] sm:h-8 sm:w-8" />
+        </div>
+        <Link
+          href="/products"
+          className="shrink-0 rounded-full bg-secondary px-4 py-2 text-xs font-extrabold text-foreground transition hover:bg-[#4A80BE] hover:text-white sm:text-sm"
+        >
+          Ver mas
+        </Link>
       </div>
 
-      <div className="flex snap-x gap-4 overflow-x-auto overflow-y-hidden pt-1 pb-4">
+      <div className="flex snap-x gap-3 overflow-x-auto overflow-y-hidden pt-1 pb-4 sm:gap-4">
         {sorted.map((cat, index) => (
           <AnimatedContent key={cat.id} delay={index * 55} className="shrink-0 snap-start">
             <Link
               href={`/products?category=${cat.slug}`}
-              className="group relative block h-32 w-64 overflow-hidden rounded-[1.5rem] border border-border bg-secondary shadow-sm"
+              className="group relative block h-28 w-52 overflow-hidden rounded-[1.5rem] border border-border bg-secondary shadow-sm sm:h-32 sm:w-64"
             >
               {cat.isTrending && (
                 <span className="absolute left-3 top-3 z-10 animate-pulse rounded-full bg-[#CCFF00] px-2.5 py-1 text-[9px] font-black uppercase tracking-widest text-black shadow-md">
@@ -42,7 +50,7 @@ export function CategoryTrends({ categories }: { categories: Category[] }) {
                 src={cat.imageUrl ?? "/Imagenes/Mascota BLUE.png"}
                 alt={cat.name}
                 fill
-                sizes="256px"
+                sizes="(max-width: 640px) 208px, 256px"
                 className="object-cover transition-transform duration-300 group-hover:scale-105"
                 onError={(e) => {
                   const target = e.target as HTMLImageElement

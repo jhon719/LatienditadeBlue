@@ -9,12 +9,12 @@ export function ReviewsSection({ reviews }: { reviews: ReviewItem[] }) {
   if (reviews.length === 0) return null
 
   return (
-    <section className="blue-container py-12">
+    <section className="blue-container py-10 sm:py-14">
       <div className="mb-7">
         <p className="text-sm font-extrabold uppercase text-[#4A80BE]">
           Confianza coleccionista
         </p>
-        <h2 className="font-display text-5xl leading-none">
+        <h2 className="font-display text-4xl leading-none sm:text-5xl">
           <GradientText>Reseñas de la comunidad</GradientText>
         </h2>
       </div>

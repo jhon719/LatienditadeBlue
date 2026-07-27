@@ -3,39 +3,11 @@
 import Image from "next/image"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import {
-  LayoutDashboard,
-  Package,
-  Inbox,
-  ClipboardList,
-  Megaphone,
-  Tags,
-  Users,
-  Settings,
-  Store,
-  Boxes,
-  FileText,
-  MessageSquare,
-  Sticker,
-} from "lucide-react"
+import { Store } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { NotificationBell } from "./NotificationBell"
-
-const navigation = [
-  { name: "Dashboard", href: "/admin", icon: LayoutDashboard },
-  { name: "Bandeja POS", href: "/admin/manual-payments", icon: Inbox },
-  { name: "Órdenes", href: "/admin/orders", icon: ClipboardList },
-  { name: "Logística", href: "/admin/logistics", icon: Boxes },
-  { name: "Productos", href: "/admin/products", icon: Package },
-  { name: "Campañas", href: "/admin/campaigns", icon: Megaphone },
-  { name: "Categorías y Líneas", href: "/admin/categories", icon: Tags },
-  { name: "Usuarios", href: "/admin/users", icon: Users },
-  { name: "Mensajes", href: "/admin/messages", icon: MessageSquare },
-  { name: "Stickers", href: "/admin/stickers", icon: Sticker },
-  { name: "Reportes", href: "/admin/reports", icon: FileText },
-  { name: "Configuración", href: "/admin/settings", icon: Settings },
-]
+import { adminNavigation, isAdminRouteActive } from "./admin-nav"
 
 export function AdminSidebar() {
   const pathname = usePathname()
@@ -63,28 +35,22 @@ export function AdminSidebar() {
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 space-y-1 p-4">
-        {navigation.map((item) => {
-          const isActive =
-            item.href === "/admin"
-              ? pathname === "/admin"
-              : pathname === item.href || pathname.startsWith(`${item.href}/`)
-          return (
-            <Link
-              key={item.name}
-              href={item.href}
-              className={cn(
-                "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
-                isActive
-                  ? "bg-primary text-primary-foreground"
-                  : "text-muted-foreground hover:bg-muted hover:text-foreground"
-              )}
-            >
-              <item.icon className="h-4 w-4" />
-              {item.name}
-            </Link>
-          )
-        })}
+      <nav className="flex-1 space-y-1 overflow-y-auto p-4">
+        {adminNavigation.map((item) => (
+          <Link
+            key={item.name}
+            href={item.href}
+            className={cn(
+              "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
+              isAdminRouteActive(pathname, item.href)
+                ? "bg-primary text-primary-foreground"
+                : "text-muted-foreground hover:bg-muted hover:text-foreground"
+            )}
+          >
+            <item.icon className="h-4 w-4 shrink-0" />
+            {item.name}
+          </Link>
+        ))}
       </nav>
 
       {/* Back to Store */}

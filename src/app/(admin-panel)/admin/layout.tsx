@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation"
 import { auth } from "@/lib/auth"
 import { AdminSidebar } from "@/components/admin/AdminSidebar"
+import { AdminMobileBar } from "@/components/admin/AdminMobileBar"
 
 export default async function AdminLayout({
   children,
@@ -19,7 +20,10 @@ export default async function AdminLayout({
     <div className="min-h-screen bg-muted/30">
       <AdminSidebar />
       <div className="lg:pl-64">
-        <main className="p-4 lg:p-6">{children}</main>
+        <AdminMobileBar />
+        {/* min-w-0 evita que una tabla ancha estire el layout y genere
+            scroll horizontal en toda la página */}
+        <main className="min-w-0 p-4 lg:p-6">{children}</main>
       </div>
     </div>
   )

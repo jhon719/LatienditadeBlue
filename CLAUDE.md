@@ -60,7 +60,7 @@ src/components/
 
 - **Path alias**: `@/*` maps to `./src/*`
 - **Images**: remote patterns para `images.unsplash.com` y `res.cloudinary.com`
-- **Deploy**: build = `prisma generate && next build`; en Vercel configurar `DATABASE_URL` (Neon), `AUTH_SECRET`, Cloudinary (obligatorio en prod: el disco es efímero) y opcionalmente Google/Mercado Pago
+- **Deploy**: build = `prisma generate && next build`; despliegue en VPS propio (Docker, GitHub Actions → GHCR → SSH). Configurar en producción `DATABASE_URL`, `AUTH_SECRET`, Cloudinary (obligatorio en prod: el disco es efímero) y opcionalmente Google/Mercado Pago
 
 ## Project Plan
 

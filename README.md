@@ -107,7 +107,7 @@ Crea un archivo `.env` en la raíz. Solo `DATABASE_URL` y `AUTH_SECRET` son obli
 | `CLOUDINARY_CLOUD_NAME` / `CLOUDINARY_API_KEY` / `CLOUDINARY_API_SECRET` | Opcional | Subida de imágenes a la nube (obligatorio en prod: el disco es efímero) |
 | `RESEND_API_KEY` / `EMAIL_FROM` | Opcional | Correos transaccionales |
 | `ADMIN_NOTIFICATION_EMAIL` | Opcional | Correo del admin para avisos de pagos/abonos (por defecto `frizio.trabajo@gmail.com`) |
-| `CRON_SECRET` | Opcional | Protege el endpoint de liberación de stock (Vercel Cron) |
+| `CRON_SECRET` | Opcional | Protege el endpoint de liberación de stock (cron externo) |
 | `STOCK_RELEASE_MINUTES` | Opcional | Minutos para cancelar órdenes de pasarela colgadas (por defecto 60) |
 | `SEED_ADMIN_PASSWORD` | Opcional (seed) | Contraseña del usuario ADMIN sembrado; si falta, se genera aleatoria |
 | `SEED_DEMO_PASSWORD` | Opcional (seed) | Contraseña del cliente demo sembrado; si falta, se genera aleatoria |
@@ -158,7 +158,7 @@ Modelo relacional en `prisma/schema.prisma`: `User`, `Account`, `Category`, `Lin
 
 ## Despliegue
 
-Build: `prisma generate && next build`. En Vercel configurar `DATABASE_URL` (Neon), `AUTH_SECRET`, credenciales de Cloudinary (obligatorias en producción) y, opcionalmente, Google y Mercado Pago. El webhook de acreditación de Mercado Pago requiere una URL pública (no funciona en `localhost`).
+Build: `prisma generate && next build`. Despliegue en VPS propio (Docker vía GitHub Actions → GHCR → SSH). Configurar en el entorno de producción `DATABASE_URL`, `AUTH_SECRET`, credenciales de Cloudinary (obligatorias en producción) y, opcionalmente, Google y Mercado Pago. El webhook de acreditación de Mercado Pago requiere una URL pública (no funciona en `localhost`).
 
 ## Documentación
 

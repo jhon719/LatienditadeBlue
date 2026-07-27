@@ -1,5 +1,6 @@
 import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
+import { storeWhatsappUrl } from "@/lib/social"
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
@@ -26,8 +27,8 @@ export function maskSensitive(value: string | null | undefined): string {
   return `${value.slice(0, 2)}***${value.slice(-3)}`
 }
 
-// Enlace de coordinación por WhatsApp (bóveda 03.03)
+// Enlace de coordinación por WhatsApp (bóveda 03.03).
+// Delega en storeWhatsappUrl para no duplicar el número de la tienda.
 export function whatsappLink(message: string): string {
-  const phone = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER ?? "51997763962"
-  return `https://wa.me/${phone}?text=${encodeURIComponent(message)}`
+  return storeWhatsappUrl(message)
 }

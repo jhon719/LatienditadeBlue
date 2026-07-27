@@ -3,6 +3,7 @@
 import { useState } from "react"
 import Image from "next/image"
 import { X } from "lucide-react"
+import { storeWhatsappUrl } from "@/lib/social"
 
 // Burbuja de bienvenida de Bluet (bóveda 02.01 §4): mascota flotante
 // que invita a coordinar por WhatsApp
@@ -11,8 +12,7 @@ export function BluetBubble() {
 
   if (dismissed) return null
 
-  const phone = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER ?? "51997763962"
-  const message = encodeURIComponent(
+  const chatUrl = storeWhatsappUrl(
     "¡Hola! Estoy buscando una figura en especial, ¿me ayudas? ✨"
   )
 
@@ -38,7 +38,7 @@ export function BluetBubble() {
         <p className="text-xs font-semibold leading-snug text-foreground">
           ¡Hola! ¿Buscas alguna figura en especial?{" "}
           <a
-            href={`https://wa.me/${phone}?text=${message}`}
+            href={chatUrl}
             target="_blank"
             rel="noopener noreferrer"
             className="text-primary underline"
