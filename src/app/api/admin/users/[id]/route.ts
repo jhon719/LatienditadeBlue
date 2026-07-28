@@ -9,6 +9,7 @@ type Params = Promise<{ id: string }>
 const crmSchema = z.object({
   loyaltyTier: z.enum(["NUEVO", "FRECUENTE", "VIP", "EN_RIESGO"]).optional(),
   adminNotes: z.string().max(2000).nullable().optional(),
+  role: z.enum(["ADMIN", "CUSTOMER"]).optional(),
 })
 
 export async function PATCH(request: NextRequest, { params }: { params: Params }) {
@@ -26,7 +27,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Params }
     const user = await prisma.user.update({
       where: { id },
       data: parsed.data,
-      select: { id: true, loyaltyTier: true, adminNotes: true },
+      select: { id: true, loyaltyTier: true, adminNotes: true, role: true },
     })
 
     return NextResponse.json(user)

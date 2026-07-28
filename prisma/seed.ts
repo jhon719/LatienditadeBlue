@@ -58,18 +58,94 @@ function scanImageFolder(dir: string, publicPrefix: string) {
     })
 }
 
+// Arma el pg_dump real a partir de DATABASE_URL (host/usuario/base), para que
+// el mensaje de rescate sea copiable tal cual sea cual sea el entorno. La
+// contraseña NUNCA se imprime: pg_dump la pide de forma interactiva si hace
+// falta, así no queda ni en la terminal ni en logs de Docker/CI.
+function comandoRespaldo(): string {
+  try {
+    const u = new URL(process.env.DATABASE_URL ?? "")
+    const host = u.hostname
+    const port = u.port || "5432"
+    const user = decodeURIComponent(u.username)
+    const db = u.pathname.replace(/^\//, "")
+    return `pg_dump -h ${host} -p ${port} -U ${user} -d ${db} > respaldo.sql`
+  } catch {
+    return "pg_dump -h <host> -U <usuario> -d <base> > respaldo.sql"
+  }
+}
+
+// El seed arranca borrando TODA la base. Eso es lo correcto en un entorno de
+// desarrollo recién clonado, pero contra una base con operación real destruye
+// contabilidad, lotes y clientes sin posibilidad de recuperarlos: no hay
+// backup automático y PostgreSQL no tiene deshacer. Antes de borrar nada se
+// comprueba si hay datos que el seed no sabría regenerar.
+async function abortarSiHayDatosReales() {
+  const [adquisiciones, lotes, ordenes, reservas, usuariosReales] = await Promise.all([
+    prisma.acquisition.count(),
+    prisma.importBatch.count(),
+    prisma.order.count(),
+    prisma.preorderReservation.count(),
+    // Los dos usuarios del propio seed no cuentan: cualquier otro sí.
+    prisma.user.count({
+      where: { email: { notIn: ["admin@latienditadeblue.com", "cliente@demo.com"] } },
+    }),
+  ])
+
+  const hallazgos = [
+    ["adquisiciones", adquisiciones],
+    ["lotes de importación", lotes],
+    ["órdenes", ordenes],
+    ["reservas de preventa", reservas],
+    ["usuarios ajenos al seed", usuariosReales],
+  ].filter(([, n]) => (n as number) > 0)
+
+  if (hallazgos.length === 0) return
+
+  console.error("\n⛔ El seed se detuvo: esta base tiene datos reales.\n")
+  for (const [etiqueta, n] of hallazgos) {
+    console.error(`   ${n} ${etiqueta}`)
+  }
+  console.error(
+    "\nCorrerlo los borraría y el seed no sabe regenerarlos.\n" +
+      "Si de verdad quieres reiniciar la base, haz primero un respaldo:\n" +
+      `   ${comandoRespaldo()}\n` +
+      "   (pedirá la contraseña de forma interactiva)\n" +
+      "y luego repite el comando con SEED_FORCE=1.\n"
+  )
+  process.exit(1)
+}
+
 async function main() {
   console.log("Seeding La Tiendita de Blue...")
 
+  if (process.env.SEED_FORCE === "1") {
+    console.warn("⚠️  SEED_FORCE=1: se omite la comprobación de datos reales.")
+  } else {
+    await abortarSiHayDatosReales()
+  }
+
   // Limpiar datos existentes (orden por dependencias)
   await prisma.paymentProof.deleteMany()
+  await prisma.preorderReservation.deleteMany()
+  await prisma.separationPayment.deleteMany()
   await prisma.orderItem.deleteMany()
   await prisma.order.deleteMany()
   await prisma.review.deleteMany()
   await prisma.product.deleteMany()
+  await prisma.discountRule.deleteMany()
   await prisma.category.deleteMany()
   await prisma.line.deleteMany()
   await prisma.brand.deleteMany()
+  await prisma.importBatchItem.deleteMany()
+  await prisma.importBatch.deleteMany()
+  await prisma.announcement.deleteMany()
+  await prisma.banner.deleteMany()
+  await prisma.coupon.deleteMany()
+  await prisma.message.deleteMany()
+  await prisma.sticker.deleteMany()
+  await prisma.acquisition.deleteMany()
+  await prisma.shalomContact.deleteMany()
   await prisma.account.deleteMany()
   await prisma.user.deleteMany()
 

@@ -46,3 +46,7 @@ next-env.d.ts
 .graphify/needs_update
 .graphify/cache/
 
+# obsidian: plugins locales pueden guardar API keys / claves privadas en su
+# data.json (ej. obsidian-local-rest-api). Nunca deben entrar al repo.
+.graphify/obsidian/.obsidian/plugins/
+
