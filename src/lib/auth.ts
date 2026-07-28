@@ -85,31 +85,34 @@ if (isGoogleEnabled()) {
   )
 }
 
+// El modelo User es propio (username único obligatorio; sin name/emailVerified/
+// image), así que el createUser por defecto del PrismaAdapter no encaja y hay
+// que sustituirlo. Crear el usuario aquí y no en el callback signIn es lo que
+// permite que el adapter siga con linkAccount() y guarde la fila en accounts:
+// signIn corre ANTES del adapter, así que si el usuario ya existe cuando el
+// adapter lo busca por email sin cuenta vinculada, aborta con
+// OAuthAccountNotLinked y el login por Google queda roto para siempre.
+const prismaAdapter = PrismaAdapter(prisma)
+const adapter: typeof prismaAdapter = {
+  ...prismaAdapter,
+  async createUser({ email }) {
+    const user = await prisma.user.create({
+      data: {
+        email: email!,
+        username: await generateUsername(email!),
+        passwordHash: null,
+        avatarFileName: null, // Fallback automático a Mascota BLUE.png
+        justRegistered: true, // Fuerza /accept-terms en primer login post-registro
+      },
+    })
+    return { ...user, emailVerified: null }
+  },
+}
+
 export const { handlers, signIn, signOut, auth } = NextAuth({
-  adapter: PrismaAdapter(prisma),
+  adapter,
   providers,
   callbacks: {
-    async signIn({ user, account }) {
-      // Al entrar con Google por primera vez, crear el usuario con username generado
-      if (account?.provider === "google" && user.email) {
-        const existing = await prisma.user.findUnique({
-          where: { email: user.email },
-        })
-        if (!existing) {
-          const username = await generateUsername(user.email)
-          await prisma.user.create({
-            data: {
-              email: user.email,
-              username,
-              passwordHash: null,
-              avatarFileName: null, // Fallback automático a Mascota BLUE.png
-              justRegistered: true, // Fuerza /accept-terms en primer login post-registro
-            },
-          })
-        }
-      }
-      return true
-    },
     async jwt({ token, user, account }) {
       if (user) {
         // En Google el id del token es el sub de Google; usar siempre el id de nuestra DB

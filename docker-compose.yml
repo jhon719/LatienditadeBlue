@@ -36,6 +36,11 @@ services:
       # La app corre detrás del proxy de red_global_web: sin esto NextAuth v5
       # rechaza el Host reenviado y rompe el callback de login.
       AUTH_TRUST_HOST: "true"
+      # trustHost no alcanza para TODAS las rutas de NextAuth v5 beta detrás de
+      # un proxy: /api/auth/signout construye su propio redirect y, sin
+      # AUTH_URL explicito, cae de vuelta al bind interno (HOSTNAME=0.0.0.0
+      # definido en el Dockerfile), mandando al navegador a https://0.0.0.0:3000.
+      AUTH_URL: ${AUTH_URL:?define AUTH_URL en el .env del servidor (ej. https://latienditadeblue.org.pe)}
       NEXT_PUBLIC_APP_URL: ${NEXT_PUBLIC_APP_URL}
       NEXT_PUBLIC_WHATSAPP_NUMBER: ${NEXT_PUBLIC_WHATSAPP_NUMBER}
       NEXT_TELEMETRY_DISABLED: "1"
