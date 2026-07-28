@@ -27,6 +27,7 @@ export function ImageUpload({
 }: ImageUploadProps) {
   const [uploading, setUploading] = useState(false)
   const [dragActive, setDragActive] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   const handleUpload = useCallback(
     async (files: FileList | null) => {
@@ -37,6 +38,7 @@ export function ImageUpload({
 
       const filesToUpload = Array.from(files).slice(0, remainingSlots)
       setUploading(true)
+      setError(null)
 
       try {
         const uploadPromises = filesToUpload.map(async (file) => {
@@ -50,8 +52,8 @@ export function ImageUpload({
           })
 
           if (!response.ok) {
-            const error = await response.json()
-            throw new Error(error.error || "Error al subir imagen")
+            const result = await response.json().catch(() => null)
+            throw new Error(result?.error || `Error al subir imagen (HTTP ${response.status})`)
           }
 
           return response.json()
@@ -59,8 +61,9 @@ export function ImageUpload({
 
         const results = await Promise.all(uploadPromises)
         onChange([...value, ...results])
-      } catch (error) {
-        console.error("Error uploading images:", error)
+      } catch (err) {
+        console.error("Error uploading images:", err)
+        setError(err instanceof Error ? err.message : "Error al subir la imagen")
       } finally {
         setUploading(false)
       }
@@ -110,6 +113,12 @@ export function ImageUpload({
 
   return (
     <div className="space-y-4">
+      {error && (
+        <div className="rounded-md bg-destructive/15 p-3 text-sm text-destructive">
+          {error}
+        </div>
+      )}
+
       {/* Preview de imágenes subidas */}
       {value.length > 0 && (
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
