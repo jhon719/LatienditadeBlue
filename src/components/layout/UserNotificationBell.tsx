@@ -63,7 +63,9 @@ export function UserNotificationBell() {
   }, [refreshKey])
 
   return (
-    <DropdownMenu>
+    // modal={false} por el mismo motivo que en Header: el scroll-lock de Radix
+    // rompe el `sticky` del header (ver comentario allí).
+    <DropdownMenu modal={false}>
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" size="icon" className="relative rounded-full">
           <Bell className="h-5 w-5" />

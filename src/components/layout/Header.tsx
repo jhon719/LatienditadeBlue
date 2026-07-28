@@ -117,7 +117,12 @@ export function Header() {
             </Link>
 
             {mounted && status !== "loading" && session ? (
-              <DropdownMenu>
+              // modal={false}: el menú modal de Radix bloquea el scroll poniendo
+              // `overflow: hidden` inline en el body, lo que anula el
+              // `overflow-x: clip` de globals.css y lo convierte en contenedor
+              // de scroll. Eso rompe el `sticky` de este header (se esconde al
+              // abrir el menú) y el relayout hace que el menú se cierre solo.
+              <DropdownMenu modal={false}>
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" className="group hidden h-auto items-center gap-2.5 rounded-full py-1.5 pl-1.5 pr-4 sm:flex">
                     <span className="flex h-10 w-10 shrink-0 rounded-full ring-2 ring-transparent transition-all duration-300 group-hover:scale-105 group-hover:ring-[#F5B400]">
