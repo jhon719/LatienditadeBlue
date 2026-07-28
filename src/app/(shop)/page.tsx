@@ -6,12 +6,14 @@ import {
   transformReview,
 } from "@/lib/transformers"
 import { getActiveDiscountRules, getActiveBanners } from "@/lib/campaigns"
+import { getRandomActiveProductIds, fetchProductsByIds } from "@/lib/home-products"
 import { HeroBanner } from "@/components/home/HeroBanner"
 import { QuickAccessPanel } from "@/components/home/QuickAccessPanel"
 import { CategoryTrends } from "@/components/home/CategoryTrends"
 import { BenefitsMarquee } from "@/components/home/BenefitsMarquee"
 import { StatsBand } from "@/components/home/StatsBand"
 import { FeaturedProducts } from "@/components/home/FeaturedProducts"
+import { CategoryShowcase } from "@/components/home/CategoryShowcase"
 import { LinesSection } from "@/components/home/LinesSection"
 import { ReviewsSection } from "@/components/home/ReviewsSection"
 import { FollowUs } from "@/components/home/FollowUs"
@@ -42,7 +44,7 @@ export default async function HomePage() {
         brand: true,
         reviews: { select: { rating: true } },
       },
-      take: 8,
+      take: 5,
       orderBy: { createdAt: "desc" },
     }),
     prisma.review.findMany({
@@ -52,12 +54,38 @@ export default async function HomePage() {
     }),
   ])
 
-  const [rules, banners, productCount, reviewCount] = await Promise.all([
+  // Solo animes marcados como Tendencia desde admin/categorías tienen su
+  // propia sección con productos aleatorios en el home.
+  const trendingCategories = categories.filter((c) => c.isTrending)
+
+  const [
+    rules,
+    banners,
+    productCount,
+    reviewCount,
+    catalogPreviewIds,
+    categorySectionIdLists,
+  ] = await Promise.all([
     getActiveDiscountRules(),
     getActiveBanners(),
     prisma.product.count({ where: { isActive: true } }),
     prisma.review.count(),
+    getRandomActiveProductIds(14),
+    Promise.all(trendingCategories.map((c) => getRandomActiveProductIds(8, c.id))),
   ])
+
+  const [catalogPreviewRows, ...categoryProductRows] = await Promise.all([
+    fetchProductsByIds(catalogPreviewIds),
+    ...categorySectionIdLists.map((ids) => fetchProductsByIds(ids)),
+  ])
+
+  const catalogPreview = catalogPreviewRows.map((p) => transformProduct(p, rules))
+  const categorySections = trendingCategories
+    .map((cat, index) => ({
+      category: transformCategory(cat),
+      products: categoryProductRows[index].map((p) => transformProduct(p, rules)),
+    }))
+    .filter((section) => section.products.length > 0)
 
   return (
     <>
@@ -70,6 +98,7 @@ export default async function HomePage() {
           ctaLabel: b.ctaLabel ?? undefined,
           ctaUrl: b.ctaUrl ?? undefined,
         }))}
+        featuredProducts={featured.map((p) => transformProduct(p, rules))}
       />
       {/* QuickAccessPanel se monta sobre el hero (-mt-8), así que la tira de
           beneficios va después para no quedar tapada. */}
@@ -83,7 +112,8 @@ export default async function HomePage() {
         lines={lines.length}
         reviews={reviewCount}
       />
-      <FeaturedProducts products={featured.map((p) => transformProduct(p, rules))} />
+      <FeaturedProducts products={catalogPreview} />
+      <CategoryShowcase sections={categorySections} />
       <LinesSection lines={lines.map(transformLine)} />
       <ReviewsSection reviews={reviews.map((r) => transformReview(r, true))} />
       <StoreLocations />

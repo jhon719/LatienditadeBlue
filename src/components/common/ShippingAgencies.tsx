@@ -1,24 +1,20 @@
 import Image from "next/image"
-import { ShieldCheck } from "lucide-react"
+import { Truck } from "lucide-react"
 import { cn } from "@/lib/utils"
 
-// Logos reales (carpeta "logos de pagos"). Cada chip es de tamaño fijo con
-// object-contain para que todos midan igual sin importar la resolucion o
-// proporcion original del archivo que se suba.
-const PAYMENT_LOGOS = [
-  { name: "Visa", src: "/Imagenes/Pagos/logos de pagos/VISA.svg" },
-  { name: "Mastercard", src: "/Imagenes/Pagos/logos de pagos/MASTERCARD.svg" },
-  { name: "American Express", src: "/Imagenes/Pagos/logos de pagos/AMERICAN EXPRESS.svg" },
-  { name: "Diners Club", src: "/Imagenes/Pagos/logos de pagos/DINERS CLUB.svg" },
-  { name: "Yape", src: "/Imagenes/Pagos/logos de pagos/YAPE.svg" },
-  { name: "Plin", src: "/Imagenes/Pagos/logos de pagos/PLIN.png" },
+// Agencias de envio a provincia (bóveda: NATIONAL_COURIER). Mismo patrón de
+// chip fijo + object-contain que PaymentMethods para que ambos logos midan
+// igual sin importar la resolucion original del archivo.
+const SHIPPING_LOGOS = [
+  { name: "Shalom", src: "/Imagenes/Pagos/shalom.svg" },
+  { name: "Olva", src: "/Imagenes/Pagos/OLVA.jpg" },
 ]
 
 /**
- * Tira de metodos de pago aceptados.
+ * Tira de agencias de envio a provincia.
  * `variant="dark"` para fondos oscuros (footer), `"light"` para el resto.
  */
-export function PaymentMethods({
+export function ShippingAgencies({
   variant = "light",
   className,
 }: {
@@ -35,12 +31,12 @@ export function PaymentMethods({
           isDark ? "text-white/70" : "text-muted-foreground"
         )}
       >
-        <ShieldCheck className="h-4 w-4 shrink-0 text-[#F5B400]" />
-        Metodos de pago aceptados
+        <Truck className="h-4 w-4 shrink-0 text-[#F5B400]" />
+        Envios a provincia por agencia
       </p>
 
       <ul className="mt-3 flex flex-wrap gap-2">
-        {PAYMENT_LOGOS.map((logo) => (
+        {SHIPPING_LOGOS.map((logo) => (
           <li
             key={logo.name}
             title={logo.name}

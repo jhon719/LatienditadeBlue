@@ -15,10 +15,10 @@ export function FeaturedProducts({ products }: { products: Product[] }) {
       <div className="mb-6 flex items-end justify-between gap-4 sm:mb-7">
         <div className="min-w-0">
           <p className="text-xs font-extrabold uppercase text-[#4A80BE] sm:text-sm">
-            Novedades seleccionadas
+            Directo del catalogo
           </p>
           <h2 className="font-display text-4xl leading-none sm:text-5xl">
-            <GradientText>Figuras destacadas</GradientText>
+            <GradientText>Explora la tienda</GradientText>
           </h2>
         </div>
         {/* En escritorio el "Ver mas" va junto al título */}
@@ -29,7 +29,7 @@ export function FeaturedProducts({ products }: { products: Product[] }) {
           Ver mas <ArrowRight className="h-4 w-4" />
         </Link>
       </div>
-      <div className="grid grid-cols-2 gap-3 sm:gap-5 md:grid-cols-3 lg:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 md:grid-cols-4 lg:grid-cols-5">
         {products.map((product, index) => (
           <AnimatedContent key={product.id} delay={index * 55}>
             <ProductCard product={product} />

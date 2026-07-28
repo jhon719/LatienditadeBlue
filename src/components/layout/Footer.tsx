@@ -4,6 +4,8 @@ import { Mail, MapPin, Phone } from "lucide-react"
 import { Separator } from "@/components/ui/separator"
 import { SocialIcon } from "@/components/common/SocialIcon"
 import { PaymentMethods } from "@/components/common/PaymentMethods"
+import { ShippingAgencies } from "@/components/common/ShippingAgencies"
+import { HowToBuyLink } from "@/components/common/HowToBuyLink"
 import {
   SOCIAL_LINKS,
   STORE_EMAIL,
@@ -59,6 +61,7 @@ export function Footer() {
               <li><Link href="/products?status=preventa" className="hover:text-[#F5B400]">Preventa</Link></li>
               <li><Link href="/products?sortBy=newest" className="hover:text-[#F5B400]">Recien llegados</Link></li>
               <li><Link href="/products" className="hover:text-[#F5B400]">Todo el catalogo</Link></li>
+              <li><HowToBuyLink className="hover:text-[#F5B400]" /></li>
             </ul>
           </div>
           <div>
@@ -104,7 +107,10 @@ export function Footer() {
           </div>
         </div>
         <Separator className="my-8 bg-white/15" />
-        <PaymentMethods variant="dark" />
+        <div className="grid gap-6 sm:grid-cols-2">
+          <PaymentMethods variant="dark" />
+          <ShippingAgencies variant="dark" />
+        </div>
         <Separator className="my-6 bg-white/15" />
         <p className="text-sm text-white/60">&copy; {new Date().getFullYear()} La Tiendita de Blue. Todos los derechos reservados.</p>
       </div>

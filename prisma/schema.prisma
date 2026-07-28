@@ -34,9 +34,15 @@ enum ProductType {
 }
 
 enum ShippingType {
-  PICKUP           // Recojo en tienda
-  LOCAL_DELIVERY   // Motorizado Lima
+  PICKUP // Recojo en tienda
+  LOCAL_DELIVERY // Motorizado Lima
   NATIONAL_COURIER // Olva / Shalom a provincias
+}
+
+// Agencia de courier preferida del usuario para envíos a provincia
+enum ShippingAgency {
+  SHALOM
+  OLVA
 }
 
 enum ShippingStatus {
@@ -75,13 +81,13 @@ enum LoyaltyTier {
 
 // Máquina de estados de tiempo para campañas (bóveda 05.05 §3)
 enum CampaignStatus {
-  DRAFT     // Se está diseñando, invisible para clientes
-  ACTIVE    // Permanente hasta que el admin lo apague
+  DRAFT // Se está diseñando, invisible para clientes
+  ACTIVE // Permanente hasta que el admin lo apague
   SCHEDULED // Requiere validFrom / validUntil
 }
 
 enum DiscountType {
-  PERCENTAGE   // 15 → 15% de descuento
+  PERCENTAGE // 15 → 15% de descuento
   FIXED_AMOUNT // 20 → S/ 20 menos
 }
 
@@ -101,12 +107,13 @@ model User {
   username     String  @unique // Nombre público para reseñas
 
   // Datos privados (visibles solo por el propio usuario y el ADMIN)
-  firstName  String?
-  lastName   String?
-  dni        String?
-  phone      String?
-  address    String?
-  department String? // Departamento del Perú (alimenta el mapa de calor, bóveda 05.01)
+  firstName               String?
+  lastName                String?
+  dni                     String?
+  phone                   String?
+  address                 String? // Dirección de envío (para courier a provincia o motorizado en Lima)
+  department              String? // Departamento del Perú (alimenta el mapa de calor, bóveda 05.01)
+  preferredShippingAgency ShippingAgency? // Agencia preferida (Shalom/Olva) para NATIONAL_COURIER
 
   // URL de Cloudinary (latiendita/avatars) o archivo en public/Imagenes/avatar/
   avatarFileName     String?
@@ -274,7 +281,7 @@ model Product {
   line   Line?   @relation(fields: [lineId], references: [id])
 
   brandId String
-  brand   Brand @relation(fields: [brandId], references: [id])
+  brand   Brand  @relation(fields: [brandId], references: [id])
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -492,7 +499,7 @@ model Coupon {
 // Lotes de importación: stock en tránsito (aduanas), invisible para la venta
 enum BatchStatus {
   IN_TRANSIT // Comprado al proveedor, en camino
-  RECEIVED   // Llegó a almacén → stock inyectado automáticamente
+  RECEIVED // Llegó a almacén → stock inyectado automáticamente
 }
 
 model ImportBatch {
@@ -594,15 +601,15 @@ model ShalomContact {
 
 // Separaciones / Apartados con adelanto (deposit) y saldo por cobrar (bóveda 05.06 / 05.07)
 enum PreorderStatus {
-  PENDING   // Separación activa: saldo pendiente (stock o preventa en tránsito)
-  ARRIVED   // Preventa llegó a almacén: cobrando saldo final (dueDate activo, semáforo)
+  PENDING // Separación activa: saldo pendiente (stock o preventa en tránsito)
+  ARRIVED // Preventa llegó a almacén: cobrando saldo final (dueDate activo, semáforo)
   COMPLETED // Cliente pagó el 100% (PAGO_COMPLETADO)
   CANCELLED // Abandono/liberación: adelanto retenido, figura liberada al stock
 }
 
 // Tipo de separación: define la regla de plazos (bóveda 05.07 §3)
 enum SeparationKind {
-  STOCK    // Producto disponible: saldo a la quincena/fin de mes (~15 días)
+  STOCK // Producto disponible: saldo a la quincena/fin de mes (~15 días)
   PREORDER // Preventa: 50% a fin de mes, 50% al llegar a almacén
 }
 
@@ -621,7 +628,7 @@ model PreorderReservation {
   kind        SeparationKind @default(PREORDER)
   totalPrice  Decimal        @db.Decimal(10, 2)
   // Total abonado y aprobado hasta ahora (suma de payments APPROVED); saldo = total - depositPaid
-  depositPaid Decimal        @db.Decimal(10, 2) @default(0)
+  depositPaid Decimal        @default(0) @db.Decimal(10, 2)
 
   status  PreorderStatus @default(PENDING)
   dueDate DateTime? // Plazo límite para completar el saldo (semáforo)
@@ -639,7 +646,7 @@ model PreorderReservation {
 
 // Abonos parciales de una separación (cuenta corriente por producto, bóveda 05.07 §2)
 enum SeparationPaymentStatus {
-  PENDING  // Abono subido por el cliente, esperando validación en Bandeja POS
+  PENDING // Abono subido por el cliente, esperando validación en Bandeja POS
   APPROVED // Verificado por el admin: resta del saldo
   REJECTED // Comprobante inválido
 }

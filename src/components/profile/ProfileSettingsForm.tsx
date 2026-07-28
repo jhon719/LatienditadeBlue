@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import Image from "next/image"
 import { useRouter } from "next/navigation"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
@@ -11,6 +12,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { WhatsappIcon } from "@/components/common/WhatsappIcon"
 import { TiktokIcon } from "@/components/common/TiktokIcon"
+import { cn } from "@/lib/utils"
 import {
   Card,
   CardContent,
@@ -27,6 +29,11 @@ import {
 } from "@/components/ui/select"
 import { PERU_DEPARTMENTS } from "@/lib/peru"
 
+const SHIPPING_AGENCIES = [
+  { value: "SHALOM" as const, label: "Shalom", logo: "/Imagenes/Pagos/shalom.svg" },
+  { value: "OLVA" as const, label: "Olva", logo: "/Imagenes/Pagos/OLVA.jpg" },
+]
+
 const settingsSchema = z.object({
   firstName: z.string().max(60).optional(),
   lastName: z.string().max(60).optional(),
@@ -41,6 +48,8 @@ const settingsSchema = z.object({
   address: z.string().max(200).optional(),
   // Departamento del Perú (alimenta el mapa de calor del admin, bóveda 05.01)
   department: z.string(),
+  // Agencia de courier preferida para envíos a provincia (Shalom/Olva)
+  preferredShippingAgency: z.enum(["SHALOM", "OLVA"]).optional().or(z.literal("")),
   // Opt-in de promociones (bóveda 05.04 §4, Ley 29733)
   marketingOptIn: z.boolean(),
   // Identidad de TikTok (opcional)
@@ -94,6 +103,7 @@ export function ProfileSettingsForm({
     defaultValues: initialData,
   })
   const department = watch("department")
+  const preferredShippingAgency = watch("preferredShippingAgency")
 
   const passwordForm = useForm<PasswordFormData>({
     resolver: zodResolver(passwordSchema),
@@ -217,6 +227,48 @@ export function ProfileSettingsForm({
                     ))}
                   </SelectContent>
                 </Select>
+              </div>
+              {/* Agencia para envíos a provincia (bóveda: NATIONAL_COURIER) */}
+              <div className="space-y-2 sm:col-span-2">
+                <Label>Agencia de envío (opcional)</Label>
+                <p className="text-xs text-muted-foreground">
+                  Si vives fuera de Lima, elige con qué agencia prefieres
+                  recibir tus pedidos.
+                </p>
+                <div className="flex gap-3">
+                  {SHIPPING_AGENCIES.map((agency) => {
+                    const selected = preferredShippingAgency === agency.value
+                    return (
+                      <button
+                        key={agency.value}
+                        type="button"
+                        onClick={() =>
+                          setValue(
+                            "preferredShippingAgency",
+                            selected ? "" : agency.value
+                          )
+                        }
+                        className={cn(
+                          "flex flex-1 items-center gap-3 rounded-xl border-2 p-3 text-left transition",
+                          selected
+                            ? "border-primary bg-primary/5"
+                            : "border-border hover:border-muted-foreground/40"
+                        )}
+                      >
+                        <span className="relative h-10 w-14 shrink-0 overflow-hidden rounded-lg bg-white p-1">
+                          <Image
+                            src={agency.logo}
+                            alt={agency.label}
+                            fill
+                            className="object-contain"
+                            sizes="56px"
+                          />
+                        </span>
+                        <span className="text-sm font-semibold">{agency.label}</span>
+                      </button>
+                    )
+                  })}
+                </div>
               </div>
               {/* Identidad social (opcional): reconocerte por tu TikTok */}
               <div className="space-y-2 sm:col-span-2">

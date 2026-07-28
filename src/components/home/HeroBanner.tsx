@@ -13,11 +13,17 @@ import {
   CarouselNext,
   CarouselPrevious,
 } from "@/components/ui/carousel"
-import type { BannerView } from "@/types"
+import type { BannerView, Product } from "@/types"
 
 // Carrusel de Hero Banners administrables (bóveda 05.05 §2).
 // Si el admin no ha activado ninguno, se muestra el hero estático de la marca.
-export function HeroBanner({ banners = [] }: { banners?: BannerView[] }) {
+export function HeroBanner({
+  banners = [],
+  featuredProducts = [],
+}: {
+  banners?: BannerView[]
+  featuredProducts?: Product[]
+}) {
   if (banners.length > 0) {
     return (
       <section className="relative">
@@ -113,16 +119,47 @@ export function HeroBanner({ banners = [] }: { banners?: BannerView[] }) {
         </AnimatedContent>
         <AnimatedContent delay={180} className="hidden lg:block">
           <div className="relative aspect-[4/5] overflow-hidden rounded-[40px] border-4 border-white bg-white solid-shadow-yellow animate-float-soft">
-            <Image
-              src="https://images.unsplash.com/photo-1563089145-599997674d42?w=800&h=1000&fit=crop"
-              alt="Figura anime destacada"
-              fill
-              className="object-cover"
-            />
-            <div className="absolute bottom-5 left-5 right-5 rounded-3xl bg-white/92 p-4 text-[#142F5C] backdrop-blur">
-              <p className="text-xs font-extrabold uppercase text-[#4A80BE]">Drop destacado</p>
-              <p className="font-display text-3xl leading-none">Gear 5 Ichiban Kuji</p>
-            </div>
+            {featuredProducts.length > 0 ? (
+              // Galería que rota entre las figuras marcadas como destacadas
+              // desde admin/products, en vez del "Drop destacado" fijo.
+              <Carousel
+                opts={{ loop: true }}
+                plugins={[Autoplay({ delay: 3500, stopOnInteraction: false })]}
+              >
+                <CarouselContent className="ml-0">
+                  {featuredProducts.map((product) => (
+                    <CarouselItem key={product.id} className="pl-0">
+                      <Link href={`/products/${product.slug}`} className="relative block h-[525px] w-full">
+                        <Image
+                          src={product.images[0] ?? "/Imagenes/Mascota BLUE.png"}
+                          alt={product.name}
+                          fill
+                          sizes="420px"
+                          className="object-cover"
+                        />
+                        <div className="absolute bottom-5 left-5 right-5 rounded-3xl bg-white/92 p-4 text-[#142F5C] backdrop-blur">
+                          <p className="text-xs font-extrabold uppercase text-[#4A80BE]">Drop destacado</p>
+                          <p className="font-display text-3xl leading-none line-clamp-1">{product.name}</p>
+                        </div>
+                      </Link>
+                    </CarouselItem>
+                  ))}
+                </CarouselContent>
+              </Carousel>
+            ) : (
+              <>
+                <Image
+                  src="https://images.unsplash.com/photo-1563089145-599997674d42?w=800&h=1000&fit=crop"
+                  alt="Figura anime destacada"
+                  fill
+                  className="object-cover"
+                />
+                <div className="absolute bottom-5 left-5 right-5 rounded-3xl bg-white/92 p-4 text-[#142F5C] backdrop-blur">
+                  <p className="text-xs font-extrabold uppercase text-[#4A80BE]">Drop destacado</p>
+                  <p className="font-display text-3xl leading-none">Gear 5 Ichiban Kuji</p>
+                </div>
+              </>
+            )}
           </div>
         </AnimatedContent>
       </div>

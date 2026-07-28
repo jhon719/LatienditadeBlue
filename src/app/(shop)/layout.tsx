@@ -1,6 +1,8 @@
 import { Header } from "@/components/layout/Header"
 import { Footer } from "@/components/layout/Footer"
 import { AnnouncementBar } from "@/components/layout/AnnouncementBar"
+import { CompleteProfileBanner } from "@/components/common/CompleteProfileBanner"
+import { WelcomeTour } from "@/components/common/WelcomeTour"
 import { getActiveAnnouncement } from "@/lib/campaigns"
 
 export default async function ShopLayout({
@@ -27,8 +29,10 @@ export default async function ShopLayout({
         }
       />
       <Header />
+      <CompleteProfileBanner />
       <main className="flex-1">{children}</main>
       <Footer />
+      <WelcomeTour />
     </div>
   )
 }

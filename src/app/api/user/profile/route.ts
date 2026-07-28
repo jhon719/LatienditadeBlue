@@ -20,6 +20,7 @@ export async function GET() {
       phone: true,
       address: true,
       department: true,
+      preferredShippingAgency: true,
       avatarFileName: true,
       marketingOptIn: true,
       tiktokUsername: true,
@@ -49,6 +50,8 @@ const profileSchema = z.object({
   address: z.string().max(200).optional().nullable(),
   // Departamento del Perú para el mapa de calor (bóveda 05.01)
   department: z.enum(DEPARTMENT_CODES).optional().nullable().or(z.literal("")),
+  // Agencia de courier preferida para envíos a provincia (Shalom/Olva)
+  preferredShippingAgency: z.enum(["SHALOM", "OLVA"]).optional().nullable().or(z.literal("")),
   marketingOptIn: z.boolean().optional(),
   // Identidad social (opcional): usuario y enlace de TikTok
   tiktokUsername: z.string().max(40).optional().nullable(),
@@ -96,6 +99,7 @@ export async function PATCH(request: NextRequest) {
       phone: true,
       address: true,
       department: true,
+      preferredShippingAgency: true,
       marketingOptIn: true,
       tiktokUsername: true,
       tiktokUrl: true,

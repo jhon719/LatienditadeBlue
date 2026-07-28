@@ -70,11 +70,11 @@ export function Header() {
                 sizes="(max-width: 640px) 40px, 48px"
               />
             </div>
-            {/* El wordmark se oculta en pantallas muy angostas para dejar
-                espacio a los accesos de la derecha */}
-            <div className="leading-none max-[380px]:hidden">
-              <p className="font-display text-2xl text-foreground sm:text-3xl">La Tiendita</p>
-              <p className="-mt-1 text-[10px] font-extrabold uppercase tracking-wide text-[#4A80BE] sm:text-xs">de Blue</p>
+            {/* En pantallas muy angostas el wordmark se achica en vez de
+                ocultarse (el toggle de tema ya libera espacio en mobile) */}
+            <div className="leading-none">
+              <p className="font-display text-lg text-foreground min-[381px]:text-2xl sm:text-3xl">La Tiendita</p>
+              <p className="-mt-1 text-[9px] font-extrabold uppercase tracking-wide text-[#4A80BE] min-[381px]:text-[10px] sm:text-xs">de Blue</p>
             </div>
           </Link>
 

@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import Image from "next/image"
 import Link from "next/link"
 import { ShoppingCart, Star, Check, CalendarClock } from "lucide-react"
@@ -9,12 +9,14 @@ import { Badge } from "@/components/ui/badge"
 import { Card, CardContent } from "@/components/ui/card"
 import { Product } from "@/types"
 import { useCartStore } from "@/stores/cart-store"
+import { cn } from "@/lib/utils"
 
 interface ProductCardProps {
   product: Product
 }
 
 const PLACEHOLDER_IMAGE = "/Imagenes/Mascota BLUE.png"
+const HOVER_SLIDE_MS = 900
 
 // Badge automático de oferta (bóveda 05.05 §2 "Badges")
 function OfferBadge({ product }: { product: Product }) {
@@ -49,7 +51,23 @@ export function ProductCard({ product }: ProductCardProps) {
   const addItem = useCartStore((state) => state.addItem)
   const [added, setAdded] = useState(false)
 
-  const productImage = product.images?.[0] || PLACEHOLDER_IMAGE
+  const gallery = product.images?.length ? product.images : [PLACEHOLDER_IMAGE]
+  const hasMany = gallery.length > 1
+  const [hovering, setHovering] = useState(false)
+  const [activeImage, setActiveImage] = useState(0)
+
+  // Con varias fotos, al pasar el cursor se van encadenando en bucle. Con una
+  // sola no hay nada que rotar y queda solo el zoom de siempre.
+  useEffect(() => {
+    if (!hovering || !hasMany) return
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return
+    const id = setInterval(
+      () => setActiveImage((i) => (i + 1) % gallery.length),
+      HOVER_SLIDE_MS
+    )
+    return () => clearInterval(id)
+  }, [hovering, hasMany, gallery.length])
+
   const canBuy =
     product.status === "PREVENTA" ||
     (product.status !== "AGOTADO" && product.stockQty > 0)
@@ -64,7 +82,14 @@ export function ProductCard({ product }: ProductCardProps) {
 
   return (
     <Card className="group overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:shadow-xl">
-      <div className="relative aspect-square overflow-hidden bg-muted">
+      <div
+        className="relative aspect-square overflow-hidden bg-muted"
+        onMouseEnter={() => setHovering(true)}
+        onMouseLeave={() => {
+          setHovering(false)
+          setActiveImage(0)
+        }}
+      >
         <div className="absolute left-2 top-2 z-20 flex flex-col gap-1">
           <StatusBadge product={product} />
           <OfferBadge product={product} />
@@ -72,15 +97,33 @@ export function ProductCard({ product }: ProductCardProps) {
 
         <Link href={`/products/${product.slug}`}>
           <div className="relative h-full w-full">
-            <Image
-              src={productImage}
-              alt={product.name}
-              fill
-              className="object-cover transition-transform duration-500 group-hover:scale-110"
-              sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
-            />
+            {gallery.map((image, index) => (
+              <Image
+                key={`${image}-${index}`}
+                src={image}
+                alt={product.name}
+                fill
+                className={cn(
+                  "object-cover transition-all duration-500 group-hover:scale-110",
+                  index === activeImage ? "opacity-100" : "opacity-0"
+                )}
+                sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+                priority={index === 0}
+              />
+            ))}
           </div>
         </Link>
+
+        {hasMany && (
+          <span
+            className={cn(
+              "pointer-events-none absolute right-2 top-2 z-20 rounded-full bg-background/85 px-2 py-0.5 text-[10px] font-bold tabular-nums text-foreground shadow-sm backdrop-blur transition-opacity",
+              hovering ? "opacity-100" : "opacity-0"
+            )}
+          >
+            {activeImage + 1}/{gallery.length}
+          </span>
+        )}
 
         {/* Barrido de brillo al pasar el mouse */}
         <span className="card-shine z-10" />
