@@ -16,6 +16,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { SemaphoreBadge, ProgressBar, type SemaphoreLevel } from "@/components/admin/SeparationBits"
+import { compressImageIfNeeded } from "@/lib/image-compression"
 
 interface Payment {
   id: string
@@ -68,8 +69,9 @@ function PaySaldoForm({
     setUploading(true)
     setError(null)
     try {
+      const fileToUpload = await compressImageIfNeeded(file)
       const fd = new FormData()
-      fd.append("file", file)
+      fd.append("file", fileToUpload)
       fd.append("folder", "vouchers")
       const res = await fetch("/api/upload", { method: "POST", body: fd })
       const r = await res.json().catch(() => null)

@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation"
 import { Camera, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { UserAvatar } from "@/components/common/UserAvatar"
+import { compressImageIfNeeded } from "@/lib/image-compression"
 
 interface AvatarUploaderProps {
   username: string
@@ -23,8 +24,9 @@ export function AvatarUploader({ username, avatarFileName }: AvatarUploaderProps
     setUploading(true)
     setError(null)
     try {
+      const fileToUpload = await compressImageIfNeeded(file)
       const formData = new FormData()
-      formData.append("file", file)
+      formData.append("file", fileToUpload)
       const res = await fetch("/api/user/avatar", {
         method: "POST",
         body: formData,

@@ -5,6 +5,7 @@ import Image from "next/image"
 import { Upload, X, Loader2, ImagePlus } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
+import { compressImageIfNeeded } from "@/lib/image-compression"
 
 interface UploadedImage {
   url: string
@@ -42,8 +43,11 @@ export function ImageUpload({
 
       try {
         const uploadPromises = filesToUpload.map(async (file) => {
+          // Comprimir si pesa > 1MB (límite de Next.js App Router en dev)
+          const fileToUpload = await compressImageIfNeeded(file)
+
           const formData = new FormData()
-          formData.append("file", file)
+          formData.append("file", fileToUpload)
           formData.append("folder", folder)
 
           const response = await fetch("/api/upload", {

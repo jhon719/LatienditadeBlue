@@ -5,6 +5,7 @@ import { UploadCloud, CheckCircle, Loader2 } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { ImageLightbox } from "@/components/common/ImageLightbox"
+import { compressImageIfNeeded } from "@/lib/image-compression"
 
 interface ManualPaymentSectionProps {
   voucherUrl: string | null
@@ -29,8 +30,9 @@ export function ManualPaymentSection({
     setUploading(true)
     setError(null)
     try {
+      const fileToUpload = await compressImageIfNeeded(file)
       const formData = new FormData()
-      formData.append("file", file)
+      formData.append("file", fileToUpload)
       formData.append("folder", "vouchers")
       const res = await fetch("/api/upload", { method: "POST", body: formData })
       if (!res.ok) {
