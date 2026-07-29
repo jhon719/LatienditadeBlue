@@ -47,6 +47,11 @@ const nextConfig: NextConfig = {
   // (protección anti DNS-rebinding de Next.js: sin esto, el dev server
   // rechaza peticiones cuyo Host no coincide con localhost).
   allowedDevOrigins: ["*.ngrok-free.app", "*.ngrok-free.dev", "*.ngrok.io", "*.ngrok.app"],
+  api: {
+    bodyParser: {
+      sizeLimit: "5mb", // Aumentar límite global de body para uploads de imágenes
+    },
+  },
   images: {
     remotePatterns: [
       {
