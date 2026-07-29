@@ -42,7 +42,7 @@ export function AvatarUploader({ username, avatarFileName }: AvatarUploaderProps
   }
 
   return (
-    <div className="flex flex-col items-center gap-2">
+    <div className="flex flex-col items-center gap-4">
       <div className="relative" key={version}>
         <UserAvatar username={username} avatarFileName={avatarFileName} size={96} />
         <Button
@@ -70,7 +70,17 @@ export function AvatarUploader({ username, avatarFileName }: AvatarUploaderProps
           }}
         />
       </div>
-      {error && <p className="text-xs text-destructive">{error}</p>}
+
+      {error && <p className="text-xs text-destructive font-medium">{error}</p>}
+
+      <div className="rounded-lg bg-blue-50 p-3 text-xs text-muted-foreground">
+        <p className="font-semibold text-foreground mb-2">Requisitos del avatar:</p>
+        <ul className="space-y-1 list-disc list-inside">
+          <li>Tamaño máximo: <span className="font-semibold">5 MB</span></li>
+          <li>Resolución recomendada: <span className="font-semibold">400 x 400 px</span> (mínimo 200 x 200 px)</li>
+          <li>Formatos: JPG, PNG o WebP</li>
+        </ul>
+      </div>
     </div>
   )
 }

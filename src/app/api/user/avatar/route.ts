@@ -14,7 +14,7 @@ import { IMAGE_EXT, sniffImageType } from "@/lib/image-validation"
 const AVATAR_DIR = path.join(process.cwd(), "public", "Imagenes", "avatar")
 const CLOUD_FOLDER = "latiendita/avatars"
 
-const MAX_SIZE = 2 * 1024 * 1024 // 2MB
+const MAX_SIZE = 5 * 1024 * 1024 // 5MB
 
 export async function POST(request: NextRequest) {
   const { session, response } = await requireUser()
@@ -29,7 +29,7 @@ export async function POST(request: NextRequest) {
     }
     if (file.size > MAX_SIZE) {
       return NextResponse.json(
-        { error: "El avatar no puede superar 2MB" },
+        { error: "El archivo no puede superar 5MB. Comprime la imagen e intenta de nuevo." },
         { status: 400 }
       )
     }
@@ -52,26 +52,36 @@ export async function POST(request: NextRequest) {
 
     if (isCloudinaryEnabled()) {
       const result = await new Promise<{ secure_url: string }>((resolve, reject) => {
-        cloudinary.uploader
-          .upload_stream(
-            {
-              folder: CLOUD_FOLDER,
-              public_id: userId, // Un único archivo por usuario
-              overwrite: true,
-              invalidate: true,
-              resource_type: "image",
-              transformation: [
-                { width: 400, height: 400, crop: "fill", gravity: "face" },
-                { quality: "auto" },
-                { fetch_format: "auto" },
-              ],
-            },
-            (error, uploaded) => {
-              if (error) reject(error)
-              else resolve(uploaded as { secure_url: string })
-            }
-          )
-          .end(buffer)
+        const timeout = setTimeout(() => {
+          reject(new Error("Timeout al conectar con Cloudinary (30s)"))
+        }, 30000)
+
+        const stream = cloudinary.uploader.upload_stream(
+          {
+            folder: CLOUD_FOLDER,
+            public_id: userId,
+            overwrite: true,
+            invalidate: true,
+            resource_type: "image",
+            transformation: [
+              { width: 400, height: 400, crop: "fill", gravity: "face" },
+              { quality: "auto" },
+              { fetch_format: "auto" },
+            ],
+          },
+          (error, uploaded) => {
+            clearTimeout(timeout)
+            if (error) reject(error)
+            else resolve(uploaded as { secure_url: string })
+          }
+        )
+
+        stream.on("error", (error) => {
+          clearTimeout(timeout)
+          reject(error)
+        })
+
+        stream.end(buffer)
       })
 
       // Si antes tenía un archivo local, se limpia del disco
@@ -111,8 +121,9 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ avatarFileName: fileName })
   } catch (error) {
     console.error("Error uploading avatar:", error)
+    const errorMsg = error instanceof Error ? error.message : String(error)
     return NextResponse.json(
-      { error: "Error al subir el avatar" },
+      { error: `Error al subir el avatar: ${errorMsg}` },
       { status: 500 }
     )
   }
