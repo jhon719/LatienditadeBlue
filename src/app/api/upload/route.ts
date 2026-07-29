@@ -8,6 +8,15 @@ import { IMAGE_EXT, sniffImageType } from "@/lib/image-validation"
 
 const MAX_SIZE = 5 * 1024 * 1024
 
+// Configurar límite de body para uploads (por defecto Next.js tiene 1MB)
+export const config = {
+  api: {
+    bodyParser: {
+      sizeLimit: "5mb",
+    },
+  },
+}
+
 // Carpetas que puede usar cualquier usuario autenticado (checkout/preventas) vs.
 // carpetas del catálogo/marketing reservadas a ADMIN. Sin esta separación, un
 // cliente podía subir a `banners`, `products`, etc. con solo estar logueado.
@@ -15,6 +24,8 @@ const USER_FOLDERS = ["vouchers", "reviews"]
 const ADMIN_FOLDERS = [
   "products",
   "banners",
+  "popups",
+  "corner-ads",
   "categories",
   "lines",
   "brands",

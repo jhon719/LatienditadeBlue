@@ -27,11 +27,19 @@ import { ImageUpload } from "@/components/admin/ImageUpload"
 // Formulario compartido de campañas (bóveda 05.05; regla CLAUDE.md: páginas
 // dedicadas, sin modales). Sirve para crear y para editar.
 
-export type CampaignType = "banners" | "announcements" | "coupons" | "discount-rules"
+export type CampaignType =
+  | "banners"
+  | "announcements"
+  | "popups"
+  | "corner-ads"
+  | "coupons"
+  | "discount-rules"
 
 export const CAMPAIGN_TYPE_OPTIONS: { value: CampaignType; label: string }[] = [
   { value: "banners", label: "Hero Banner (carrusel principal)" },
   { value: "announcements", label: "Cinta de anuncios (Top Bar)" },
+  { value: "popups", label: "Popup promocional (pantalla completa)" },
+  { value: "corner-ads", label: "Anuncio de esquina (card flotante)" },
   { value: "coupons", label: "Cupón de descuento" },
   { value: "discount-rules", label: "Regla de precio (precios tachados)" },
 ]
@@ -97,6 +105,17 @@ export function CampaignForm({
   const [bgColor, setBgColor] = useState(str(data.bgColor) || "#142F5C")
   const [textColor, setTextColor] = useState(str(data.textColor) || "#FFFFFF")
 
+  // Popup (reutiliza linkUrl de arriba: solo un tipo se edita a la vez)
+  const [popupImages, setPopupImages] = useState<{ url: string; publicId: string }[]>(
+    type === "popups" && str(data.imageUrl) ? [{ url: str(data.imageUrl), publicId: "" }] : []
+  )
+  const [altText, setAltText] = useState(str(data.altText) || "Promoción")
+
+  // Anuncio de esquina (reutiliza linkUrl y altText de arriba)
+  const [cornerAdImages, setCornerAdImages] = useState<{ url: string; publicId: string }[]>(
+    type === "corner-ads" && str(data.imageUrl) ? [{ url: str(data.imageUrl), publicId: "" }] : []
+  )
+
   // Coupon / Rule
   const [code, setCode] = useState(str(data.code))
   const [description, setDescription] = useState(str(data.description))
@@ -150,6 +169,23 @@ export function CampaignForm({
       case "announcements":
         if (!text.trim()) return { error: "El texto de la cinta es requerido" }
         return { text, linkUrl: linkUrl || null, bgColor, textColor, ...scheduling }
+      case "popups":
+        if (popupImages.length === 0) return { error: "Sube la imagen del popup" }
+        return {
+          imageUrl: popupImages[0].url,
+          linkUrl: linkUrl || null,
+          altText: altText || "Promoción",
+          ...scheduling,
+        }
+      case "corner-ads":
+        if (cornerAdImages.length === 0) return { error: "Sube la imagen del anuncio" }
+        if (!linkUrl.trim()) return { error: "El enlace de destino es requerido" }
+        return {
+          imageUrl: cornerAdImages[0].url,
+          linkUrl,
+          altText: altText || "Anuncio",
+          ...scheduling,
+        }
       case "coupons":
         if (!code.trim() || !value) return { error: "Código y valor son requeridos" }
         return {
@@ -340,6 +376,83 @@ export function CampaignForm({
                     />
                     <Input value={textColor} onChange={(e) => setTextColor(e.target.value)} />
                   </div>
+                </div>
+              </div>
+            </>
+          )}
+
+          {type === "popups" && (
+            <>
+              <div className="space-y-2">
+                <Label>Imagen del popup</Label>
+                <ImageUpload
+                  value={popupImages}
+                  onChange={setPopupImages}
+                  maxImages={1}
+                  folder="popups"
+                />
+                <p className="text-xs text-muted-foreground">
+                  Recomendado: 800×800px (cuadrada) o 900×1200px (vertical). Máximo 5MB.
+                  Se muestra centrada sobre la página, una vez por sesión del visitante.
+                </p>
+              </div>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="space-y-2">
+                  <Label>Enlace al hacer clic (opcional)</Label>
+                  <Input
+                    value={linkUrl}
+                    onChange={(e) => setLinkUrl(e.target.value)}
+                    placeholder="/products?status=preventa"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Texto alternativo</Label>
+                  <Input
+                    value={altText}
+                    onChange={(e) => setAltText(e.target.value)}
+                    placeholder="Promoción de preventa"
+                  />
+                </div>
+              </div>
+            </>
+          )}
+
+          {type === "corner-ads" && (
+            <>
+              <div className="space-y-2">
+                <Label>Imagen del anuncio</Label>
+                <ImageUpload
+                  value={cornerAdImages}
+                  onChange={setCornerAdImages}
+                  maxImages={1}
+                  folder="corner-ads"
+                />
+                <p className="text-xs text-muted-foreground">
+                  Recomendado: 300×380px (vertical). Máximo 5MB. Se muestra como
+                  una card flotante en la esquina inferior derecha, sin cubrir
+                  el resto de la página.
+                </p>
+              </div>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="space-y-2">
+                  <Label>Enlace al hacer clic</Label>
+                  <Input
+                    value={linkUrl}
+                    onChange={(e) => setLinkUrl(e.target.value)}
+                    placeholder="/products o https://sitio-externo.com"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Interno (/products) o externo (https://...). Se abre en
+                    pestaña nueva si es externo.
+                  </p>
+                </div>
+                <div className="space-y-2">
+                  <Label>Texto alternativo</Label>
+                  <Input
+                    value={altText}
+                    onChange={(e) => setAltText(e.target.value)}
+                    placeholder="Oferta relámpago"
+                  />
                 </div>
               </div>
             </>

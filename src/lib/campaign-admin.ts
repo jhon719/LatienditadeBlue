@@ -30,6 +30,20 @@ const announcementSchema = z.object({
   ...scheduling,
 })
 
+const popupSchema = z.object({
+  imageUrl: z.string().min(1),
+  linkUrl: z.string().max(200).nullable().optional(),
+  altText: z.string().max(120).default("Promoción"),
+  ...scheduling,
+})
+
+const cornerAdSchema = z.object({
+  imageUrl: z.string().min(1),
+  linkUrl: z.string().min(1).max(300),
+  altText: z.string().max(120).default("Anuncio"),
+  ...scheduling,
+})
+
 const couponSchema = z.object({
   code: z
     .string()
@@ -67,6 +81,8 @@ const discountRuleSchema = z
 export const CAMPAIGN_TYPES = {
   banners: { schema: bannerSchema, orderBy: { sortOrder: "asc" as const } },
   announcements: { schema: announcementSchema, orderBy: { updatedAt: "desc" as const } },
+  popups: { schema: popupSchema, orderBy: { updatedAt: "desc" as const } },
+  "corner-ads": { schema: cornerAdSchema, orderBy: { updatedAt: "desc" as const } },
   coupons: { schema: couponSchema, orderBy: { createdAt: "desc" as const } },
   "discount-rules": { schema: discountRuleSchema, orderBy: { createdAt: "desc" as const } },
 } as const
@@ -85,6 +101,10 @@ export function campaignModel(type: CampaignType) {
       return prisma.banner
     case "announcements":
       return prisma.announcement
+    case "popups":
+      return prisma.popup
+    case "corner-ads":
+      return prisma.cornerAd
     case "coupons":
       return prisma.coupon
     case "discount-rules":

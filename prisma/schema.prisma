@@ -425,6 +425,45 @@ model Banner {
   @@map("banners")
 }
 
+// Popup promocional a pantalla completa: imagen clickeable con cierre manual (X).
+// Se muestra una vez por sesión de navegador (bóveda 05.05 extensión).
+model Popup {
+  id       String  @id @default(cuid())
+  imageUrl String // Cloudinary latiendita/popups (o /uploads local)
+  linkUrl  String? // Si se hace clic en la imagen, redirige aquí (opcional)
+  altText  String  @default("Promoción")
+
+  status     CampaignStatus @default(DRAFT)
+  validFrom  DateTime?
+  validUntil DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([status])
+  @@map("popups")
+}
+
+// Anuncio de esquina: card pequeña anclada a una esquina de la pantalla,
+// no bloquea el resto de la página. Imagen clickeable (URL interna o externa)
+// con cierre manual (X). Bóveda 05.05 extensión.
+model CornerAd {
+  id       String @id @default(cuid())
+  imageUrl String // Cloudinary latiendita/corner-ads (o /uploads local)
+  linkUrl  String // Interna (/products) o externa (https://...)
+  altText  String @default("Anuncio")
+
+  status     CampaignStatus @default(DRAFT)
+  validFrom  DateTime?
+  validUntil DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([status])
+  @@map("corner_ads")
+}
+
 // Cinta de anuncios superior (Top Bar)
 model Announcement {
   id        String  @id @default(cuid())

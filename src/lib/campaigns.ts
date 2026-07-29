@@ -2,6 +2,8 @@ import { prisma } from "@/lib/prisma"
 import type {
   Banner,
   Announcement,
+  Popup,
+  CornerAd,
   Coupon,
   DiscountRule,
   Prisma,
@@ -52,6 +54,20 @@ export async function getActiveBanners(): Promise<Banner[]> {
 
 export async function getActiveAnnouncement(): Promise<Announcement | null> {
   return prisma.announcement.findFirst({
+    where: liveCampaignWhere(),
+    orderBy: { updatedAt: "desc" },
+  })
+}
+
+export async function getActivePopup(): Promise<Popup | null> {
+  return prisma.popup.findFirst({
+    where: liveCampaignWhere(),
+    orderBy: { updatedAt: "desc" },
+  })
+}
+
+export async function getActiveCornerAd(): Promise<CornerAd | null> {
+  return prisma.cornerAd.findFirst({
     where: liveCampaignWhere(),
     orderBy: { updatedAt: "desc" },
   })

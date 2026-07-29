@@ -38,6 +38,8 @@ interface CampaignItem {
   // announcements
   text?: string
   bgColor?: string
+  // popups
+  altText?: string
   // coupons
   code?: string
   type?: "PERCENTAGE" | "FIXED_AMOUNT"
@@ -58,6 +60,8 @@ const STATUS_LABELS: Record<string, { label: string; className: string }> = {
 const TYPE_LABELS: Record<string, string> = {
   banners: "Banner",
   announcements: "Anuncio",
+  popups: "Popup",
+  "corner-ads": "Anuncio de esquina",
   coupons: "Cupón",
   "discount-rules": "Regla",
 }
@@ -132,6 +136,28 @@ function CampaignTable({
                     />
                   </div>
                 )}
+                {type === "popups" && item.imageUrl && (
+                  <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-md bg-muted">
+                    <Image
+                      src={item.imageUrl}
+                      alt={item.altText ?? "popup"}
+                      fill
+                      className="object-cover"
+                      sizes="48px"
+                    />
+                  </div>
+                )}
+                {type === "corner-ads" && item.imageUrl && (
+                  <div className="relative h-12 w-10 shrink-0 overflow-hidden rounded-md bg-muted">
+                    <Image
+                      src={item.imageUrl}
+                      alt={item.altText ?? "anuncio"}
+                      fill
+                      className="object-cover"
+                      sizes="40px"
+                    />
+                  </div>
+                )}
                 {type === "announcements" && (
                   <span
                     className="h-6 w-6 shrink-0 rounded-full border"
@@ -140,7 +166,7 @@ function CampaignTable({
                 )}
                 <div>
                   <p className="font-medium">
-                    {item.title ?? item.text ?? item.code ?? item.name}
+                    {item.title ?? item.text ?? item.altText ?? item.code ?? item.name}
                   </p>
                   {type === "coupons" && (
                     <p className="text-xs text-muted-foreground">
@@ -223,7 +249,7 @@ export default function CampaignsPage() {
   const [loading, setLoading] = useState(true)
 
   const fetchAll = useCallback(async () => {
-    const types = ["banners", "announcements", "coupons", "discount-rules"]
+    const types = ["banners", "announcements", "popups", "corner-ads", "coupons", "discount-rules"]
     const results = await Promise.all(
       types.map((t) =>
         fetch(`/api/admin/campaigns/${t}`).then((r) => (r.ok ? r.json() : []))
@@ -267,13 +293,15 @@ export default function CampaignsPage() {
             {/* TabsList tiene alto fijo (h-9), así que en móvil no puede
                 envolver a 2 filas: la tira scrollea horizontalmente y desde
                 sm vuelve a ser una grilla pareja. */}
-            <TabsList className="flex w-full justify-start overflow-x-auto [scrollbar-width:none] sm:grid sm:grid-cols-4 [&::-webkit-scrollbar]:hidden">
+            <TabsList className="flex w-full justify-start overflow-x-auto [scrollbar-width:none] sm:grid sm:grid-cols-6 [&::-webkit-scrollbar]:hidden">
               <TabsTrigger value="banners">Hero Banners</TabsTrigger>
               <TabsTrigger value="announcements">Cinta superior</TabsTrigger>
+              <TabsTrigger value="popups">Popups</TabsTrigger>
+              <TabsTrigger value="corner-ads">Anuncio esquina</TabsTrigger>
               <TabsTrigger value="coupons">Cupones</TabsTrigger>
               <TabsTrigger value="discount-rules">Reglas de precio</TabsTrigger>
             </TabsList>
-            {(["banners", "announcements", "coupons", "discount-rules"] as const).map(
+            {(["banners", "announcements", "popups", "corner-ads", "coupons", "discount-rules"] as const).map(
               (t) => (
                 <TabsContent key={t} value={t} className="mt-4">
                   <CampaignTable
