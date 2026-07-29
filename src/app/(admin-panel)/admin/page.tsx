@@ -123,14 +123,14 @@ export default async function AdminDashboardPage({
           </p>
         </div>
 
-        {/* Selector de rango */}
-        <div className="flex gap-1 rounded-full border bg-card p-1">
+        {/* Selector de rango - responsive en mobile */}
+        <div className="flex gap-1 overflow-x-auto rounded-full border bg-card p-1 sm:overflow-visible">
           {RANGES.map((r) => (
             <Link
               key={r.value}
               href={`/admin?range=${r.value}`}
               className={cn(
-                "rounded-full px-4 py-1.5 text-xs font-bold transition-colors",
+                "shrink-0 rounded-full px-3 py-1.5 text-xs font-bold transition-colors whitespace-nowrap",
                 range === r.value
                   ? "bg-primary text-primary-foreground"
                   : "text-muted-foreground hover:text-foreground"
@@ -273,15 +273,15 @@ export default async function AdminDashboardPage({
         </Card>
       </AnimatedContent>
 
-      <div className="grid gap-4 lg:grid-cols-7">
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
         {/* Últimos pedidos */}
-        <Card className="lg:col-span-4">
-          <CardHeader className="flex flex-row items-center justify-between">
-            <div>
+        <Card className="md:col-span-1 lg:col-span-4 overflow-x-auto">
+          <CardHeader className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+            <div className="min-w-0">
               <CardTitle>Pedidos recientes</CardTitle>
               <CardDescription>Los últimos movimientos de la tienda</CardDescription>
             </div>
-            <Button asChild variant="outline" size="sm">
+            <Button asChild variant="outline" size="sm" className="shrink-0">
               <Link href="/admin/orders">
                 Ver todos <ArrowUpRight className="ml-1 h-3 w-3" />
               </Link>
@@ -294,16 +294,16 @@ export default async function AdminDashboardPage({
               </p>
             ) : (
               recentOrders.map((order) => (
-                <div key={order.id} className="flex items-center justify-between">
-                  <div>
-                    <p className="font-mono text-sm font-bold">{order.processCode}</p>
-                    <p className="text-xs text-muted-foreground">
+                <div key={order.id} className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="min-w-0">
+                    <p className="font-mono text-sm font-bold truncate">{order.processCode}</p>
+                    <p className="text-xs text-muted-foreground truncate">
                       @{order.user.username} ·{" "}
                       {order.createdAt.toLocaleDateString("es-PE")}
                     </p>
                   </div>
-                  <div className="flex items-center gap-3">
-                    <span className="text-sm font-semibold">
+                  <div className="flex items-center gap-2 sm:gap-3">
+                    <span className="text-sm font-semibold shrink-0">
                       S/ {Number(order.totalAmount).toFixed(2)}
                     </span>
                     <Badge className={statusLabels[order.status]?.className ?? ""}>
@@ -318,7 +318,7 @@ export default async function AdminDashboardPage({
 
         {/* Alertas de stock: agotados (rojo) y stock bajo (naranja), animadas
             y accionables (bóveda 05.03) */}
-        <Card className="lg:col-span-3">
+        <Card className="md:col-span-1 lg:col-span-3 overflow-x-auto">
           <CardHeader>
             <CardTitle>Alertas de inventario</CardTitle>
             <CardDescription>

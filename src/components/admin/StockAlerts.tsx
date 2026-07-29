@@ -85,12 +85,12 @@ export function StockAlerts({
       {out.map((p) => (
         <div
           key={p.id}
-          className="flex items-center gap-3 rounded-lg border border-red-300 bg-[#FFEAEA]/50 p-3 dark:border-red-500/40 dark:bg-red-500/10"
+          className="flex flex-col gap-2 rounded-lg border border-red-300 bg-[#FFEAEA]/50 p-3 dark:border-red-500/40 dark:bg-red-500/10 sm:flex-row sm:items-center"
         >
           <PulseDot tone="critical" />
           <Link
             href={`/admin/products/${p.id}/edit`}
-            className="flex flex-1 items-center gap-3 truncate"
+            className="flex flex-1 items-center gap-3 min-w-0"
           >
             <div className="relative h-9 w-9 shrink-0 overflow-hidden rounded-md bg-muted">
               {p.image && (
@@ -99,7 +99,7 @@ export function StockAlerts({
             </div>
             <p className="truncate text-sm font-medium">{p.name}</p>
           </Link>
-          <Badge className="shrink-0 animate-pulse bg-red-500 text-white hover:bg-red-500">
+          <Badge className="shrink-0 animate-pulse bg-red-500 text-white hover:bg-red-500 w-fit">
             <PackageX className="mr-1 h-3 w-3" /> Agotado
           </Badge>
           <div className="flex shrink-0 gap-1">
@@ -126,16 +126,18 @@ export function StockAlerts({
         <Link
           key={p.id}
           href={`/admin/products/${p.id}/edit`}
-          className="flex items-center gap-3 rounded-lg border border-[#F5B400]/50 bg-[#FFF5D1]/40 p-3 transition-colors hover:bg-[#FFF5D1]/70 dark:bg-[#FFF5D1]/10"
+          className="flex flex-col gap-2 rounded-lg border border-[#F5B400]/50 bg-[#FFF5D1]/40 p-3 transition-colors hover:bg-[#FFF5D1]/70 dark:bg-[#FFF5D1]/10 sm:flex-row sm:items-center"
         >
           <PulseDot tone="warning" />
-          <div className="relative h-9 w-9 shrink-0 overflow-hidden rounded-md bg-muted">
-            {p.image && (
-              <Image src={p.image} alt={p.name} fill className="object-cover" sizes="36px" />
-            )}
+          <div className="flex flex-1 items-center gap-3 min-w-0">
+            <div className="relative h-9 w-9 shrink-0 overflow-hidden rounded-md bg-muted">
+              {p.image && (
+                <Image src={p.image} alt={p.name} fill className="object-cover" sizes="36px" />
+              )}
+            </div>
+            <p className="truncate text-sm font-medium">{p.name}</p>
           </div>
-          <p className="flex-1 truncate text-sm font-medium">{p.name}</p>
-          <Badge className="shrink-0 animate-pulse bg-[#F5B400] text-[#142F5C] hover:bg-[#F5B400]">
+          <Badge className="shrink-0 animate-pulse bg-[#F5B400] text-[#142F5C] hover:bg-[#F5B400] w-fit">
             Quedan {p.stockQty}
           </Badge>
         </Link>
