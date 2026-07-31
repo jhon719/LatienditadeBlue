@@ -1,20 +1,20 @@
 # Graph Report - .  (2026-07-31)
 
 ## Corpus Check
-- Large corpus: 1589 files · ~314,960 words. Semantic extraction will be expensive (many Claude tokens). Consider running on a subfolder, or use --no-semantic to run AST-only.
+- Large corpus: 1589 files · ~313,009 words. Semantic extraction will be expensive (many Claude tokens). Consider running on a subfolder, or use --no-semantic to run AST-only.
 
 ## Summary
-- 1400 nodes · 3615 edges · 75 communities detected
+- 1385 nodes · 3581 edges · 74 communities detected
 - Extraction: 98% EXTRACTED · 1% INFERRED · 0% AMBIGUOUS · INFERRED: 50 edges (avg confidence: 0.75)
 - Token cost: 0 input · 0 output
-- Edge kinds: imports: 1048 · contains: 877 · imports_from: 667 · MODIFIES: 515 · conceptually_related_to: 187 · references: 110 · calls: 69 · ON_BRANCH: 42 · PARENT_OF: 41 · shares_data_with: 36 · cites: 7 · rationale_for: 5 · semantically_similar_to: 5 · implements: 4 · inherits: 2
+- Edge kinds: imports: 1040 · contains: 862 · imports_from: 667 · MODIFIES: 515 · conceptually_related_to: 187 · references: 110 · calls: 58 · ON_BRANCH: 42 · PARENT_OF: 41 · shares_data_with: 36 · cites: 7 · rationale_for: 5 · semantically_similar_to: 5 · implements: 4 · inherits: 2
 
 
 ## Input Scope
 - Requested: auto
 - Resolved: committed (source: default-auto)
 - Included files: 1589 · Candidates: 1794
-- Excluded: 17 untracked · 65852 ignored · 6 sensitive · 57 missing committed
+- Excluded: 9 untracked · 65657 ignored · 6 sensitive · 57 missing committed
 - Recommendation: Use --scope all or graphify.yaml inputs.corpus for a knowledge-base folder.
 
 ## Graph Freshness
@@ -58,8 +58,8 @@ Cohesion: 0.11
 Nodes (30): Acquisition, AcquisitionsTab(), MonthSummary, Summary, Contact, ShalomDirectoryTab(), StockProduct, ENDPOINT (+22 more)
 
 ### Community 1 - "Campaign & Catalog Forms"
-Cohesion: 0.10
-Nodes (32): AcquisitionData, AcquisitionForm(), num(), BrandOption, CatalogEntryFormProps, ENDPOINT, TYPE_OPTIONS, UPLOAD_FOLDER (+24 more)
+Cohesion: 0.11
+Nodes (29): AcquisitionData, AcquisitionForm(), num(), BrandOption, CatalogEntryFormProps, ENDPOINT, TYPE_OPTIONS, UPLOAD_FOLDER (+21 more)
 
 ### Community 2 - "UI Utilities & Marquee"
 Cohesion: 0.06
@@ -82,20 +82,20 @@ Cohesion: 0.09
 Nodes (24): CrmPanel(), CrmPanelProps, TIER_LABELS, CampaignItem, STATUS_LABELS, TYPE_LABELS, SortSelectProps, PasswordFormData (+16 more)
 
 ### Community 7 - "Auth Forms & Register Flow"
+Cohesion: 0.07
+Nodes (28): RANGES, statusLabels, StockAlerts(), CashFlowChart(), TooltipPayload, DonutTooltipPayload, LogisticsDonut(), SLICE_STYLE (+20 more)
+
+### Community 8 - "Campaign List Page"
 Cohesion: 0.08
 Nodes (25): CartItem(), CartItemProps, CartSummary(), CartSummaryProps, AppliedCoupon, CouponInput(), CouponInputProps, OrderSummary() (+17 more)
 
-### Community 8 - "Campaign List Page"
+### Community 9 - "Admin CRM Input Forms"
 Cohesion: 0.07
 Nodes (26): popups, corner_ads, 4162218 feat: agregar popups y anuncios de esquina como nuevos tipos de campana, CompleteProfileBanner(), CornerAd(), CornerAdProps, NO_SHOW, NO_SHOW (+18 more)
 
-### Community 9 - "Admin CRM Input Forms"
-Cohesion: 0.07
-Nodes (25): ProgressBar(), SEMAPHORE_STYLES, SemaphoreBadge(), SemaphoreLevel, Batch, money(), OrderDetail, PAY_BADGE (+17 more)
-
 ### Community 10 - "Footer & Social Icons"
-Cohesion: 0.10
-Nodes (31): BatchMarginReport, BatchMarginRow, BLUE, DeliveriesReport, DeliveryRow, downloadBatchMarginPdf(), downloadDeliveriesPdf(), downloadOverdueBatchesPdf() (+23 more)
+Cohesion: 0.06
+Nodes (27): ProgressBar(), SEMAPHORE_STYLES, SemaphoreBadge(), SemaphoreLevel, ShalomContactData, ImageLightbox(), Batch, money() (+19 more)
 
 ### Community 11 - "Product Admin API Routes"
 Cohesion: 0.09
@@ -118,76 +118,76 @@ Cohesion: 0.14
 Nodes (24): main, 1ee563c fix: Google OAuth account linking y redirect de logout, 264b6fe fix: backfill justRegistered=false for pre-existing users, 2dd499b version 12, 2f6d845 revision 1, 36643e5 fix: Google OAuth static-render bug, seed safety guard, OG metadata, 3b141c8 16/07/2026, 41cf842 documentacion (+16 more)
 
 ### Community 16 - "Admin Dashboard Charts"
-Cohesion: 0.12
-Nodes (18): RANGES, statusLabels, StockAlerts(), CashFlowChart(), TooltipPayload, DonutTooltipPayload, LogisticsDonut(), SLICE_STYLE (+10 more)
-
-### Community 17 - "Product Filter Sidebar & Store"
 Cohesion: 0.14
 Nodes (14): 25c3978 feat: agregar preferencia de agencia de envío, carrusel de imágenes en hover, y tutorial de bienvenida con Bluet, HowToBuyLink(), PAYMENT_LOGOS, PaymentMethods(), SHIPPING_LOGOS, ShippingAgencies(), buildSlides(), NO_AUTO_OPEN (+6 more)
 
-### Community 18 - "Admin Sidebar & Login"
+### Community 17 - "Product Filter Sidebar & Store"
 Cohesion: 0.12
 Nodes (17): computeBalance(), computeSemaphore(), defaultDueDate(), Semaphore, SemaphoreLevel, SeparationBalance, SeparationKind, SeparationStatus (+9 more)
 
-### Community 19 - "Home Marquee Components"
+### Community 18 - "Admin Sidebar & Login"
 Cohesion: 0.12
 Nodes (15): FilterMobile(), FilterMobileProps, FilterSidebar(), Category, statusBadge, ProductGrid(), SortSelect(), FilterState (+7 more)
 
-### Community 20 - "Campaigns & Coupon Validation"
+### Community 19 - "Home Marquee Components"
 Cohesion: 0.13
 Nodes (9): cn(), maskSensitive(), whatsappLink(), StickerItem, StickerPicker(), buildPageList(), Pagination(), PaginationProps (+1 more)
 
-### Community 21 - "Deliveries PDF Report"
+### Community 20 - "Campaigns & Coupon Validation"
 Cohesion: 0.18
 Nodes (15): applyDiscountRules(), ADMIN_ALERT_LABELS, client(), layout(), OrderEmailData, orderRow(), send(), sendAdminPaymentAlertEmail() (+7 more)
 
-### Community 22 - "Plan de Implementacion Resumen"
+### Community 21 - "Deliveries PDF Report"
 Cohesion: 0.18
 Nodes (10): adminNavigation, isAdminRouteActive(), AdminMobileBar(), AdminSidebar(), navigation, DOT, NotificationBell(), NotifItem (+2 more)
 
-### Community 23 - "Estructura de Directorios Next.js"
+### Community 22 - "Plan de Implementacion Resumen"
 Cohesion: 0.22
 Nodes (9): GradientText(), CategoryShowcaseSection, ProductCard(), ProductCardProps, ProductGridProps, AnimatedContent(), AnimatedContentProps, Category (+1 more)
 
-### Community 24 - "Flujo de Boleta y Despliegue"
+### Community 23 - "Estructura de Directorios Next.js"
 Cohesion: 0.14
 Nodes (12): Marquee(), BENEFITS, BenefitsMarquee(), BuyMeACoffee(), DONATION, CategoryShowcase(), CategoryTrends(), FeaturedProducts() (+4 more)
 
-### Community 25 - "Auth, Seguridad y Modelo BD"
+### Community 24 - "Flujo de Boleta y Despliegue"
 Cohesion: 0.12
 Nodes (9): brands, lines, preorder_reservations, separation_payments, acquisitions, shalom_contacts, createSchema, itemSchema (+1 more)
 
-### Community 26 - "User Avatar & Reviews"
+### Community 25 - "Auth, Seguridad y Modelo BD"
 Cohesion: 0.17
 Nodes (18): src/lib/pricing.ts, Boveda de Obsidian (docs/Boveda-Proyecto-Ecommerce, 8 secciones), Bundles 'Combina y Ahorra' (referenciado, detallado en otro chunk), Buy Me a Coffee (02.01): seccion desplegable en home con QR de Yape local, Campanas y Marketing (05.05): Banner/Announcement/Coupon/DiscountRule, motor de reglas de precio, cupones, Catalogo dinamico (categorias/animes con TENDENCIA, lineas, marcas, filtros y busqueda), Cloudinary activo (productos/vouchers/resenas/banners en latiendita/*, avatares con public_id=userId), CRM y Notificaciones (05.04): ficha 360 del cliente, plantillas WhatsApp, opt-in marketing (Ley 29733) (+10 more)
 
-### Community 27 - "Politicas Legales y Envios"
+### Community 26 - "User Avatar & Reviews"
 Cohesion: 0.15
 Nodes (6): ImageLightboxProps, EMBLA_BREAKPOINTS, ProductGalleryProps, Dialog(), DialogContent(), DialogTitle()
 
-### Community 28 - "Hero Banner & Carousel"
+### Community 27 - "Politicas Legales y Envios"
 Cohesion: 0.17
 Nodes (16): HeroBanner(), MagneticButton(), BannerView, Carousel(), CarouselApi, CarouselContent(), CarouselContext, CarouselContextProps (+8 more)
 
-### Community 29 - "Reglas del Proyecto (CLAUDE.md)"
+### Community 28 - "Hero Banner & Carousel"
 Cohesion: 0.13
 Nodes (17): Grupo de Rutas Privadas src/app/(admin-panel)/admin/ (dashboard, products, orders, manual-payments), Endpoints Backend src/app/api/ (orders, payments/mercadopago, proofs, products, webhook/mercadopago), Componentes UI src/components/ (admin, common, home, layout, products), Adicionales — Desglose Detallado de Directorios y Procesos, Utilidades src/lib/ (db.ts, mercadopago.ts, storage.ts, transformers.ts), Grupo de Rutas Publicas src/app/(shop)/ (home, products, cart, checkout, orders), Estado Global src/stores/ (cart-store.ts, ui-store.ts), Flujo Admin CRUD de Categorias (generacion de slug, toggles isActive/isTrending) (+9 more)
 
-### Community 30 - "Peru Heat Map Component"
+### Community 29 - "Reglas del Proyecto (CLAUDE.md)"
 Cohesion: 0.13
 Nodes (17): 06.01 — Flujo de Compra por Pasarela Automatica (nota referenciada, no incluida en este chunk), 06 — Experiencia de Usuario y Checkout (seccion padre referenciada, sin archivo indice localizado), 05.01 — Dashboard, Analitica y UI/UX (nota referenciada, no incluida en este chunk), 02.01 (referenciada repetidamente como 'Arquitectura de Base de Datos') — posible confusion con 01.03, 08.01 — Estrategia de Despliegue y Configuracion de Entornos, Modelo DotEnv (.env.local vs Vercel Environment Variables, misma estructura en todos los entornos), Checklist Pre-flight (prisma validate, check-env.js, logging centralizado), 08 — Plan de Implementacion y Despliegue (seccion padre referenciada) (+9 more)
 
-### Community 31 - "Order Summary & Pricing"
+### Community 30 - "Peru Heat Map Component"
 Cohesion: 0.20
 Nodes (10): AVATAR_DIR, ef3a883 version 7, deleteImageByUrl(), extractPublicId(), isCloudinaryEnabled(), IMAGE_EXT, SniffedImage, sniffImageType() (+2 more)
 
-### Community 32 - "Quick Access & Magnetic Button"
+### Community 31 - "Order Summary & Pricing"
 Cohesion: 0.13
 Nodes (17): Auth y Seguridad (NextAuth v5, RBAC, mustChangePassword, idempotencyKey, processCode), Trazabilidad Antifraude (processCode unico + relacion obligatoria Order-PaymentProof), 01.03 — Modelo de Base de Datos Prisma SQL, Politica de Datos Privados vs Publicos (firstName/lastName/dni nunca expuestos), Configuracion Neon + Prisma (DATABASE_URL local vs Neon, DATABASE_URL_NON_POOLING), 01.04 — Libreria de Animaciones y Diseno Visual (nota referenciada, no incluida en este chunk), Bloque 1: <ProductGallery/> (zoom hover, carrusel miniaturas, next/image priority), Bloque 4: <RatingsAndReviews/> — promedio, distribucion, badge Compra Verificada (+9 more)
 
-### Community 33 - "Avatar Upload & Cloudinary"
+### Community 32 - "Quick Access & Magnetic Button"
 Cohesion: 0.14
 Nodes (17): 05.02 (referenciada como 'Gestion de Clientes (CRM) y Usuarios') — nota real 05.02 es la Bandeja POS, 07 — Marco Legal y Politicas (seccion padre referenciada, sin archivo indice localizado), 06.03 — Logistica de Envios e Integracion con Courier (nota referenciada, no incluida en este chunk), Flujo de Aprobacion Manual (QR -> voucher Cloudinary -> AWAITING_VERIFICATION -> admin aprueba), Responsabilidad Admin-Driven (no compartir capturas de clientes, archivar vouchers tras conciliacion), Recoleccion de Datos (identificacion, contacto, transaccionales, cookies), Uso y Tratamiento (finalidad primaria/secundaria, seguridad, no venta a terceros), 07.03 — Politica de Privacidad y Proteccion de Datos (+9 more)
+
+### Community 33 - "Avatar Upload & Cloudinary"
+Cohesion: 0.15
+Nodes (12): BLUE, DeliveriesReport, DeliveryRow, downloadDeliveriesPdf(), downloadUsersPdf(), drawFooter(), drawHeader(), GRAY (+4 more)
 
 ### Community 34 - "Acquisitions Cost Calculation"
 Cohesion: 0.18
@@ -198,28 +198,28 @@ Cohesion: 0.17
 Nodes (16): Mapeo Fisico de Imagenes por slug (public/imagenes/Lista de Animes, Lineas de figuras), Assets Locales (public/Imagenes, no renombrar), Organizacion de Componentes (src/components/), Capa de Datos (schema.prisma, seed.ts, prisma.ts, transformers.ts, types/index.ts), CLAUDE.md — Guia del Proyecto, Integracion graphify (grafo de conocimiento del repo), Regla: no usar Modales, usar paginas dedicadas para formularios, Regla: no usar Server Actions, usar Route Handlers (+8 more)
 
 ### Community 36 - "Legal Pages (Terms/Privacy)"
-Cohesion: 0.14
-Nodes (10): DeptFeatureProps, geo, PeruHeatMap(), SEQUENTIAL_BLUE, DepartmentStat, DEPARTMENT_CODES, departmentLabel(), PERU_DEPARTMENTS (+2 more)
-
-### Community 37 - "PRD Resumen de Requisitos"
 Cohesion: 0.13
 Nodes (6): ForcedResetForm(), schema, adapter, { handlers, signIn, signOut, auth }, prismaAdapter, providers
 
-### Community 38 - "Checkout Coupon & Shipping"
+### Community 37 - "PRD Resumen de Requisitos"
 Cohesion: 0.17
 Nodes (13): BLUE, BoletaOrder, downloadBoletaPdf(), GRAY, lastY(), NAVY, PAYMENT_LABELS, RGB (+5 more)
 
-### Community 39 - "Transactional Email Sending"
+### Community 38 - "Checkout Coupon & Shipping"
 Cohesion: 0.19
 Nodes (8): MessageComposer(), AdminOrder, orderStatusBadge, shippingLabels, statusConfig, ShalomTracker(), Button(), buttonVariants
 
-### Community 40 - "Core DB Migration Schema"
+### Community 39 - "Transactional Email Sending"
 Cohesion: 0.18
 Nodes (13): abortarSiHayDatosReales(), adapter, ANIMES_DIR, comandoRespaldo(), generatedPasswords, LINEAS_DIR, main(), pool (+5 more)
 
-### Community 41 - "Cart Summary & Product Detail"
+### Community 40 - "Core DB Migration Schema"
 Cohesion: 0.20
 Nodes (8): createSchema, ACQUISITION_MONTHS, AcquisitionDerived, AcquisitionInputs, computeAcquisition(), igvAmount(), MONTH_ORDER, r2()
+
+### Community 41 - "Cart Summary & Product Detail"
+Cohesion: 0.22
+Nodes (10): ImageUploadProps, UploadedImage, ManualPaymentSection(), ManualPaymentSectionProps, 45b74fe fix: comprimir automaticamente imagenes > 1MB en todos los uploads, 953d1b2 fix: remover configuración de Pages Router en App Router (/api/upload), a559ce5 fix: remover soporte a GIF que no esta implementado en servidor, compressImageIfNeeded() (+2 more)
 
 ### Community 42 - "Env Config & Payment Gateways"
 Cohesion: 0.20
@@ -258,98 +258,94 @@ Cohesion: 0.18
 Nodes (7): 1fb3289 fix: implement justRegistered flag for terms acceptance on first login, registerSchema, DefaultJWT, DefaultUser, JWT, Session, User
 
 ### Community 51 - "Cart & Checkout Test Findings"
-Cohesion: 0.27
-Nodes (8): ImageUploadProps, UploadedImage, 45b74fe fix: comprimir automaticamente imagenes > 1MB en todos los uploads, 953d1b2 fix: remover configuración de Pages Router en App Router (/api/upload), a559ce5 fix: remover soporte a GIF que no esta implementado en servidor, compressImageIfNeeded(), AvatarUploader(), AvatarUploaderProps
-
-### Community 52 - "Product Card & Grid"
 Cohesion: 0.25
 Nodes (11): Configuration (path alias @/*, remote image patterns, build de deploy), Despliegue en Vercel (build: npx prisma generate && next build, Edge Middleware, Node 20+), 02.06 — Autenticacion Segura con Google y NextAuth v5, Configuracion .env (GOOGLE_CLIENT_ID/SECRET, NEXTAUTH_SECRET, NEXTAUTH_URL), Configuracion Google Cloud Console (OAuth consent, origenes/redirect URIs, dominio latienditadeblue.org.pe), 03.01 — Pasarela Automatizada Mercado Pago, Flujo E2E de Pago (Checkout -> Preference -> Pago -> Webhook -> Estado PAID/FAILED), UX del Boton de Pago (loading Bluet, Checkout Pro / Brick embebido) (+3 more)
 
-### Community 53 - "Git Commit History"
+### Community 52 - "Product Card & Grid"
 Cohesion: 0.35
 Nodes (11): Address (Direcciones), Brand (Marcas), Category (Categorias), Modelo de Datos - BasicTechShop (referenciado, detallado en otro chunk), Order (Pedidos), Estados de Pedido (PENDING→CONFIRMED→PROCESSING→SHIPPED→DELIVERED / CANCELLED), OrderItem (Items del Pedido), Product (Productos) (+3 more)
 
-### Community 54 - "Preorders & Acquisitions Migration"
+### Community 53 - "Git Commit History"
 Cohesion: 0.31
 Nodes (11): Estructura de API Routes (auth, users, categories, brands, products, addresses, orders), Paginas de Administracion, API Routes (listado detallado con metodos HTTP), Paginas de Checkout, Listado de Paginas - BasicTechShop (referenciado, detallado en otro chunk), Estructura de Layouts (root, (shop), (admin-panel)), Proteccion de Rutas (Middleware), Paginas de Perfil de Usuario (+3 more)
 
-### Community 55 - "Stats Counter Animation"
+### Community 54 - "Preorders & Acquisitions Migration"
 Cohesion: 0.24
 Nodes (5): previewText(), stripMarkers(), MessageBody(), Msg, SentGroup
 
-### Community 56 - "Checkout Success Page"
+### Community 55 - "Stats Counter Animation"
 Cohesion: 0.25
 Nodes (6): navigation, ProfileMobileNav(), navigation, ProfileSidebar(), ScrollArea(), ScrollBar()
 
-### Community 57 - "Community 57"
+### Community 56 - "Checkout Success Page"
 Cohesion: 0.24
 Nodes (10): Boveda de Obsidian (docs/Boveda-Proyecto-Ecommerce), Base de Datos Local (PostgreSQL 18, latiendita_blue, usuarios seed), Project Overview: e-commerce peruano de figuras coleccionables, README.md — La Tiendita de Blue, Seccion Documentacion (enlaces a CLAUDE.md, PLAN.md, DATA-MODEL.md, PAGES.md, PRD.md, Boveda), Estructura del Proyecto (arbol src/), Requisitos e Instalacion (Node 20+, Postgres 18, npm install, migrate, seed), Scripts Disponibles (dev/build/start/lint/db:seed/db:migrate) (+2 more)
 
-### Community 58 - "Community 58"
+### Community 57 - "Community 57"
 Cohesion: 0.29
 Nodes (4): 8b3e1a0 version 5, useCoarsePointer(), MagneticButtonProps, SpotlightCardProps
 
-### Community 59 - "Community 59"
+### Community 58 - "Community 58"
 Cohesion: 0.31
 Nodes (5): getClient(), getPaymentClient(), getPreferenceClient(), isMercadoPagoEnabled(), schema
 
-### Community 60 - "Community 60"
+### Community 59 - "Community 59"
 Cohesion: 0.31
 Nodes (4): AuthShell(), FEATURES, RegisterForm(), isGoogleEnabled()
 
-### Community 61 - "Community 61"
+### Community 60 - "Community 60"
 Cohesion: 0.36
 Nodes (7): RegisterFormData, registerSchema, Field, FieldDescription, FieldError, FieldGroup, FieldLabel
 
-### Community 62 - "Community 62"
+### Community 61 - "Community 61"
 Cohesion: 0.32
 Nodes (3): 2ee7082 version 3, 3db2e43 version 2, releaseAbandonedStock()
 
-### Community 63 - "Community 63"
+### Community 62 - "Community 62"
 Cohesion: 0.36
 Nodes (7): announcements, banners, categories, coupons, discount_rules, lines, orders
 
-### Community 64 - "Community 64"
+### Community 63 - "Community 63"
 Cohesion: 0.25
 Nodes (8): cart-store.ts (referenciado, detallado en otro chunk), ProductCard component, ProductGallery component, Checkout dual (envios + pago manual con QR/voucher o Mercado Pago; idempotencia; processCode), Hallazgo: carrito de compras falla al agregar un segundo producto, Hallazgo: errores de manejo de imagenes (src faltante, href vacio), TC008 Shopping Cart Operations (FAILED, HIGH), TC009 Checkout Flow Success (FAILED, CRITICAL)
 
-### Community 65 - "Community 65"
+### Community 64 - "Community 64"
 Cohesion: 0.33
 Nodes (4): GoogleButton(), LoginForm(), LoginFormData, loginSchema
 
-### Community 66 - "Community 66"
+### Community 65 - "Community 65"
 Cohesion: 0.33
 Nodes (6): a3fe619 fix: aumentar límite de avatar a 5MB y mostrar recomendaciones, b1b2d34 fix: revertir clave api invalida en next.config y hacer responsivo el dashboard, bc2e609 fix: aumentar límite de body parser a 5MB para uploads de imágenes, csp, nextConfig, securityHeaders
 
-### Community 67 - "Community 67"
+### Community 66 - "Community 66"
 Cohesion: 0.33
 Nodes (5): transformReview(), hasVerifiedPurchase(), POST(), reviewSchema, VERIFIED_STATUSES
 
-### Community 68 - "Community 68"
+### Community 67 - "Community 67"
 Cohesion: 0.67
 Nodes (5): import_batch_items, import_batches, preorder_reservations, products, users
 
-### Community 69 - "Community 69"
+### Community 68 - "Community 68"
 Cohesion: 0.40
 Nodes (3): CountUp(), CountUpProps, StatsBand()
 
-### Community 70 - "Community 70"
+### Community 69 - "Community 69"
 Cohesion: 0.33
 Nodes (5): adminRoutes, config, guestRoutes, legalReadingRoutes, protectedRoutes
 
-### Community 71 - "Community 71"
+### Community 70 - "Community 70"
 Cohesion: 0.40
 Nodes (1): 7f3209a feat: add sitemap.xml, robots.txt and Google OAuth data disclosure
 
-### Community 72 - "Community 72"
+### Community 71 - "Community 71"
 Cohesion: 0.50
 Nodes (3): PriceFilter(), PriceFilterProps, Slider()
 
-### Community 73 - "Community 73"
+### Community 72 - "Community 72"
 Cohesion: 0.83
 Nodes (3): messages, stickers, users
 
-### Community 74 - "Community 74"
+### Community 73 - "Community 73"
 Cohesion: 0.50
 Nodes (4): 02.03 — Sistema de Perfiles y Datos Privados de Admin, Flujo de Cambio Forzado (mustChangePassword, /auth/forced-reset), Diseno de Interfaces Protegidas (perfil cliente enmascarado, panel admin con datos completos), Matriz de Visibilidad de Datos (username/avatarUrl publicos vs realName/dni/phone/address privados)
 
@@ -374,9 +370,9 @@ Nodes (4): 02.03 — Sistema de Perfiles y Datos Privados de Admin, Flujo de Cam
   docs/Boveda-Proyecto-Ecommerce/04-Seguridad-Y-Prevencion-De-Errores/[[04.02-Blindaje contra SQL Injection y XSS]].md · relation: conceptually_related_to
 
 ## Knowledge Gaps
-- **372 isolated node(s):** `eslintConfig`, `csp`, `securityHeaders`, `nextConfig`, `config` (+367 more)
+- **366 isolated node(s):** `eslintConfig`, `csp`, `securityHeaders`, `nextConfig`, `config` (+361 more)
   These have ≤1 connection - possible missing edges or undocumented components.
-- **Thin community `Community 71`** (1 nodes): `7f3209a feat: add sitemap.xml, robots.txt and Google OAuth data disclosure`
+- **Thin community `Community 70`** (1 nodes): `7f3209a feat: add sitemap.xml, robots.txt and Google OAuth data disclosure`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
 
 ## Suggested Questions

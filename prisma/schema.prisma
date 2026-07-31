@@ -544,12 +544,14 @@ enum BatchStatus {
 model ImportBatch {
   id          String      @id @default(cuid())
   name        String // Ej. "Lote Julio - Banpresto"
-  supplier    String? // Proveedor
-  trackingRef String? // Guía internacional / referencia aduanera
+  supplier    String? // Repurposado en el panel como "N° de Lote" (código interno, ej. BBHD501)
+  trackingRef String? // Guía internacional / referencia aduanera (puede ser una URL de tracking)
+  shipDate    DateTime? // Fecha de envío del proveedor; el ETA se autocalcula sumando 70 días
   eta         DateTime? // Fecha estimada de llegada (mueve las preventas asociadas)
   status      BatchStatus @default(IN_TRANSIT)
   receivedAt  DateTime?
   notes       String?     @db.Text
+  images      String[] // Fotos del lote (packing list, unboxing, etc.) — Cloudinary, sin límite de cantidad
 
   items     ImportBatchItem[]
   preorders PreorderReservation[]

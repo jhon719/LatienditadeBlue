@@ -13,9 +13,10 @@ interface PromoPopupProps {
   altText: string
 }
 
-// Se muestra una vez por sesion del navegador. La clave incluye el id de la
-// campana: si el admin publica un popup nuevo, vuelve a aparecer aunque el
-// visitante ya hubiera cerrado el anterior.
+// Se muestra una vez hasta que el visitante lo cierra. La clave incluye el id
+// de la campana: si el admin publica un popup nuevo, vuelve a aparecer aunque
+// el visitante ya hubiera cerrado el anterior (pero mantiene cerrado si ese
+// popup en particular fue descartado).
 const dismissKey = (id: string) => `popupDismissed:${id}`
 
 const AUTO_OPEN_DELAY_MS = 2500
@@ -28,13 +29,13 @@ export function PromoPopup({ id, imageUrl, linkUrl, altText }: PromoPopupProps) 
   const [open, setOpen] = useState(false)
 
   const close = useCallback(() => {
-    sessionStorage.setItem(dismissKey(id), "1")
+    localStorage.setItem(dismissKey(id), "1")
     setOpen(false)
   }, [id])
 
   useEffect(() => {
     if (NO_SHOW.some((p) => pathname.startsWith(p))) return
-    if (sessionStorage.getItem(dismissKey(id)) === "1") return
+    if (localStorage.getItem(dismissKey(id)) === "1") return
 
     const timer = setTimeout(() => setOpen(true), AUTO_OPEN_DELAY_MS)
     return () => clearTimeout(timer)

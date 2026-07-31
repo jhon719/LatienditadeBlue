@@ -101,6 +101,8 @@ export default function AdminProductsPage() {
   const [stockFilter, setStockFilter] = useState("all")
   const [deleteId, setDeleteId] = useState<string | null>(null)
   const [deleting, setDeleting] = useState(false)
+  const [deleteError, setDeleteError] = useState<string | null>(null)
+  const [deactivatedNotice, setDeactivatedNotice] = useState<string | null>(null)
 
   useEffect(() => {
     const fetchData = async () => {
@@ -128,18 +130,28 @@ export default function AdminProductsPage() {
   const handleDelete = async () => {
     if (!deleteId) return
     setDeleting(true)
+    setDeleteError(null)
     try {
       const response = await fetch(`/api/products/${deleteId}`, {
         method: "DELETE",
       })
-      if (response.ok) {
-        setProducts(products.filter((p) => p.id !== deleteId))
+      const data = await response.json().catch(() => ({}))
+      if (!response.ok) {
+        setDeleteError(data.error || "No se pudo eliminar el producto. Intenta de nuevo.")
+        return
+      }
+      setProducts(products.filter((p) => p.id !== deleteId))
+      setDeleteId(null)
+      if (data.deactivated) {
+        setDeactivatedNotice(
+          "El producto tiene ventas o separaciones asociadas: se desactivó (dejó de estar visible en la tienda) en vez de eliminarse, para conservar ese historial."
+        )
       }
     } catch (error) {
       console.error("Error deleting product:", error)
+      setDeleteError("No se pudo eliminar el producto. Intenta de nuevo.")
     } finally {
       setDeleting(false)
-      setDeleteId(null)
     }
   }
 
@@ -181,6 +193,19 @@ export default function AdminProductsPage() {
           </Link>
         </Button>
       </div>
+
+      {deactivatedNotice && (
+        <div className="flex items-start justify-between gap-4 rounded-md bg-[#E1F0FF] p-3 text-sm text-[#142F5C] dark:bg-primary/10 dark:text-foreground">
+          <p>{deactivatedNotice}</p>
+          <button
+            type="button"
+            onClick={() => setDeactivatedNotice(null)}
+            className="shrink-0 font-medium underline"
+          >
+            Cerrar
+          </button>
+        </div>
+      )}
 
       {/* Stats */}
       <div className="grid gap-4 md:grid-cols-4">
@@ -353,7 +378,10 @@ export default function AdminProductsPage() {
                             <DropdownMenuSeparator />
                             <DropdownMenuItem
                               className="text-destructive"
-                              onClick={() => setDeleteId(product.id)}
+                              onClick={() => {
+                                setDeleteError(null)
+                                setDeleteId(product.id)
+                              }}
                             >
                               <Trash2 className="mr-2 h-4 w-4" />
                               Eliminar
@@ -371,14 +399,28 @@ export default function AdminProductsPage() {
       </Card>
 
       {/* Delete Confirmation */}
-      <AlertDialog open={!!deleteId} onOpenChange={() => setDeleteId(null)}>
+      <AlertDialog
+        open={!!deleteId}
+        onOpenChange={(open) => {
+          if (!open) {
+            setDeleteId(null)
+            setDeleteError(null)
+          }
+        }}
+      >
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Eliminar producto</AlertDialogTitle>
             <AlertDialogDescription>
-              Esta accion no se puede deshacer. El producto sera eliminado permanentemente.
+              Si el producto no tiene ventas ni separaciones asociadas se eliminara
+              permanentemente. Si las tiene, se desactivara para conservar ese historial.
             </AlertDialogDescription>
           </AlertDialogHeader>
+          {deleteError && (
+            <div className="rounded-md bg-destructive/15 p-3 text-sm text-destructive">
+              {deleteError}
+            </div>
+          )}
           <AlertDialogFooter>
             <AlertDialogCancel disabled={deleting}>Cancelar</AlertDialogCancel>
             <AlertDialogAction onClick={handleDelete} disabled={deleting}>

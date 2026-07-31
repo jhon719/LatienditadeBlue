@@ -15,6 +15,7 @@ interface UploadedImage {
 interface ImageUploadProps {
   value: UploadedImage[]
   onChange: (images: UploadedImage[]) => void
+  // Sin maxImages = sin límite de cantidad (ej. galería de lotes)
   maxImages?: number
   // Subcarpeta lógica en Cloudinary/uploads: products | banners | reviews
   folder?: string
@@ -23,7 +24,7 @@ interface ImageUploadProps {
 export function ImageUpload({
   value = [],
   onChange,
-  maxImages = 5,
+  maxImages,
   folder = "products",
 }: ImageUploadProps) {
   const [uploading, setUploading] = useState(false)
@@ -34,7 +35,7 @@ export function ImageUpload({
     async (files: FileList | null) => {
       if (!files || files.length === 0) return
 
-      const remainingSlots = maxImages - value.length
+      const remainingSlots = maxImages ? maxImages - value.length : Infinity
       if (remainingSlots <= 0) return
 
       const filesToUpload = Array.from(files).slice(0, remainingSlots)
@@ -155,7 +156,7 @@ export function ImageUpload({
       )}
 
       {/* Área de upload */}
-      {value.length < maxImages && (
+      {(!maxImages || value.length < maxImages) && (
         <div
           onDragEnter={handleDrag}
           onDragLeave={handleDrag}
@@ -184,7 +185,7 @@ export function ImageUpload({
                 JPG, PNG o WebP (máx. 5MB)
               </p>
               <p className="text-xs text-muted-foreground">
-                {value.length} de {maxImages} imágenes
+                {maxImages ? `${value.length} de ${maxImages} imágenes` : `${value.length} imágenes subidas`}
               </p>
             </>
           )}

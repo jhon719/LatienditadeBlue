@@ -4,7 +4,7 @@
     "hash": "dfa1f5f6a7037bf39dc510f30b180002"
   },
   "C:/Users/johna/Downloads/la-tiendita-de-blue/next.config.ts": {
-    "mtime": 1785297910236.181,
+    "mtime": 1785112647946.8384,
     "hash": "b49b48e4e6b0c4238e4c26f34764a709"
   },
   "C:/Users/johna/Downloads/la-tiendita-de-blue/postcss.config.mjs": {
@@ -72,8 +72,8 @@
     "hash": "4e19851ee899d31cb476739e4c5b882c"
   },
   "C:/Users/johna/Downloads/la-tiendita-de-blue/src/app/(admin-panel)/admin/campaigns/page.tsx": {
-    "mtime": 1785306599755.183,
-    "hash": "90bc56612fe4e8670f9368c46b8d0f50"
+    "mtime": 1785108706002.9521,
+    "hash": "23148413013e4b5c9a4e2295f09ddb58"
   },
   "C:/Users/johna/Downloads/la-tiendita-de-blue/src/app/(admin-panel)/admin/categories/[type]/[id]/edit/page.tsx": {
     "mtime": 1784604165897.99,
@@ -100,12 +100,12 @@
     "hash": "3c1b410a94f3cb0191b8bcf99bb39e84"
   },
   "C:/Users/johna/Downloads/la-tiendita-de-blue/src/app/(admin-panel)/admin/logistics/batches/[id]/page.tsx": {
-    "mtime": 1785474703967.4548,
-    "hash": "d3e766b736e95284bf151a81b0ae33e5"
+    "mtime": 1784610573162.102,
+    "hash": "fd7842bf6941d77e309b9809b40d2b5e"
   },
   "C:/Users/johna/Downloads/la-tiendita-de-blue/src/app/(admin-panel)/admin/logistics/batches/new/page.tsx": {
-    "mtime": 1785474660472.655,
-    "hash": "8f7cc6474e8980ad6eb2e96af4c719b9"
+    "mtime": 1784610530939.7249,
+    "hash": "c2a4f7495f39b7689aa36fb6f432a46d"
   },
   "C:/Users/johna/Downloads/la-tiendita-de-blue/src/app/(admin-panel)/admin/logistics/page.tsx": {
     "mtime": 1785108708077.3843,
@@ -140,8 +140,8 @@
     "hash": "132874bea7752dcff51f9b4b5bb273ca"
   },
   "C:/Users/johna/Downloads/la-tiendita-de-blue/src/app/(admin-panel)/admin/page.tsx": {
-    "mtime": 1785301190300.9878,
-    "hash": "7909264ebdd2f44b5ec9cdb65649acd5"
+    "mtime": 1784951659307.5955,
+    "hash": "60fa7679935c3d0395cd8a23e4c47bdd"
   },
   "C:/Users/johna/Downloads/la-tiendita-de-blue/src/app/(admin-panel)/admin/products/[id]/edit/page.tsx": {
     "mtime": 1784418276825.9658,
@@ -152,12 +152,12 @@
     "hash": "e856fe010346f9a1b287853afd86a407"
   },
   "C:/Users/johna/Downloads/la-tiendita-de-blue/src/app/(admin-panel)/admin/products/page.tsx": {
-    "mtime": 1785465269072.133,
-    "hash": "399e848fa0cef9aebff58aaba9e1ce77"
+    "mtime": 1784602679470.3599,
+    "hash": "d69f5db6926d4eef9128043bd929d7c2"
   },
   "C:/Users/johna/Downloads/la-tiendita-de-blue/src/app/(admin-panel)/admin/reports/page.tsx": {
-    "mtime": 1785476209221.5552,
-    "hash": "048524cc69db55b3bad2fee65049bcbd"
+    "mtime": 1784674478675.1548,
+    "hash": "d83972be86c888f44e11cefc80b1f77c"
   },
   "C:/Users/johna/Downloads/la-tiendita-de-blue/src/app/(admin-panel)/admin/settings/page.tsx": {
     "mtime": 1784433667445.2385,
@@ -204,8 +204,8 @@
     "hash": "ea15251beca86eae05afe60dcc1c184e"
   },
   "C:/Users/johna/Downloads/la-tiendita-de-blue/src/app/(shop)/layout.tsx": {
-    "mtime": 1785306541209.994,
-    "hash": "5ffd8ad2beb82771e37c3277fa3bed5a"
+    "mtime": 1785281801083.2998,
+    "hash": "9dc43f07612877528334af64201d7fcd"
   },
   "C:/Users/johna/Downloads/la-tiendita-de-blue/src/app/(shop)/page.tsx": {
     "mtime": 1785269450356.6897,
@@ -240,8 +240,8 @@
     "hash": "93bd17179d41741b31592630122508d5"
   },
   "C:/Users/johna/Downloads/la-tiendita-de-blue/src/app/(shop)/profile/separations/page.tsx": {
-    "mtime": 1785364162264.4006,
-    "hash": "118a66b277529e0e229aa4485892f466"
+    "mtime": 1784610927029.0667,
+    "hash": "4e340d80fe4255f9959914ded5c936d2"
   },
   "C:/Users/johna/Downloads/la-tiendita-de-blue/src/app/(shop)/profile/settings/page.tsx": {
     "mtime": 1785279044810.175,
@@ -272,12 +272,12 @@
     "hash": "52d1cc109db3b7fa4ee7ca36ac57f087"
   },
   "C:/Users/johna/Downloads/la-tiendita-de-blue/src/app/api/admin/batches/[id]/route.ts": {
-    "mtime": 1785474599126.6711,
-    "hash": "5ec51db7e7c8691f42f0fac84b8dce0e"
+    "mtime": 1784610545568.4724,
+    "hash": "67e0074dd9fef041a4029e36bd3f3eb8"
   },
   "C:/Users/johna/Downloads/la-tiendita-de-blue/src/app/api/admin/batches/route.ts": {
-    "mtime": 1785474579626.3643,
-    "hash": "e9bff0ffaa84aaab3a14ecee49102450"
+    "mtime": 1784609955439.3484,
+    "hash": "ece4cede3329a4fdcc5728e2cb34af77"
   },
   "C:/Users/johna/Downloads/la-tiendita-de-blue/src/app/api/admin/campaigns/[type]/[id]/route.ts": {
     "mtime": 1784524727138.6677,
@@ -400,8 +400,8 @@
     "hash": "a1d1bfdd89acbf642435ed483130cad2"
   },
   "C:/Users/johna/Downloads/la-tiendita-de-blue/src/app/api/products/[id]/route.ts": {
-    "mtime": 1785465229796.4006,
-    "hash": "f05d2df05e1a39130a00387ee995b71f"
+    "mtime": 1784951561567.0007,
+    "hash": "c4f233ec3f6481a9cb645c123d24ae73"
   },
   "C:/Users/johna/Downloads/la-tiendita-de-blue/src/app/api/products/route.ts": {
     "mtime": 1784990778818.0046,
@@ -420,12 +420,12 @@
     "hash": "c1f339ef0ff68be70966bdae627748cc"
   },
   "C:/Users/johna/Downloads/la-tiendita-de-blue/src/app/api/upload/route.ts": {
-    "mtime": 1785474547174.9563,
-    "hash": "fd136d360ddb4d32cc667d2994dcab9a"
+    "mtime": 1784955014802.5361,
+    "hash": "779c69248d952d6302618d95f2637a14"
   },
   "C:/Users/johna/Downloads/la-tiendita-de-blue/src/app/api/user/avatar/route.ts": {
-    "mtime": 1785285169905.2178,
-    "hash": "be0aa9e2ccc1a6289e5a1d7ca7623a94"
+    "mtime": 1784765083695.2275,
+    "hash": "72933bd25cd82de1aab9ae6d7ddb646d"
   },
   "C:/Users/johna/Downloads/la-tiendita-de-blue/src/app/api/user/profile/route.ts": {
     "mtime": 1785279029563.1206,
@@ -456,8 +456,8 @@
     "hash": "cbb3dbb718073c8e07ef567ceb880c14"
   },
   "C:/Users/johna/Downloads/la-tiendita-de-blue/src/components/admin/CampaignForm.tsx": {
-    "mtime": 1785306572961.5332,
-    "hash": "3681c805073df788b8bd87766623c61f"
+    "mtime": 1784524811873.5046,
+    "hash": "ae1cdaf2e524c628f554e1a8ed85958b"
   },
   "C:/Users/johna/Downloads/la-tiendita-de-blue/src/components/admin/CatalogEntryForm.tsx": {
     "mtime": 1784604149559.2263,
@@ -472,8 +472,8 @@
     "hash": "02f786ed892b47412b210a6423f0bf09"
   },
   "C:/Users/johna/Downloads/la-tiendita-de-blue/src/components/admin/ImageUpload.tsx": {
-    "mtime": 1785474542457.1018,
-    "hash": "3baf161b1d2c1f9b16d6e30aaa6c459d"
+    "mtime": 1785269920982.6514,
+    "hash": "ea98b13fb97abaf7c249307ae1b51298"
   },
   "C:/Users/johna/Downloads/la-tiendita-de-blue/src/components/admin/ProductForm.tsx": {
     "mtime": 1784526580525.948,
@@ -540,8 +540,8 @@
     "hash": "b490883fa015a9760afbb88fcb2da07d"
   },
   "C:/Users/johna/Downloads/la-tiendita-de-blue/src/components/checkout/ManualPaymentSection.tsx": {
-    "mtime": 1785364172756.1675,
-    "hash": "6bbb8dea1d099b5d4c2fc447210b0f01"
+    "mtime": 1784524889275.631,
+    "hash": "2659759ea23c3385b5b79456b4e3273b"
   },
   "C:/Users/johna/Downloads/la-tiendita-de-blue/src/components/checkout/OrderSummary.tsx": {
     "mtime": 1784472882510.0503,
@@ -636,8 +636,8 @@
     "hash": "78cd3c91b8ec54ce0e7c652679e78553"
   },
   "C:/Users/johna/Downloads/la-tiendita-de-blue/src/components/layout/Header.tsx": {
-    "mtime": 1785471520169.2107,
-    "hash": "91aa7f8abe41e9369ed03eaae9035c9e"
+    "mtime": 1785274271427.3066,
+    "hash": "da19be7a087e8a6def3c2697893a7499"
   },
   "C:/Users/johna/Downloads/la-tiendita-de-blue/src/components/layout/MobileNav.tsx": {
     "mtime": 1785108096404.8547,
@@ -712,8 +712,8 @@
     "hash": "4b111204174d68dca8d9adb3e5ec5252"
   },
   "C:/Users/johna/Downloads/la-tiendita-de-blue/src/components/profile/AvatarUploader.tsx": {
-    "mtime": 1785364131634.094,
-    "hash": "8d256a82819b2ea979cc7afc6c97e325"
+    "mtime": 1784417785574.9385,
+    "hash": "45d95105bc540ceb4274a634dc5a41a6"
   },
   "C:/Users/johna/Downloads/la-tiendita-de-blue/src/components/profile/ProfileMobileNav.tsx": {
     "mtime": 1784955882936.5852,
@@ -876,12 +876,12 @@
     "hash": "4971f06d17ca20c2187a4ebc64dde534"
   },
   "C:/Users/johna/Downloads/la-tiendita-de-blue/src/lib/campaign-admin.ts": {
-    "mtime": 1785306495070.8518,
-    "hash": "b84bad832d1eb55faaffb15e86a9625b"
+    "mtime": 1784472979803.934,
+    "hash": "e46c99035c15ed908db966227d7ef67c"
   },
   "C:/Users/johna/Downloads/la-tiendita-de-blue/src/lib/campaigns.ts": {
-    "mtime": 1785306507110.2598,
-    "hash": "a7c206f3c3b55049a70def075f47d52b"
+    "mtime": 1784472604493.8215,
+    "hash": "5b0cf2826f5f4a6a9100dc6d0851fb23"
   },
   "C:/Users/johna/Downloads/la-tiendita-de-blue/src/lib/cloudinary.ts": {
     "mtime": 1784951544609.6187,
@@ -916,8 +916,8 @@
     "hash": "d9b4f57578caacf7665348b990bbc506"
   },
   "C:/Users/johna/Downloads/la-tiendita-de-blue/src/lib/reports-pdf.ts": {
-    "mtime": 1785476149448.1636,
-    "hash": "39e3d924987ef6984601577b3e923329"
+    "mtime": 1784673549678.0813,
+    "hash": "1b53e4edda88c64671d739576811c221"
   },
   "C:/Users/johna/Downloads/la-tiendita-de-blue/src/lib/separations-server.ts": {
     "mtime": 1784949323864.8628,
@@ -1084,8 +1084,8 @@
     "hash": "d41d8cd98f00b204e9800998ecf8427e"
   },
   "C:/Users/johna/Downloads/la-tiendita-de-blue/docs/Boveda-Proyecto-Ecommerce/05-Panel-Administrativo-Y-POS/[[05.03-Control de Inventario y Preventas]].md": {
-    "mtime": 1785476569293.0034,
-    "hash": "3cdad7d0d23c134402d99a24e49a064d"
+    "mtime": 1784992125621.097,
+    "hash": "27da2a985c9228b855de1d0330df2b07"
   },
   "C:/Users/johna/Downloads/la-tiendita-de-blue/docs/Boveda-Proyecto-Ecommerce/05-Panel-Administrativo-Y-POS/[[05.07-Motor Avanzado de Separaciones, Plazos y Pagos Fraccionados]].md": {
     "mtime": 1784684307638.5366,
@@ -1160,8 +1160,8 @@
     "hash": "c1571f7a7f451058f7ef8173f62d2063"
   },
   "C:/Users/johna/Downloads/la-tiendita-de-blue/.graphify/GRAPH_REPORT.md": {
-    "mtime": 1785475825389.381,
-    "hash": "f8e65685621da9e2baa5fab40d89cd2e"
+    "mtime": 1785103236821.1592,
+    "hash": "4f0127ce2bd1b92cd96c50434120e25c"
   },
   "C:/Users/johna/Downloads/la-tiendita-de-blue/.graphify/description-instructions/batch-000.md": {
     "mtime": 1784846017224.786,
@@ -6200,8 +6200,8 @@
     "hash": "4826fdbc9c284b56dd80b18b95468a99"
   },
   "C:/Users/johna/Downloads/la-tiendita-de-blue/src/components/admin/StockAlerts.tsx": {
-    "mtime": 1785301214299.268,
-    "hash": "d1cc434e63dff56369a13be82d781af5"
+    "mtime": 1784951627333.751,
+    "hash": "59ce499eb9c48b1da5d909a003858631"
   },
   "C:/Users/johna/Downloads/la-tiendita-de-blue/src/components/layout/UserNotificationBell.tsx": {
     "mtime": 1785209876455.0264,
@@ -6247,18 +6247,6 @@
     "mtime": 1785166046644.1475,
     "hash": "f13664005fd5cf44eab4044f51e43e45"
   },
-  "C:/Users/johna/Downloads/la-tiendita-de-blue/prisma/migrations/20260728225008_add_preferred_shipping_agency/migration.sql": {
-    "mtime": 1785279008185.0156,
-    "hash": "b94142c8e7cd3c4be5ccbecb8836522e"
-  },
-  "C:/Users/johna/Downloads/la-tiendita-de-blue/prisma/migrations/20260729055141_add_popup_campaign/migration.sql": {
-    "mtime": 1785304301402.479,
-    "hash": "c67cfc18ce756cb51df5b9215dadeb22"
-  },
-  "C:/Users/johna/Downloads/la-tiendita-de-blue/prisma/migrations/20260729063050_add_corner_ad_campaign/migration.sql": {
-    "mtime": 1785306650800.3892,
-    "hash": "6d8ca05aa0a083765c091f30cf20296b"
-  },
   "C:/Users/johna/Downloads/la-tiendita-de-blue/src/app/(auth)/accept-terms/page.tsx": {
     "mtime": 1785121331515.3193,
     "hash": "24d5b6afdc9d13068912830f4c509dd0"
@@ -6287,37 +6275,9 @@
     "mtime": 1785121288794.07,
     "hash": "8a0f0e7b8bd4794e33565787ca4b266b"
   },
-  "C:/Users/johna/Downloads/la-tiendita-de-blue/src/components/common/CompleteProfileBanner.tsx": {
-    "mtime": 1785278940910.4292,
-    "hash": "8d261b1a807d2d67d78fb989a64d4b30"
-  },
-  "C:/Users/johna/Downloads/la-tiendita-de-blue/src/components/common/CornerAd.tsx": {
-    "mtime": 1785306525171.7395,
-    "hash": "9e423bf3db7bb8d8e4ff5ef1f5515fcf"
-  },
-  "C:/Users/johna/Downloads/la-tiendita-de-blue/src/components/common/HowToBuyLink.tsx": {
-    "mtime": 1785281781755.245,
-    "hash": "79ef4706f7cbfd2ca20afc5b196bc574"
-  },
   "C:/Users/johna/Downloads/la-tiendita-de-blue/src/components/common/PaymentMethods.tsx": {
     "mtime": 1785278820713.275,
     "hash": "16e2648c19b29f1d7ef51d7289f4cb10"
-  },
-  "C:/Users/johna/Downloads/la-tiendita-de-blue/src/components/common/PromoPopup.tsx": {
-    "mtime": 1785473151201.2534,
-    "hash": "4e160fca53afc3521bc73897fef39444"
-  },
-  "C:/Users/johna/Downloads/la-tiendita-de-blue/src/components/common/ShippingAgencies.tsx": {
-    "mtime": 1785278914992.4026,
-    "hash": "a6e366deeb98d3436cf8f03d223b953d"
-  },
-  "C:/Users/johna/Downloads/la-tiendita-de-blue/src/components/common/WelcomeTour.tsx": {
-    "mtime": 1785282027727.008,
-    "hash": "8efd01afb1fac4c3f057844607572995"
-  },
-  "C:/Users/johna/Downloads/la-tiendita-de-blue/src/components/home/CategoryShowcase.tsx": {
-    "mtime": 1785274245258.8423,
-    "hash": "ed0a27b49d5941e5f7a780778a884e3a"
   },
   "C:/Users/johna/Downloads/la-tiendita-de-blue/src/components/home/StoreLocations.tsx": {
     "mtime": 1785118039796.8154,
@@ -6331,14 +6291,6 @@
     "mtime": 1785119378372.087,
     "hash": "2375e1702bf8d1764b17253682881797"
   },
-  "C:/Users/johna/Downloads/la-tiendita-de-blue/src/lib/home-products.ts": {
-    "mtime": 1785269420695.5356,
-    "hash": "89f4a0af66bf45d4512bd73b2c854f66"
-  },
-  "C:/Users/johna/Downloads/la-tiendita-de-blue/src/lib/image-compression.ts": {
-    "mtime": 1785364105820.233,
-    "hash": "89601f1198fd177c4e090c0f485922c5"
-  },
   "C:/Users/johna/Downloads/la-tiendita-de-blue/src/lib/locations.ts": {
     "mtime": 1785118025824.7407,
     "hash": "f496f6e4877e8bb6a4bfcb2148bf7500"
@@ -6346,10 +6298,6 @@
   "C:/Users/johna/Downloads/la-tiendita-de-blue/src/stores/navigation-store.ts": {
     "mtime": 1785119366485.147,
     "hash": "d1f61df282d514febde97214b0d014f4"
-  },
-  "C:/Users/johna/Downloads/la-tiendita-de-blue/src/stores/onboarding-store.ts": {
-    "mtime": 1785281729284.7202,
-    "hash": "abee771be749689f3fe66c5346432919"
   },
   "C:/Users/johna/Downloads/la-tiendita-de-blue/.graphify/2026-07-26/GRAPH_REPORT.md": {
     "mtime": 1785103236821.1592,

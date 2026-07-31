@@ -3,7 +3,7 @@
 import { use, useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
-import { ArrowLeft, Loader2, PackageCheck, Save } from "lucide-react"
+import { ArrowLeft, ExternalLink, Loader2, PackageCheck, Save } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import {
@@ -13,19 +13,52 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
+import Image from "next/image"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
+import { ImageUpload } from "@/components/admin/ImageUpload"
+
+interface UploadedImage {
+  url: string
+  publicId: string
+}
 
 interface Batch {
   id: string
   name: string
   supplier: string | null
   trackingRef: string | null
+  shipDate: string | null
   eta: string | null
   status: "IN_TRANSIT" | "RECEIVED"
   notes: string | null
-  items: { id: string; name: string; quantity: number; unitCost: number | null }[]
+  images: string[]
+  items: {
+    id: string
+    name: string
+    image: string | null
+    productStatus: "ONLINE" | "STOCK" | "PREVENTA" | "AGOTADO"
+    quantity: number
+    unitCost: number | null
+  }[]
+}
+
+const PRODUCT_STATUS_LABEL: Record<Batch["items"][number]["productStatus"], string> = {
+  ONLINE: "Online",
+  STOCK: "En stock",
+  PREVENTA: "Preventa",
+  AGOTADO: "Agotado",
+}
+
+// El ETA se autocalcula sumando este número de días a la fecha de envío
+// (tiempo típico de tránsito internacional + aduanas hasta almacén).
+const SHIP_TO_ETA_DAYS = 70
+
+function addDaysAsInputDate(dateStr: string, days: number): string {
+  const d = new Date(`${dateStr}T00:00:00`)
+  d.setDate(d.getDate() + days)
+  return d.toISOString().slice(0, 10)
 }
 
 export default function EditBatchPage({
@@ -40,8 +73,10 @@ export default function EditBatchPage({
   const [name, setName] = useState("")
   const [supplier, setSupplier] = useState("")
   const [trackingRef, setTrackingRef] = useState("")
+  const [shipDate, setShipDate] = useState("")
   const [eta, setEta] = useState("")
   const [notes, setNotes] = useState("")
+  const [images, setImages] = useState<UploadedImage[]>([])
   const [saving, setSaving] = useState(false)
   const [receiving, setReceiving] = useState(false)
   const [saved, setSaved] = useState(false)
@@ -55,13 +90,22 @@ export default function EditBatchPage({
         setName(b.name)
         setSupplier(b.supplier ?? "")
         setTrackingRef(b.trackingRef ?? "")
+        setShipDate(b.shipDate ? b.shipDate.slice(0, 10) : "")
         setEta(b.eta ? b.eta.slice(0, 10) : "")
         setNotes(b.notes ?? "")
+        setImages(b.images.map((url) => ({ url, publicId: "" })))
       })
       .catch(() => setNotFound(true))
   }
 
   useEffect(load, [id])
+
+  const handleShipDateChange = (value: string) => {
+    setShipDate(value)
+    setEta(value ? addDaysAsInputDate(value, SHIP_TO_ETA_DAYS) : "")
+  }
+
+  const trackingIsUrl = /^https?:\/\//i.test(trackingRef.trim())
 
   const save = async () => {
     setSaving(true)
@@ -74,8 +118,10 @@ export default function EditBatchPage({
           name,
           supplier: supplier || null,
           trackingRef: trackingRef || null,
+          shipDate: shipDate ? new Date(shipDate).toISOString() : null,
           eta: eta ? new Date(eta).toISOString() : null,
           notes: notes || null,
+          images: images.map((img) => img.url),
         }),
       })
       setSaved(true)
@@ -164,21 +210,49 @@ export default function EditBatchPage({
               <Input value={name} onChange={(e) => setName(e.target.value)} />
             </div>
             <div className="space-y-2">
-              <Label>Proveedor</Label>
+              <Label>N° de Lote</Label>
               <Input value={supplier} onChange={(e) => setSupplier(e.target.value)} />
             </div>
             <div className="space-y-2">
               <Label>Guía / referencia</Label>
               <Input value={trackingRef} onChange={(e) => setTrackingRef(e.target.value)} />
+              {trackingIsUrl && (
+                <a
+                  href={trackingRef}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline"
+                >
+                  Abrir guía <ExternalLink className="h-3 w-3" />
+                </a>
+              )}
+            </div>
+            <div className="space-y-2">
+              <Label>Fecha de envío</Label>
+              <Input
+                type="date"
+                value={shipDate}
+                onChange={(e) => handleShipDateChange(e.target.value)}
+              />
             </div>
             <div className="space-y-2">
               <Label>ETA</Label>
               <Input type="date" value={eta} onChange={(e) => setEta(e.target.value)} />
+              <p className="text-xs text-muted-foreground">
+                Autocalculada: fecha de envío + {SHIP_TO_ETA_DAYS} días. Puedes ajustarla.
+              </p>
             </div>
           </div>
           <div className="space-y-2">
             <Label>Notas</Label>
             <Textarea rows={2} value={notes} onChange={(e) => setNotes(e.target.value)} />
+          </div>
+          <div className="space-y-2">
+            <Label>Galería de imágenes</Label>
+            <p className="text-xs text-muted-foreground">
+              Fotos del packing list, unboxing o evidencia del envío. Sin límite de cantidad.
+            </p>
+            <ImageUpload value={images} onChange={setImages} folder="batches" />
           </div>
         </CardContent>
       </Card>
@@ -191,10 +265,18 @@ export default function EditBatchPage({
           {batch.items.map((it) => (
             <div
               key={it.id}
-              className="flex items-center justify-between rounded-lg border p-2 text-sm"
+              className="flex items-center gap-3 rounded-lg border p-2 text-sm"
             >
-              <span>{it.name}</span>
-              <span className="text-muted-foreground">
+              <div className="relative h-9 w-9 shrink-0 overflow-hidden rounded bg-muted">
+                {it.image && (
+                  <Image src={it.image} alt={it.name} fill className="object-cover" sizes="36px" />
+                )}
+              </div>
+              <span className="flex-1 truncate">{it.name}</span>
+              <Badge variant="outline" className="shrink-0 text-xs">
+                {PRODUCT_STATUS_LABEL[it.productStatus]}
+              </Badge>
+              <span className="shrink-0 text-muted-foreground">
                 {it.quantity} uds{it.unitCost ? ` · S/ ${it.unitCost.toFixed(2)} c/u` : ""}
               </span>
             </div>

@@ -4,7 +4,7 @@ import { useEffect, useState, useSyncExternalStore } from "react"
 import Image from "next/image"
 import Link from "next/link"
 import { useSession, signOut } from "next-auth/react"
-import { LogOut, Package, Search, Settings, ShoppingCart, User } from "lucide-react"
+import { LogOut, Package, Settings, ShoppingCart, User } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { UserAvatar } from "@/components/common/UserAvatar"
 import { Button } from "@/components/ui/button"
@@ -16,11 +16,11 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { Input } from "@/components/ui/input"
 import { useCartStore } from "@/stores/cart-store"
 import { MobileNav } from "./MobileNav"
 import { AnimatedThemeToggle } from "./AnimatedThemeToggle"
 import { UserNotificationBell } from "./UserNotificationBell"
+import { SearchAutocomplete } from "./SearchAutocomplete"
 
 // Navegación por tipo de mercancía (estilo Homidori) + preventas y catálogo
 const navLinks = [
@@ -90,17 +90,6 @@ export function Header() {
             ))}
           </nav>
 
-          <div className="hidden max-w-xs flex-1 md:block xl:max-w-sm">
-            <form action="/products" className="relative">
-              <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[#4A80BE]" />
-              <Input
-                name="search"
-                className="h-11 rounded-full border-[#dbe3ee] pl-11 font-semibold"
-                placeholder="Buscar anime, marca o producto"
-              />
-            </form>
-          </div>
-
           <div className="ml-auto flex shrink-0 items-center gap-0.5 sm:gap-1">
             <AnimatedThemeToggle className="mr-0.5 sm:mr-1" />
             {mounted && status !== "loading" && session && <UserNotificationBell />}
@@ -153,6 +142,18 @@ export function Header() {
               </Link>
             )}
             <MobileNav avatarFileName={avatarFileName} />
+          </div>
+        </div>
+      </div>
+
+      {/* Buscador en fila propia: a partir de md ya no compite por espacio con
+          los links de navegación (xl:flex), que antes lo dejaban truncado en
+          pantallas de laptop (~1280-1366px). En mobile, el buscador del
+          MobileNav lo reemplaza. */}
+      <div className="hidden border-t border-border/60 bg-background/95 md:block">
+        <div className="blue-container py-2.5">
+          <div className="mx-auto max-w-2xl">
+            <SearchAutocomplete />
           </div>
         </div>
       </div>

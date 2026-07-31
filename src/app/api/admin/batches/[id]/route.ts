@@ -12,7 +12,9 @@ export async function GET(_request: NextRequest, { params }: { params: Params })
   const { id } = await params
   const b = await prisma.importBatch.findUnique({
     where: { id },
-    include: { items: { include: { product: { select: { name: true } } } } },
+    include: {
+      items: { include: { product: { select: { name: true, images: true, status: true } } } },
+    },
   })
   if (!b) {
     return NextResponse.json({ error: "Lote no encontrado" }, { status: 404 })
@@ -22,12 +24,16 @@ export async function GET(_request: NextRequest, { params }: { params: Params })
     name: b.name,
     supplier: b.supplier,
     trackingRef: b.trackingRef,
+    shipDate: b.shipDate?.toISOString() ?? null,
     eta: b.eta?.toISOString() ?? null,
     status: b.status,
     notes: b.notes,
+    images: b.images,
     items: b.items.map((it) => ({
       id: it.id,
       name: it.product.name,
+      image: it.product.images[0] ?? null,
+      productStatus: it.product.status,
       quantity: it.quantity,
       unitCost: it.unitCost ? Number(it.unitCost) : null,
     })),
@@ -38,8 +44,10 @@ const updateSchema = z.object({
   name: z.string().min(2).optional(),
   supplier: z.string().nullable().optional(),
   trackingRef: z.string().nullable().optional(),
+  shipDate: z.string().datetime().nullable().optional(),
   eta: z.string().datetime().nullable().optional(),
   notes: z.string().nullable().optional(),
+  images: z.array(z.string()).optional(),
 })
 
 // PATCH: editar datos del lote. Si cambia el ETA, arrastra las preventas
@@ -68,8 +76,10 @@ export async function PATCH(request: NextRequest, { params }: { params: Params }
           ...(d.name ? { name: d.name } : {}),
           ...(d.supplier === undefined ? {} : { supplier: d.supplier || null }),
           ...(d.trackingRef === undefined ? {} : { trackingRef: d.trackingRef || null }),
+          ...(d.shipDate === undefined ? {} : { shipDate: d.shipDate ? new Date(d.shipDate) : null }),
           ...(etaChanged ? { eta: d.eta ? new Date(d.eta) : null } : {}),
           ...(d.notes === undefined ? {} : { notes: d.notes || null }),
+          ...(d.images === undefined ? {} : { images: d.images }),
         },
       })
       // Arrastrar el nuevo ETA como fecha límite de las preventas pendientes del lote

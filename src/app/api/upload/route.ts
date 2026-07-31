@@ -22,6 +22,7 @@ const ADMIN_FOLDERS = [
   "brands",
   "acquisitions",
   "stickers",
+  "batches",
 ]
 
 export async function POST(request: NextRequest) {

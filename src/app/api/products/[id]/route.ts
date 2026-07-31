@@ -124,10 +124,16 @@ export async function DELETE(
   try {
     const { id } = await params
 
-    // Si el producto tiene órdenes asociadas, se desactiva en lugar de borrarse
-    // (conserva el historial de ventas y sus imágenes)
-    const orderCount = await prisma.orderItem.count({ where: { productId: id } })
-    if (orderCount > 0) {
+    // Si el producto tiene órdenes o separaciones/preventas asociadas, se
+    // desactiva en lugar de borrarse (conserva el historial de ventas y sus
+    // imágenes). preorder_reservations_productId_fkey es ON DELETE RESTRICT,
+    // así que un producto en PREVENTA con al menos una separación activa o
+    // histórica hace fallar el DELETE si no se detecta aquí antes.
+    const [orderCount, preorderCount] = await Promise.all([
+      prisma.orderItem.count({ where: { productId: id } }),
+      prisma.preorderReservation.count({ where: { productId: id } }),
+    ])
+    if (orderCount > 0 || preorderCount > 0) {
       await prisma.product.update({ where: { id }, data: { isActive: false } })
       return NextResponse.json({ success: true, deactivated: true })
     }

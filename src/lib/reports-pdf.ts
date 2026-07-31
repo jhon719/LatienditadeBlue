@@ -276,3 +276,309 @@ export function downloadDeliveriesPdf(data: DeliveriesReport) {
   drawFooter(doc)
   doc.save(`entregas_${new Date().toISOString().slice(0, 10)}.pdf`)
 }
+
+// ------------------------------ LOTES ATRASADOS ------------------------------
+
+export interface OverdueBatchRow {
+  id: string
+  name: string
+  supplier: string | null
+  trackingRef: string | null
+  eta: string
+  daysOverdue: number
+  severity: "LEVE" | "MODERADO" | "CRITICO"
+  itemsCount: number
+  totalUnits: number
+  pendingPreorders: number
+}
+
+export interface OverdueBatchesReport {
+  generatedAt: string
+  summary: { total: number; leve: number; moderado: number; critico: number }
+  batches: OverdueBatchRow[]
+}
+
+const SEVERITY_LABEL: Record<OverdueBatchRow["severity"], string> = {
+  LEVE: "Leve",
+  MODERADO: "Moderado",
+  CRITICO: "Crítico",
+}
+const SEVERITY_COLOR: Record<OverdueBatchRow["severity"], RGB> = {
+  LEVE: [138, 109, 0],
+  MODERADO: [204, 105, 0],
+  CRITICO: [180, 30, 30],
+}
+
+export function downloadOverdueBatchesPdf(data: OverdueBatchesReport) {
+  const doc = new jsPDF({ orientation: "landscape", unit: "pt", format: "a4" })
+  drawHeader(doc, "Lotes atrasados", `${data.summary.total} lotes con ETA vencido`)
+
+  autoTable(doc, {
+    startY: 62,
+    margin: { left: 40, right: 40 },
+    head: [
+      [
+        "Lote",
+        "N° de Lote",
+        "Guía",
+        "ETA",
+        "Días de atraso",
+        "Severidad",
+        "Ítems",
+        "Unidades",
+        "Separaciones pendientes",
+      ],
+    ],
+    body: data.batches.map((b) => [
+      b.name,
+      b.supplier ?? "—",
+      b.trackingRef ?? "—",
+      fecha(b.eta),
+      String(b.daysOverdue),
+      SEVERITY_LABEL[b.severity],
+      String(b.itemsCount),
+      String(b.totalUnits),
+      String(b.pendingPreorders),
+    ]),
+    styles: { fontSize: 7.5, cellPadding: 3, overflow: "linebreak" },
+    headStyles: { fillColor: NAVY, textColor: 255, fontStyle: "bold", fontSize: 7.5 },
+    alternateRowStyles: { fillColor: [253, 245, 235] },
+    columnStyles: { 4: { halign: "center" }, 6: { halign: "center" }, 7: { halign: "center" } },
+    didParseCell: (hookData) => {
+      if (hookData.section !== "body") return
+      const row = data.batches[hookData.row.index]
+      if (hookData.column.index === 5) {
+        hookData.cell.styles.textColor = SEVERITY_COLOR[row.severity]
+        hookData.cell.styles.fontStyle = "bold"
+      }
+    },
+  })
+
+  drawFooter(doc)
+  doc.save(`lotes_atrasados_${new Date().toISOString().slice(0, 10)}.pdf`)
+}
+
+// ------------------------------ MARGEN POR LOTE ------------------------------
+
+export interface BatchMarginRow {
+  id: string
+  name: string
+  supplier: string | null
+  status: "IN_TRANSIT" | "RECEIVED"
+  eta: string | null
+  itemsCount: number
+  totalUnits: number
+  costTotal: number
+  revenueExpected: number
+  margin: number
+  marginPct: number | null
+  costComplete: boolean
+}
+
+export interface BatchMarginReport {
+  generatedAt: string
+  summary: {
+    batchCount: number
+    incompleteCostCount: number
+    costTotal: number
+    revenueExpected: number
+    margin: number
+  }
+  batches: BatchMarginRow[]
+}
+
+export function downloadBatchMarginPdf(data: BatchMarginReport) {
+  const doc = new jsPDF({ orientation: "landscape", unit: "pt", format: "a4" })
+  drawHeader(doc, "Margen por lote", `${data.summary.batchCount} lotes · margen total ${S(data.summary.margin)}`)
+
+  autoTable(doc, {
+    startY: 62,
+    margin: { left: 40, right: 40 },
+    head: [
+      [
+        "Lote",
+        "N° de Lote",
+        "Estado",
+        "Ítems",
+        "Unidades",
+        "Costo proveedor",
+        "Venta esperada",
+        "Margen",
+        "Margen %",
+      ],
+    ],
+    body: data.batches.map((b) => [
+      b.name + (b.costComplete ? "" : " *"),
+      b.supplier ?? "—",
+      b.status === "RECEIVED" ? "Recibido" : "En tránsito",
+      String(b.itemsCount),
+      String(b.totalUnits),
+      S(b.costTotal),
+      S(b.revenueExpected),
+      S(b.margin),
+      b.marginPct == null ? "—" : `${b.marginPct.toFixed(1)}%`,
+    ]),
+    styles: { fontSize: 7.5, cellPadding: 3, overflow: "linebreak" },
+    headStyles: { fillColor: NAVY, textColor: 255, fontStyle: "bold", fontSize: 7.5 },
+    alternateRowStyles: { fillColor: [237, 243, 251] },
+    columnStyles: {
+      4: { halign: "center" },
+      5: { halign: "right" },
+      6: { halign: "right" },
+      7: { halign: "right" },
+      8: { halign: "right" },
+    },
+  })
+
+  if (data.summary.incompleteCostCount > 0) {
+    const y = lastY(doc, 62) + 18
+    doc.setTextColor(...GRAY)
+    doc.setFont("helvetica", "italic")
+    doc.setFontSize(7.5)
+    doc.text(
+      `* ${data.summary.incompleteCostCount} lote(s) con costo incompleto (algún ítem sin costo registrado): el margen mostrado es un mínimo, no el real.`,
+      40,
+      y
+    )
+  }
+
+  drawFooter(doc)
+  doc.save(`margen_lotes_${new Date().toISOString().slice(0, 10)}.pdf`)
+}
+
+// ------------------------------ STOCK EN TRÁNSITO ------------------------------
+
+export interface TransitStockReport {
+  generatedAt: string
+  totalUnits: number
+  totalBatches: number
+  totalSkus: number
+  byMonth: { label: string; units: number }[]
+  byLine: { line: string; units: number }[]
+  byCategory: { category: string; units: number }[]
+}
+
+export function downloadTransitStockPdf(data: TransitStockReport) {
+  const doc = new jsPDF({ orientation: "landscape", unit: "pt", format: "a4" })
+  drawHeader(
+    doc,
+    "Stock en tránsito",
+    `${data.totalUnits} unidades · ${data.totalBatches} lotes · ${data.totalSkus} SKU`
+  )
+  const w = doc.internal.pageSize.getWidth()
+
+  const section = (
+    title: string,
+    color: RGB,
+    head: string[],
+    body: (string | number)[][],
+    startY: number
+  ) => {
+    doc.setFillColor(...color)
+    doc.rect(40, startY, w - 80, 18, "F")
+    doc.setTextColor(255, 255, 255)
+    doc.setFont("helvetica", "bold")
+    doc.setFontSize(9)
+    doc.text(title, 46, startY + 12.5)
+
+    if (body.length === 0) {
+      doc.setTextColor(...GRAY)
+      doc.setFont("helvetica", "italic")
+      doc.setFontSize(8)
+      doc.text("Sin datos.", 46, startY + 32)
+      return startY + 44
+    }
+
+    autoTable(doc, {
+      startY: startY + 22,
+      margin: { left: 40, right: 40 },
+      head: [head],
+      body,
+      styles: { fontSize: 8, cellPadding: 3.5, overflow: "linebreak" },
+      headStyles: { fillColor: color, textColor: 255, fontStyle: "bold", fontSize: 8 },
+      alternateRowStyles: { fillColor: [245, 247, 250] },
+      columnStyles: { 1: { halign: "right" } },
+    })
+    return lastY(doc, startY + 22) + 18
+  }
+
+  let y = 62
+  y = section(
+    "POR MES DE ETA",
+    NAVY,
+    ["Mes", "Unidades"],
+    data.byMonth.map((m) => [m.label, m.units]),
+    y
+  )
+  y = section(
+    "POR LÍNEA DE FIGURA",
+    BLUE,
+    ["Línea", "Unidades"],
+    data.byLine.map((l) => [l.line, l.units]),
+    y
+  )
+  section(
+    "POR ANIME / SERIE",
+    [138, 109, 0],
+    ["Anime / Serie", "Unidades"],
+    data.byCategory.map((c) => [c.category, c.units]),
+    y
+  )
+
+  drawFooter(doc)
+  doc.save(`stock_transito_${new Date().toISOString().slice(0, 10)}.pdf`)
+}
+
+// ------------------------------ PRODUCTOS SIN LOTE ------------------------------
+
+export interface ProductWithoutBatchRow {
+  id: string
+  name: string
+  slug: string
+  status: string
+  stockQty: number
+  price: number
+  category: string
+  brand: string
+  createdAt: string
+}
+
+export interface ProductsWithoutBatchReport {
+  generatedAt: string
+  count: number
+  products: ProductWithoutBatchRow[]
+}
+
+const PRODUCT_STATUS_ES: Record<string, string> = {
+  ONLINE: "Online",
+  STOCK: "En stock",
+  PREVENTA: "Preventa",
+  AGOTADO: "Agotado",
+}
+
+export function downloadProductsWithoutBatchPdf(data: ProductsWithoutBatchReport) {
+  const doc = new jsPDF({ orientation: "landscape", unit: "pt", format: "a4" })
+  drawHeader(doc, "Productos sin lote", `${data.count} productos sin trazabilidad a una importación`)
+
+  autoTable(doc, {
+    startY: 62,
+    margin: { left: 40, right: 40 },
+    head: [["Producto", "Categoría", "Marca", "Estado", "Stock", "Precio", "Alta"]],
+    body: data.products.map((p) => [
+      p.name,
+      p.category,
+      p.brand,
+      PRODUCT_STATUS_ES[p.status] ?? p.status,
+      String(p.stockQty),
+      S(p.price),
+      fecha(p.createdAt),
+    ]),
+    styles: { fontSize: 7.5, cellPadding: 3, overflow: "linebreak" },
+    headStyles: { fillColor: NAVY, textColor: 255, fontStyle: "bold", fontSize: 7.5 },
+    alternateRowStyles: { fillColor: [237, 243, 251] },
+    columnStyles: { 4: { halign: "center" }, 5: { halign: "right" } },
+  })
+
+  drawFooter(doc)
+  doc.save(`productos_sin_lote_${new Date().toISOString().slice(0, 10)}.pdf`)
+}
