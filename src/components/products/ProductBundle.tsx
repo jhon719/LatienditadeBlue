@@ -20,24 +20,22 @@ export function ProductBundle({ product }: ProductBundleProps) {
   const [suggestions, setSuggestions] = useState<Product[]>([])
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
   const [added, setAdded] = useState(false)
+  const [source, setSource] = useState<"manual" | "automatic">("automatic")
 
   useEffect(() => {
-    fetch(`/api/products?category=${product.category.slug}&limit=6`)
+    // El endpoint decide la fuente: curaduría manual del admin si existe,
+    // si no el automático por categoría/anime.
+    fetch(`/api/products/${product.id}/bundle`)
       .then((res) => (res.ok ? res.json() : { products: [] }))
       .then((data) => {
-        const others = (data.products as Product[]).filter(
-          (p) =>
-            p.id !== product.id &&
-            p.status !== "AGOTADO" &&
-            (p.status === "PREVENTA" || p.stockQty > 0)
-        )
-        const initial = others.slice(0, 2)
+        const initial = (data.products ?? []) as Product[]
         setSuggestions(initial)
+        setSource(data.source === "manual" ? "manual" : "automatic")
         // Preseleccionar la primera sugerencia (patrón de la bóveda)
         setSelectedIds(new Set(initial.slice(0, 1).map((p) => p.id)))
       })
       .catch(() => setSuggestions([]))
-  }, [product.id, product.category.slug])
+  }, [product.id])
 
   if (suggestions.length === 0) return null
 
@@ -51,7 +49,13 @@ export function ProductBundle({ product }: ProductBundleProps) {
       quantity: 1,
     }))
   )
-  const percent = bundleItems.length >= 3 ? 10 : bundleItems.length >= 2 ? 5 : 0
+  // El descuento real se agrupa por anime (calculateBundleDiscount), así que
+  // en un set con productos de animes distintos el ahorro no es el 5/10% del
+  // total. El porcentaje mostrado se deriva del ahorro real para no prometer
+  // de más: el carrito y la orden aplican exactamente esta misma regla.
+  const percent = subtotal > 0 ? Math.round((discount / subtotal) * 100) : 0
+  // Hay más de un ítem pero ninguna pareja del mismo anime que active el dto.
+  const mixedWithoutDiscount = bundleItems.length >= 2 && discount === 0
 
   const toggle = (id: string) => {
     setSelectedIds((prev) => {
@@ -73,7 +77,10 @@ export function ProductBundle({ product }: ProductBundleProps) {
       <div className="mb-5 flex items-center gap-2">
         <Sparkles className="h-5 w-5 text-[#F5B400]" />
         <h2 className="font-display text-2xl uppercase tracking-wide text-[#142F5C] dark:text-foreground">
-          Combina y Ahorra — Set {product.category.name}
+          {/* Con curaduría manual el set puede mezclar animes, así que el
+              título no puede asumir la categoría del producto base */}
+          Combina y Ahorra
+          {source === "automatic" ? ` — Set ${product.category.name}` : ""}
         </h2>
       </div>
 
@@ -147,9 +154,16 @@ export function ProductBundle({ product }: ProductBundleProps) {
               </p>
             </>
           ) : (
-            <p className="font-display text-3xl leading-none text-[#142F5C] dark:text-foreground">
-              S/ {subtotal.toFixed(2)}
-            </p>
+            <>
+              <p className="font-display text-3xl leading-none text-[#142F5C] dark:text-foreground">
+                S/ {subtotal.toFixed(2)}
+              </p>
+              {mixedWithoutDiscount && (
+                <p className="text-[10px] leading-tight text-muted-foreground">
+                  El descuento aplica al llevar 2 o más figuras del mismo anime.
+                </p>
+              )}
+            </>
           )}
           <Button
             size="sm"

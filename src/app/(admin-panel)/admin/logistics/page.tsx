@@ -12,8 +12,10 @@ import {
   Trash2,
   Pencil,
   BellRing,
+  Search,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -70,6 +72,7 @@ interface Batch {
   status: "IN_TRANSIT" | "RECEIVED"
   receivedAt: string | null
   preorderCount: number
+  images: string[]
   items: { id: string; name: string; quantity: number }[]
 }
 
@@ -230,6 +233,7 @@ function BatchesTab() {
   const [items, setItems] = useState<Batch[]>([])
   const [loading, setLoading] = useState(true)
   const [busy, setBusy] = useState<string | null>(null)
+  const [search, setSearch] = useState("")
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -240,6 +244,16 @@ function BatchesTab() {
       setLoading(false)
     }
   }, [])
+
+  // Filtro por nombre o N° de lote: el admin llega desde la ficha de un producto
+  // sabiendo su N° de lote y necesita ubicarlo aquí (bóveda 05.03 §11)
+  const visible = items.filter((b) => {
+    const q = search.trim().toLowerCase()
+    if (!q) return true
+    return (
+      b.name.toLowerCase().includes(q) || (b.supplier ?? "").toLowerCase().includes(q)
+    )
+  })
 
   useEffect(() => {
     load()
@@ -262,7 +276,16 @@ function BatchesTab() {
 
   return (
     <div className="space-y-4">
-      <div className="flex justify-end">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="relative w-full sm:max-w-xs">
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Buscar por nombre o N° de lote"
+            className="pl-9"
+          />
+        </div>
         <Button asChild>
           <Link href="/admin/logistics/batches/new">
             <Plus className="mr-2 h-4 w-4" />
@@ -281,6 +304,10 @@ function BatchesTab() {
             <p className="py-12 text-center text-sm text-muted-foreground">
               Aún no hay lotes de importación. Crea uno para registrar stock en tránsito.
             </p>
+          ) : visible.length === 0 ? (
+            <p className="py-12 text-center text-sm text-muted-foreground">
+              Ningún lote coincide con &quot;{search.trim()}&quot;.
+            </p>
           ) : (
             <Table>
               <TableHeader>
@@ -293,13 +320,29 @@ function BatchesTab() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {items.map((b) => (
+                {visible.map((b) => (
                   <TableRow key={b.id}>
                     <TableCell>
-                      <p className="font-medium">{b.name}</p>
-                      <p className="text-xs text-muted-foreground">
-                        {b.supplier ?? "Sin proveedor"} · {b.preorderCount} separación(es)
-                      </p>
+                      <div className="flex items-center gap-3">
+                        <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded bg-muted">
+                          {b.images?.[0] && (
+                            <Image
+                              src={b.images[0]}
+                              alt=""
+                              fill
+                              className="object-cover"
+                              sizes="40px"
+                            />
+                          )}
+                        </div>
+                        <div className="min-w-0">
+                          <p className="font-medium">{b.name}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {b.supplier ?? "Sin N° de lote"} · {b.preorderCount} separación(es)
+                            {b.images?.length ? ` · ${b.images.length} foto(s)` : ""}
+                          </p>
+                        </div>
+                      </div>
                     </TableCell>
                     <TableCell className="text-sm">
                       {b.items.reduce((a, i) => a + i.quantity, 0)} uds

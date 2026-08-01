@@ -1,4 +1,4 @@
-import type { Product, Category, Line, Brand, ReviewItem, OrderView } from "@/types"
+import type { Product, Category, Line, Brand, ReviewItem, OrderView, ProductSpec } from "@/types"
 import type {
   Product as PrismaProduct,
   Category as PrismaCategory,
@@ -16,6 +16,21 @@ type ProductWithRelations = PrismaProduct & {
   line: PrismaLine | null
   brand: PrismaBrand
   reviews?: { rating: number }[]
+}
+
+// El campo Json de Prisma no garantiza la forma en runtime: se valida cada
+// entrada antes de confiar en ella (evita romper la ficha si quedó un valor
+// viejo o mal formado guardado directo en la base).
+function parseProductSpecs(raw: unknown): ProductSpec[] {
+  if (!Array.isArray(raw)) return []
+  return raw.filter(
+    (s): s is ProductSpec =>
+      !!s &&
+      typeof s === "object" &&
+      typeof (s as ProductSpec).label === "string" &&
+      typeof (s as ProductSpec).value === "string" &&
+      (s as ProductSpec).label.trim() !== ""
+  )
 }
 
 export function transformProduct(
@@ -44,6 +59,7 @@ export function transformProduct(
     expectedDate: product.expectedDate?.toISOString(),
     stockQty: product.stockQty,
     images: product.images,
+    specs: parseProductSpecs(product.specs),
     isFeatured: product.isFeatured,
     isActive: product.isActive,
     category: {

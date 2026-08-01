@@ -3,41 +3,22 @@
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
-import { ArrowLeft, ExternalLink, Loader2, Plus, Trash2 } from "lucide-react"
+import { ArrowLeft, ExternalLink, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
   Card,
   CardContent,
-  CardDescription,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
-import { ProductPicker, type ProductOption } from "@/components/admin/ProductPicker"
 import { ImageUpload } from "@/components/admin/ImageUpload"
 
 interface UploadedImage {
   url: string
   publicId: string
-}
-
-interface LineItem {
-  product: ProductOption | null
-  quantity: number
-  unitCost: string
-  // Estado que tomará el producto en el catálogo al agregarlo al lote. La
-  // mayoría de productos de un lote siguen en camino, así que por defecto es
-  // PREVENTA; el admin cambia a STOCK si está registrando un lote ya recibido.
-  status: "PREVENTA" | "STOCK"
 }
 
 // El ETA se autocalcula sumando este número de días a la fecha de envío
@@ -50,6 +31,11 @@ function addDaysAsInputDate(dateStr: string, days: number): string {
   return d.toISOString().slice(0, 10)
 }
 
+// Paso 1 de 2: se registra el lote (guía, ETA, fotos). Los productos se cargan
+// después desde la ficha del lote, donde se puede dar de alta una figura nueva
+// con el formulario completo del catálogo. Antes este formulario exigía elegir
+// un producto ya existente, lo que obligaba a inventar productos ficticios para
+// lotes cuyo contenido todavía no está en el catálogo (bóveda 05.03 §11).
 export default function NewBatchPage() {
   const router = useRouter()
   const [name, setName] = useState("")
@@ -59,9 +45,6 @@ export default function NewBatchPage() {
   const [eta, setEta] = useState("")
   const [notes, setNotes] = useState("")
   const [images, setImages] = useState<UploadedImage[]>([])
-  const [items, setItems] = useState<LineItem[]>([
-    { product: null, quantity: 1, unitCost: "", status: "PREVENTA" },
-  ])
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -70,19 +53,10 @@ export default function NewBatchPage() {
     setEta(value ? addDaysAsInputDate(value, SHIP_TO_ETA_DAYS) : "")
   }
 
-  const updateItem = (i: number, patch: Partial<LineItem>) => {
-    setItems((prev) => prev.map((it, idx) => (idx === i ? { ...it, ...patch } : it)))
-  }
-  const addItem = () =>
-    setItems((prev) => [...prev, { product: null, quantity: 1, unitCost: "", status: "PREVENTA" }])
-  const removeItem = (i: number) => setItems((prev) => prev.filter((_, idx) => idx !== i))
-
   const trackingIsUrl = /^https?:\/\//i.test(trackingRef.trim())
 
   const submit = async () => {
     if (!name.trim()) return setError("El nombre del lote es requerido")
-    const validItems = items.filter((it) => it.product && it.quantity > 0)
-    if (validItems.length === 0) return setError("Agrega al menos un producto al lote")
     setError(null)
     setSaving(true)
     try {
@@ -97,12 +71,7 @@ export default function NewBatchPage() {
           eta: eta ? new Date(eta).toISOString() : null,
           notes: notes || null,
           images: images.map((img) => img.url),
-          items: validItems.map((it) => ({
-            productId: it.product!.id,
-            quantity: Number(it.quantity),
-            unitCost: it.unitCost ? Number(it.unitCost) : null,
-            status: it.status,
-          })),
+          items: [],
         }),
       })
       if (!res.ok) {
@@ -110,7 +79,9 @@ export default function NewBatchPage() {
         setError(r?.error ?? "Error al crear el lote")
         return
       }
-      router.push("/admin/logistics")
+      const created = await res.json()
+      // Continuar en la ficha del lote para cargar sus productos
+      router.push(`/admin/logistics/batches/${created.id}`)
       router.refresh()
     } finally {
       setSaving(false)
@@ -128,7 +99,7 @@ export default function NewBatchPage() {
         <div>
           <h1 className="text-2xl font-bold">Nuevo lote de importación</h1>
           <p className="text-muted-foreground">
-            Stock en tránsito: invisible en la tienda hasta marcarlo como recibido
+            Paso 1 de 2: datos del envío. Los productos se cargan después.
           </p>
         </div>
       </div>
@@ -208,83 +179,13 @@ export default function NewBatchPage() {
         </CardContent>
       </Card>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Productos del lote</CardTitle>
-          <CardDescription>
-            Cantidad en tránsito y costo del proveedor. El estado se aplica al producto del
-            catálogo apenas se crea el lote.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          {items.map((it, i) => (
-            <div key={i} className="space-y-2 rounded-lg border p-3">
-              <div className="space-y-1">
-                <Label className="text-xs">Producto</Label>
-                <ProductPicker
-                  selected={it.product}
-                  onSelect={(product) => updateItem(i, { product })}
-                />
-              </div>
-              <div className="flex items-end gap-2">
-                <div className="w-20 space-y-1">
-                  <Label className="text-xs">Cant.</Label>
-                  <Input
-                    type="number"
-                    min={1}
-                    value={it.quantity}
-                    onChange={(e) => updateItem(i, { quantity: Number(e.target.value) })}
-                  />
-                </div>
-                <div className="w-28 space-y-1">
-                  <Label className="text-xs">Costo (S/)</Label>
-                  <Input
-                    type="number"
-                    step="0.01"
-                    value={it.unitCost}
-                    onChange={(e) => updateItem(i, { unitCost: e.target.value })}
-                  />
-                </div>
-                <div className="flex-1 space-y-1">
-                  <Label className="text-xs">Estado</Label>
-                  <Select
-                    value={it.status}
-                    onValueChange={(v) => updateItem(i, { status: v as LineItem["status"] })}
-                  >
-                    <SelectTrigger className="h-9">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="PREVENTA">Preventa</SelectItem>
-                      <SelectItem value="STOCK">En stock</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-9 w-9 text-muted-foreground hover:text-destructive"
-                  onClick={() => removeItem(i)}
-                  disabled={items.length === 1}
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
-              </div>
-            </div>
-          ))}
-          <Button variant="outline" size="sm" onClick={addItem}>
-            <Plus className="mr-2 h-4 w-4" /> Agregar producto
-          </Button>
-        </CardContent>
-      </Card>
-
       <div className="flex justify-end gap-3">
         <Button variant="outline" asChild>
           <Link href="/admin/logistics">Cancelar</Link>
         </Button>
         <Button onClick={submit} disabled={saving}>
           {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-          Crear lote
+          Crear y agregar productos
         </Button>
       </div>
     </div>

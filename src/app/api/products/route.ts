@@ -123,10 +123,23 @@ const createProductSchema = z.object({
   expectedDate: z.string().datetime().optional().nullable(),
   stockQty: z.number().int().min(0).default(0),
   images: z.array(z.string()).default([]),
+  specs: z
+    .array(z.object({ label: z.string().min(1), value: z.string().min(1) }))
+    .default([]),
   isFeatured: z.boolean().default(false),
   categoryId: z.string().min(1),
   lineId: z.string().optional().nullable(),
   brandId: z.string().min(1),
+  // Vínculo opcional con un lote de importación: da de alta el producto y, en la
+  // misma operación, lo registra como contenido del lote (bóveda 05.03 §11).
+  batch: z
+    .object({
+      batchId: z.string().min(1),
+      quantity: z.number().int().positive().default(1),
+      unitCost: z.number().nonnegative().optional().nullable(),
+    })
+    .optional()
+    .nullable(),
 })
 
 export async function POST(request: NextRequest) {
@@ -152,28 +165,60 @@ export async function POST(request: NextRequest) {
       slug = `${baseSlug}-${suffix}`
     }
 
-    const product = await prisma.product.create({
-      data: {
-        name: data.name,
-        slug,
-        description: data.description,
-        price: data.price,
-        status: data.status,
-        type: data.type,
-        expectedDate: data.expectedDate ? new Date(data.expectedDate) : null,
-        stockQty: data.stockQty,
-        images: data.images,
-        isFeatured: data.isFeatured,
-        categoryId: data.categoryId,
-        lineId: data.lineId || null,
-        brandId: data.brandId,
-      },
-      include: {
-        category: true,
-        line: true,
-        brand: true,
-        reviews: { select: { rating: true } },
-      },
+    // Si viene vinculado a un lote, el ETA del lote sirve de fecha estimada de
+    // llegada cuando el admin no puso una explícita.
+    const linkedBatch = data.batch
+      ? await prisma.importBatch.findUnique({
+          where: { id: data.batch.batchId },
+          select: { id: true, eta: true },
+        })
+      : null
+    if (data.batch && !linkedBatch) {
+      return NextResponse.json({ error: "El lote indicado no existe" }, { status: 400 })
+    }
+
+    const explicitExpected = data.expectedDate ? new Date(data.expectedDate) : null
+    const expectedDate =
+      explicitExpected ?? (data.status === "PREVENTA" ? linkedBatch?.eta ?? null : null)
+
+    const product = await prisma.$transaction(async (tx) => {
+      const created = await tx.product.create({
+        data: {
+          name: data.name,
+          slug,
+          description: data.description,
+          price: data.price,
+          status: data.status,
+          type: data.type,
+          expectedDate,
+          stockQty: data.stockQty,
+          images: data.images,
+          specs: data.specs,
+          isFeatured: data.isFeatured,
+          categoryId: data.categoryId,
+          lineId: data.lineId || null,
+          brandId: data.brandId,
+        },
+        include: {
+          category: true,
+          line: true,
+          brand: true,
+          reviews: { select: { rating: true } },
+        },
+      })
+
+      if (data.batch && linkedBatch) {
+        await tx.importBatchItem.create({
+          data: {
+            batchId: linkedBatch.id,
+            productId: created.id,
+            quantity: data.batch.quantity,
+            unitCost: data.batch.unitCost ?? null,
+          },
+        })
+      }
+
+      return created
     })
 
     return NextResponse.json(transformProduct(product), { status: 201 })

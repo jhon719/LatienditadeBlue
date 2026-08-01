@@ -20,6 +20,11 @@ export type OrderStatusType =
   | "COMPLETED"
 export type ProofStatusType = "PENDING" | "APPROVED" | "REJECTED"
 
+export interface ProductSpec {
+  label: string
+  value: string
+}
+
 export interface Product {
   id: string
   name: string
@@ -35,6 +40,9 @@ export interface Product {
   expectedDate?: string // ISO date (solo PREVENTA)
   stockQty: number
   images: string[]
+  // Ficha técnica: pares etiqueta/valor (Personaje, Material, Altura...),
+  // separados de `description` que es texto libre narrativo
+  specs: ProductSpec[]
   isFeatured: boolean
   isActive: boolean
   category: CategoryRef

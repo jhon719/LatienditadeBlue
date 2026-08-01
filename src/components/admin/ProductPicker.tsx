@@ -10,10 +10,19 @@ export interface ProductOption {
   id: string
   name: string
   image: string | null
+  // Se usan para avisar en "Combina y Ahorra" cuando el producto elegido es de
+  // otro anime (el descuento se agrupa por categoría)
+  categoryId?: string
+  categoryName?: string
 }
 
 interface ProductsApiResponse {
-  products: { id: string; name: string; images: string[] }[]
+  products: {
+    id: string
+    name: string
+    images: string[]
+    category?: { id: string; name: string }
+  }[]
 }
 
 // Selector de producto con búsqueda server-side (no carga todo el catálogo:
@@ -48,6 +57,8 @@ export function ProductPicker({
               id: p.id,
               name: p.name,
               image: p.images?.[0] ?? null,
+              categoryId: p.category?.id,
+              categoryName: p.category?.name,
             }))
           )
         })

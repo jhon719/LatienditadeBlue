@@ -15,13 +15,17 @@ import {
   Info,
   MessageSquare,
   PiggyBank,
+  HelpCircle,
+  ChevronRight,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
 import { Product } from "@/types"
 import { useCartStore } from "@/stores/cart-store"
+import { useOnboardingStore } from "@/stores/onboarding-store"
 import { STORE_WHATSAPP } from "@/lib/social"
+import { PaymentMethods } from "@/components/common/PaymentMethods"
 
 interface ProductDetailProps {
   product: Product
@@ -35,6 +39,7 @@ export function ProductDetail({ product }: ProductDetailProps) {
   const [added, setAdded] = useState(false)
   const [isWishlisted, setIsWishlisted] = useState(false)
   const addItem = useCartStore((state) => state.addItem)
+  const openTour = useOnboardingStore((state) => state.openTour)
 
   const isPreOrder = product.status === "PREVENTA"
   const canBuy = isPreOrder || (product.status !== "AGOTADO" && product.stockQty > 0)
@@ -322,6 +327,34 @@ export function ProductDetail({ product }: ProductDetailProps) {
 
       <Separator />
 
+      {/* Información adicional: cómo funciona la preventa/separación + medios
+          de pago aceptados. Reutiliza el tour de Bluet y los logos reales del
+          footer (PaymentMethods) en vez de banners ilustrados nuevos. */}
+      <div className="space-y-4 rounded-2xl border border-dashed border-primary/30 bg-[#E1F0FF]/30 p-4 dark:bg-[#E1F0FF]/5">
+        <button
+          type="button"
+          onClick={openTour}
+          className="flex w-full items-center gap-3 text-left"
+        >
+          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#F5B400]/20">
+            <HelpCircle className="h-5 w-5 text-[#8a6d00]" />
+          </span>
+          <span className="min-w-0 flex-1">
+            <span className="block text-sm font-bold text-[#142F5C] dark:text-foreground">
+              ¿Cómo funciona la preventa y las separaciones?
+            </span>
+            <span className="block text-xs text-muted-foreground">
+              Asegura tu figura con un adelanto desde S/ 10 — repasa el tutorial de Bluet
+            </span>
+          </span>
+          <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" />
+        </button>
+
+        <PaymentMethods />
+      </div>
+
+      <Separator />
+
       {/* Ficha técnica */}
       <div>
         <h3 className="mb-3 font-semibold">Especificaciones</h3>
@@ -372,6 +405,12 @@ export function ProductDetail({ product }: ProductDetailProps) {
               {isPreOrder ? "Preventa" : product.stockQty > 0 ? "Stock inmediato" : "Agotado"}
             </dd>
           </div>
+          {product.specs.map((spec) => (
+            <div key={spec.label} className="flex flex-col">
+              <dt className="text-muted-foreground">{spec.label}</dt>
+              <dd className="font-medium">{spec.value}</dd>
+            </div>
+          ))}
         </dl>
       </div>
     </div>

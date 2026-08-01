@@ -271,6 +271,7 @@ model Product {
   expectedDate DateTime? // Fecha estimada de llegada (solo PREVENTA)
   stockQty     Int           @default(0)
   images       String[] // Galería (URLs de Cloudinary)
+  specs        Json? // Ficha técnica: pares { etiqueta: valor } (Personaje, Material, Altura...)
   isFeatured   Boolean       @default(false)
   isActive     Boolean       @default(true)
 
@@ -291,12 +292,38 @@ model Product {
   batchItems ImportBatchItem[]
   preorders  PreorderReservation[]
 
+  // Curaduría manual de "Combina y Ahorra" (bóveda 02.02): productos elegidos
+  // a mano para acompañar a este cuando se muestra su ficha. Si no hay
+  // ninguno, ProductBundle cae al automático por categoría.
+  bundleSuggestionsAsBase      ProductBundleSuggestion[] @relation("BundleBase")
+  bundleSuggestionsAsSuggested ProductBundleSuggestion[] @relation("BundleSuggested")
+
   @@index([categoryId])
   @@index([lineId])
   @@index([brandId])
   @@index([type])
   @@index([slug])
   @@map("products")
+}
+
+// Par dirigido: "cuando se ve `product`, sugerir `suggested` en Combina y
+// Ahorra". No es simétrico a propósito (el admin puede querer sugerir A→B
+// sin que B sugiera A). `order` controla qué aparece primero/preseleccionado.
+model ProductBundleSuggestion {
+  id String @id @default(cuid())
+
+  productId String
+  product   Product @relation("BundleBase", fields: [productId], references: [id], onDelete: Cascade)
+
+  suggestedId String
+  suggested   Product @relation("BundleSuggested", fields: [suggestedId], references: [id], onDelete: Cascade)
+
+  order     Int      @default(0)
+  createdAt DateTime @default(now())
+
+  @@unique([productId, suggestedId])
+  @@index([productId, order])
+  @@map("product_bundle_suggestions")
 }
 
 // ==================== RESEÑAS ====================

@@ -1,6 +1,6 @@
 "use client"
 
-import { use, useEffect, useState } from "react"
+import { Suspense, use, useEffect, useState } from "react"
 import { Loader2 } from "lucide-react"
 import { ProductForm } from "@/components/admin/ProductForm"
 import type { Product } from "@/types"
@@ -37,5 +37,16 @@ export default function EditProductPage({
     )
   }
 
-  return <ProductForm product={product} />
+  // ProductForm usa useSearchParams, que exige un límite de Suspense
+  return (
+    <Suspense
+      fallback={
+        <div className="flex items-center justify-center py-24">
+          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+        </div>
+      }
+    >
+      <ProductForm product={product} />
+    </Suspense>
+  )
 }

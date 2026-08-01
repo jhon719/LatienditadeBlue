@@ -3,7 +3,16 @@
 import { use, useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
-import { ArrowLeft, ExternalLink, Loader2, PackageCheck, Save } from "lucide-react"
+import {
+  ArrowLeft,
+  ExternalLink,
+  Loader2,
+  PackageCheck,
+  Plus,
+  Save,
+  Sparkles,
+  Trash2,
+} from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import {
@@ -17,7 +26,15 @@ import Image from "next/image"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import { ImageUpload } from "@/components/admin/ImageUpload"
+import { ProductPicker, type ProductOption } from "@/components/admin/ProductPicker"
 
 interface UploadedImage {
   url: string
@@ -80,6 +97,13 @@ export default function EditBatchPage({
   const [saving, setSaving] = useState(false)
   const [receiving, setReceiving] = useState(false)
   const [saved, setSaved] = useState(false)
+  // Alta de un producto ya existente del catálogo dentro del lote
+  const [addProduct, setAddProduct] = useState<ProductOption | null>(null)
+  const [addQty, setAddQty] = useState("1")
+  const [addCost, setAddCost] = useState("")
+  const [addStatus, setAddStatus] = useState<"PREVENTA" | "STOCK">("PREVENTA")
+  const [addBusy, setAddBusy] = useState(false)
+  const [addError, setAddError] = useState<string | null>(null)
 
   const load = () => {
     fetch(`/api/admin/batches/${id}`)
@@ -128,6 +152,40 @@ export default function EditBatchPage({
     } finally {
       setSaving(false)
     }
+  }
+
+  const addItem = async () => {
+    if (!addProduct) return setAddError("Elige un producto")
+    setAddError(null)
+    setAddBusy(true)
+    try {
+      const res = await fetch(`/api/admin/batches/${id}/items`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          productId: addProduct.id,
+          quantity: Number(addQty) || 1,
+          unitCost: addCost ? Number(addCost) : null,
+          status: addStatus,
+        }),
+      })
+      if (!res.ok) {
+        const r = await res.json().catch(() => null)
+        setAddError(r?.error ?? "No se pudo agregar el producto")
+        return
+      }
+      setAddProduct(null)
+      setAddQty("1")
+      setAddCost("")
+      load()
+    } finally {
+      setAddBusy(false)
+    }
+  }
+
+  const removeItem = async (itemId: string) => {
+    await fetch(`/api/admin/batches/${id}/items/${itemId}`, { method: "DELETE" })
+    load()
   }
 
   const receive = async () => {
@@ -260,27 +318,121 @@ export default function EditBatchPage({
       <Card>
         <CardHeader>
           <CardTitle>Productos del lote</CardTitle>
+          <CardDescription>
+            Lo que trae este envío. Si la figura todavía no está en el catálogo, dala de alta
+            con el formulario completo (fotos, precio, anime) y queda vinculada al lote.
+          </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-2">
-          {batch.items.map((it) => (
-            <div
-              key={it.id}
-              className="flex items-center gap-3 rounded-lg border p-2 text-sm"
-            >
-              <div className="relative h-9 w-9 shrink-0 overflow-hidden rounded bg-muted">
-                {it.image && (
-                  <Image src={it.image} alt={it.name} fill className="object-cover" sizes="36px" />
-                )}
-              </div>
-              <span className="flex-1 truncate">{it.name}</span>
-              <Badge variant="outline" className="shrink-0 text-xs">
-                {PRODUCT_STATUS_LABEL[it.productStatus]}
-              </Badge>
-              <span className="shrink-0 text-muted-foreground">
-                {it.quantity} uds{it.unitCost ? ` · S/ ${it.unitCost.toFixed(2)} c/u` : ""}
-              </span>
+        <CardContent className="space-y-4">
+          {batch.items.length === 0 ? (
+            <p className="rounded-lg border border-dashed p-4 text-center text-sm text-muted-foreground">
+              Este lote todavía no tiene productos.
+            </p>
+          ) : (
+            <div className="space-y-2">
+              {batch.items.map((it) => (
+                <div
+                  key={it.id}
+                  className="flex items-center gap-3 rounded-lg border p-2 text-sm"
+                >
+                  <div className="relative h-9 w-9 shrink-0 overflow-hidden rounded bg-muted">
+                    {it.image && (
+                      <Image
+                        src={it.image}
+                        alt={it.name}
+                        fill
+                        className="object-cover"
+                        sizes="36px"
+                      />
+                    )}
+                  </div>
+                  <span className="min-w-0 flex-1 truncate">{it.name}</span>
+                  <Badge variant="outline" className="shrink-0 text-xs">
+                    {PRODUCT_STATUS_LABEL[it.productStatus]}
+                  </Badge>
+                  <span className="shrink-0 text-muted-foreground">
+                    {it.quantity} uds{it.unitCost ? ` · S/ ${it.unitCost.toFixed(2)} c/u` : ""}
+                  </span>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 shrink-0 text-muted-foreground hover:text-destructive"
+                    onClick={() => removeItem(it.id)}
+                    aria-label={`Quitar ${it.name} del lote`}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
+              ))}
             </div>
-          ))}
+          )}
+
+          <div className="space-y-3 rounded-lg border bg-muted/30 p-3">
+            <p className="text-xs font-semibold uppercase text-muted-foreground">
+              Agregar producto del catálogo
+            </p>
+            {addError && (
+              <div className="rounded-md bg-destructive/15 p-2 text-xs text-destructive">
+                {addError}
+              </div>
+            )}
+            <ProductPicker selected={addProduct} onSelect={setAddProduct} />
+            <div className="flex items-end gap-2">
+              <div className="w-20 space-y-1">
+                <Label className="text-xs">Cant.</Label>
+                <Input
+                  type="number"
+                  min={1}
+                  value={addQty}
+                  onChange={(e) => setAddQty(e.target.value)}
+                />
+              </div>
+              <div className="w-28 space-y-1">
+                <Label className="text-xs">Costo (S/)</Label>
+                <Input
+                  type="number"
+                  step="0.01"
+                  value={addCost}
+                  onChange={(e) => setAddCost(e.target.value)}
+                />
+              </div>
+              <div className="flex-1 space-y-1">
+                <Label className="text-xs">Estado</Label>
+                <Select
+                  value={addStatus}
+                  onValueChange={(v) => setAddStatus(v as "PREVENTA" | "STOCK")}
+                >
+                  <SelectTrigger className="h-9">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="PREVENTA">Preventa</SelectItem>
+                    <SelectItem value="STOCK">En stock</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <Button onClick={addItem} disabled={addBusy || !addProduct} className="h-9">
+                {addBusy ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                  <Plus className="mr-2 h-4 w-4" />
+                )}
+                Agregar
+              </Button>
+            </div>
+          </div>
+
+          <div className="flex flex-col gap-2 rounded-lg border border-dashed p-3 sm:flex-row sm:items-center sm:justify-between">
+            <p className="text-sm text-muted-foreground">
+              ¿La figura aún no existe en el catálogo?
+            </p>
+            <Button variant="outline" asChild>
+              <Link href={`/admin/products/new?batchId=${batch.id}`}>
+                <Sparkles className="mr-2 h-4 w-4" />
+                Registrar producto nuevo
+              </Link>
+            </Button>
+          </div>
         </CardContent>
       </Card>
 

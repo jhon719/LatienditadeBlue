@@ -58,6 +58,9 @@ const updateProductSchema = z.object({
   expectedDate: z.string().datetime().nullable().optional(),
   stockQty: z.number().int().min(0).optional(),
   images: z.array(z.string()).optional(),
+  specs: z
+    .array(z.object({ label: z.string().min(1), value: z.string().min(1) }))
+    .optional(),
   isFeatured: z.boolean().optional(),
   isActive: z.boolean().optional(),
   categoryId: z.string().optional(),
